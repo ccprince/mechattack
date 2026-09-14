@@ -1,0 +1,202 @@
+# Card templates and PDF export
+
+Reference for turning the SVG card templates in `cards/` into a printable PDF in the browser.
+The SVG files are the source of truth for geometry; this doc explains what the geometry means and
+how to process it. If a number here disagrees with the SVG, trust the SVG and fix this doc.
+
+## Decisions so far
+
+- **Draw our own cards; don't fill `RecordSheets.pdf`.** That PDF is a flattened 300-dpi bitmap
+  with no form fields and sideways cards. It's copyrighted (© 2009–2010 Chuck Hughes & Matthew
+  Kilareski), so treat it as a style reference only and keep it out of the published site.
+  The templates copy its layout and look without reusing its artwork.
+- **Card art is SVG; the PDF is built with jsPDF + svg2pdf.js.** The same SVG drives the on-screen
+  preview and the PDF, so output stays vector and sharp.
+- **Two print sizes from one template.** "Large" (native size, for readability) and "Sleeve"
+  (scaled to fit standard 2.5" × 3.5" card sleeves). The layout is identical; only the scale and
+  page grid change.
+
+## Templates
+
+| File | Native size | viewBox | Large page | Sleeve page |
+|---|---|---|---|---|
+| `cards/mech-card.svg` | 3.9" × 5.1" | 390 × 510 | 4-up (2 × 2) | 9-up (3 × 3) |
+| `cards/vehicle-card.svg` | 3.9" × 5.1" | 390 × 510 | 4-up (2 × 2) | 9-up (3 × 3) |
+| `cards/troops-card.svg` | 3.9" × 2.5" | 390 × 250 | 8-up (2 × 4) | 18-up (3 × 6) |
+
+**Coordinates:** 1 viewBox unit = 0.01 inch = 0.72 pt. All positions below are in viewBox units.
+
+### Page layout
+
+US Letter (8.5" × 11"), portrait. Center the card grid on the page. Most home printers can't print
+the outer ~0.25", so keep every card inside that margin. The card's black outer frame is the cut line.
+
+| Layout | Card size | Grid | Gutter (h / v) | Resulting margins (h / v) |
+|---|---|---|---|---|
+| Mech/Vehicle large | 3.9 × 5.1 | 2 × 2 | 0.2 / 0.2 | 0.25 / 0.3 |
+| Troops large | 3.9 × 2.5 | 2 × 4 | 0.2 / 0.15 | 0.25 / 0.275 |
+| Mech/Vehicle sleeve | 2.5 × 3.27 (scale 0.641) | 3 × 3 | 0.15 / 0.15 | 0.35 / 0.445 |
+| Troops sleeve | 2.5 × 1.60 (scale 0.641) | 3 × 6 | 0.15 / 0.1 | 0.35 / 0.44 |
+
+Sleeve scale = 2.5 / 3.9. Two sleeve-size Troops cards stacked fit one sleeve, as in the original sheets.
+At sleeve scale, labels print at ~4 pt and values at ~5.5 pt. That's tiny but matches the original.
+
+### SVG structure conventions
+
+Every template has the same layers, in paint order:
+
+1. `<g id="texture">`: stone background made with SVG filters (`#mottle`, `#streaks`). The title
+   panel also has a `filter="url(#mottle)"` overlay rect. **These filters don't survive svg2pdf.**
+   See [Texture](#texture).
+2. Static artwork: boxes (`.box`), gray header bars (`.bar`), grid lines (`.gl`), heavy outlines
+   (`.frame`), labels (`.lbl` 12px field labels, `.hdr` 9px bar headers, `.sm` small labels, `.num`
+   grid numbers, `.title` card name).
+3. `<g id="data">`: **sample** unit data. The app must empty this group and regenerate it. Each
+   value is a `<text class="val" data-field="…">`. The crossed-out block is `<rect class="crossed">`
+   plus an X `<path>`.
+
+Label styling conventions:
+- Abbreviations are small caps built from two sizes: `M<tspan font-size="9">V</tspan>:`.
+- Fonts: `Alfa Slab One` for all artwork text, `Roboto Slab` weight 600 for filled-in values
+  (`.val`). The templates load both via Google Fonts `@import`, which works only when the SVG is
+  opened directly or inlined in the page. It doesn't work inside `<img>`.
+- **Gotcha:** a CSS class rule beats an SVG presentation attribute. On an element that has a class,
+  `font-size="5.5"` is ignored; use `style="font-size:5.5px"`. Plain `<tspan>`s have no class, so
+  their attributes work.
+
+## Field map
+
+Anchor = `x`,`y` of the `<text>` (baseline). "Center" means `text-anchor="middle"`. Box = the area
+the value must stay inside: use its width minus ~8 units of padding as the max text width. Value
+font is 12px unless noted.
+
+### Mech (`mech-card.svg`)
+
+| data-field | Anchor | Box (x1–x2 × y1–y2) | Notes |
+|---|---|---|---|
+| `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
+| `name` | 258, 42 | 254–378 × 12–48 | |
+| `class` | 258, 78 | 254–378 × 48–84 | |
+| `mv` | 258, 114 | 254–378 × 84–120 | |
+| `tp` | 258, 150 | 254–378 × 120–156 | |
+| `hc` | 258, 186 | 254–378 × 156–192 | |
+| `armor` | 258, 222 | 254–378 × 192–228 | Also drives the armor cross-out |
+| `notes` | 258, 260, 10px | 254–378 × 228–422 | Multi-line: `<tspan x="258" dy="14">`, ≤ 12 lines |
+| `la-rv` / `la-hv` | 101 / 144, 467 center, 11px | 80–123 / 123–166 × 440–469 | Left arm |
+| `ra-rv` / `ra-hv` | 284 / 327, 467 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
+| `lt-rv` / `lt-hv` | 101 / 144, 496 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
+| `rt-rv` / `rt-hv` | 284 / 327, 496 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
+
+Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
+110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
+
+### Vehicle (`vehicle-card.svg`)
+
+| data-field | Anchor | Box | Notes |
+|---|---|---|---|
+| `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
+| `name` | 258, 44 | 254–378 × 12–58 | |
+| `type` | 258, 90 | 254–378 × 58–104 | |
+| `mv` | 258, 136 | 254–378 × 104–150 | |
+| `tp` | 258, 182 | 254–378 × 150–196 | |
+| `armor` | 258, 228 | 254–378 × 196–242 | Also drives the armor cross-out |
+| `notes` | 16, 277, 10px | 12–378 × 246–400 | Multi-line: `dy="14"`, ≤ 9 lines |
+| `weapon` | 16, 451, 11px | 12–232 × 418–498 | Turret/cargo bay weapon or equipment; 3 lines fit at `dy="14"` |
+| `rv` | 276, 466 center, 16px | 232–320 × 418–498 | |
+
+Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; columns x = 44–250.
+
+### Troops (`troops-card.svg`)
+
+| data-field | Anchor | Box | Notes |
+|---|---|---|---|
+| `bp` | 211, 43 center, 16px | 172–250 × 12–50 | |
+| `name` | 258, 44 | 254–378 × 12–57.2 | |
+| `type` | 258, 89.2 | 254–378 × 57.2–102.4 | |
+| `mv` | 258, 134.4 | 254–378 × 102.4–147.6 | |
+| `tp` | 258, 179.6 | 254–378 × 147.6–192.8 | |
+| `sv` | 258, 224.8 | 254–378 × 192.8–238 | |
+| `notes` | 16, 143, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`, **≤ 2 lines** |
+| `weapon` | 15, 214, 11px | 12–155 × 182–238 | Crew-served weapon |
+| `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | |
+
+Strength tracker: box *n* (1–20) is in column *c* = (*n* − 1) mod 10 and row *r* = floor((*n* − 1) / 10).
+It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5–109 (row 1).
+
+## Processing: unit data → PDF
+
+1. **Load the template** with `fetch('cards/<type>-card.svg')` and parse it with `DOMParser`.
+2. **Empty `#data`** and rebuild it from the unit's values. Set text with `textContent`, which
+   escapes user input safely.
+3. **Fit text.**
+   - Single-line fields: measure the text. If it's wider than the box, shrink the font in steps
+     down to ~8px, then truncate with "…".
+   - `notes` and `weapon`: word-wrap to the box width, one `<tspan>` per line, and cap the line
+     count from the field map.
+   - Measure with the same font the PDF uses: either `getComputedTextLength()` on an in-DOM SVG
+     after `document.fonts.ready`, or `doc.getTextWidth()` once the font is registered with jsPDF.
+4. **Cross out unused capacity.** Draw one `rect.crossed` per contiguous block, plus an X path
+   corner to corner across the block (see the sample `#data` groups).
+   - Mech/Vehicle armor grid: cross out every row whose value is greater than `armor`. A block
+     spans x = 44–250 from the top row down.
+   - Troops strength tracker: cross out boxes *n* > starting strength. If strength < 10 this covers
+     part of row 0 and all of row 1, so draw one rect per row.
+5. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
+6. **Place on the page:**
+   `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card
+   `await doc.svg(svgEl, { x, y, width, height })`, with position and size in pt from the page
+   layout table (scale 1.0 or 0.641). Add a page when the grid fills. Verify svg2pdf's
+   `x/y/width/height` units against its current docs on first use.
+7. **Download** with `doc.save('mech-attack-cards.pdf')`.
+
+### Texture
+
+svg2pdf ignores `<filter>`, so the texture has to become an image:
+
+- Build a texture-only SVG per card size: the `#texture` group plus the title-panel overlay rect,
+  no text. Render it through `new Image()` with a blob URL onto a canvas at ~150–200 dpi. Filters
+  do render in `<img>`; only the web fonts don't, and this SVG has no text.
+- Export it as JPEG to keep the PDF small. Cache one per card type.
+- Either swap `#texture` for `<image href="data:…">` in the SVG, or remove it and draw the image
+  first with `doc.addImage(data, 'JPEG', x, y, w, h, alias)`. With a fixed `alias`, jsPDF embeds
+  the image once no matter how many cards use it, which is the better choice for PDF size.
+
+### Fonts
+
+- The `@import` in the templates does nothing for svg2pdf. Bundle the TTFs in the repo; both are
+  SIL OFL fonts from Google Fonts: Alfa Slab One Regular and Roboto Slab SemiBold (600).
+- Register each with jsPDF (`addFileToVFS` + `addFont`) under the exact family names used in the
+  SVG CSS.
+- svg2pdf maps `font-weight` to jsPDF font styles. Check whether weight 600 finds Roboto Slab or
+  falls back to Helvetica. If it falls back, register SemiBold as the `normal` style and set
+  `.val` to `font-weight: normal` in the export copy.
+- Also check that svg2pdf applies the in-file `<style>` class rules and handles `<use>`
+  (`#hit-numbers`, `#minigrid`). If either fails, inline the styles and clone the `<use>` targets
+  before export.
+
+## Previewing a template
+
+Headless Chromium (from the Playwright cache) screenshots an SVG with web fonts loaded:
+
+```sh
+~/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell \
+  --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
+  --window-size=375,490 --virtual-time-budget=8000 \
+  --screenshot=/path/to/out.png file://$PWD/cards/mech-card.svg
+```
+
+Use window height 490 for Mech/Vehicle and 240 for Troops. The screenshot is 2× the window size.
+
+## Open questions (ask the user)
+
+The sample units (Ironclad, Hellhound, Rangers) and all their stats are invented. The game rules
+haven't been checked, so confirm these before building input forms or validation:
+
+- What BP, MV, TP, HC, SV, RV and HV mean, and their value types and ranges.
+- What the small tracking grids in the hardpoint, turret and crew-weapon boxes are for. They're
+  copied from the original sheets.
+- Whether the armor cross-out rule holds when armor isn't a multiple of 10.
+- Whether strength boxes above starting strength should be crossed out. That was a guess, copied
+  from the armor-grid instructions.
+- Whether the Critical Systems Area row ever takes printed data.
+- Whether a print job should allow mixed card types, or sizes, on one page.

@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="3.9in" height="5.1in" viewBox="0 0 390 510">
+  <!-- Vehicle record card. 1 viewBox unit = 0.01 inch. -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&amp;family=Roboto+Slab:wght@600&amp;display=swap');
+    text { font-family: 'Alfa Slab One', 'Rockwell Extra Bold', Rockwell, Georgia, serif; fill: #000; }
+    .lbl { font-size: 12px; }
+    .hdr { font-size: 9px; }
+    .sm { font-size: 7px; }
+    .num { font-size: 10px; text-anchor: middle; }
+    .title { font-size: 25px; text-anchor: middle; letter-spacing: 1px; }
+    .box { fill: #fff; stroke: #000; stroke-width: 1.2; }
+    .bar { fill: #b4b4b4; stroke: #000; stroke-width: 1.2; }
+    .frame { fill: none; stroke: #000; stroke-width: 1.8; }
+    .gl { stroke: #000; stroke-width: 0.6; }
+    .val { font-family: 'Roboto Slab', Georgia, serif; font-weight: 600; font-size: 12px; fill: #1a1a1a; }
+    .crossed { fill: #555; opacity: 0.45; }
+  </style>
+
+  <defs>
+    <clipPath id="cardClip"><rect x="0" y="0" width="390" height="510" rx="4"/></clipPath>
+
+    <!-- Stone texture. SVG filters don't survive svg2pdf, so for PDF export
+         this will be swapped for a pre-rendered PNG of the same look. -->
+    <filter id="mottle" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="4" seed="4"/>
+      <feColorMatrix type="matrix"
+        values="0.6 0.6 0 0 0.02
+                0.6 0.6 0 0 0.03
+                0.6 0.6 0 0 0.05
+                0    0    0 0 1"/>
+    </filter>
+    <filter id="streaks" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.008 0.09" numOctaves="3" seed="9"/>
+      <feColorMatrix type="matrix"
+        values="0 0 0 0 0.12
+                0 0 0 0 0.12
+                0 0 0 0 0.13
+                4.5 0 0 0 -1.9"/>
+    </filter>
+  </defs>
+
+  <!-- ===== Background texture + outer frame ===== -->
+  <g id="texture" clip-path="url(#cardClip)">
+    <rect x="0" y="0" width="390" height="510" filter="url(#mottle)"/>
+    <g transform="rotate(-38 195 255)">
+      <rect x="-180" y="-160" width="750" height="830" filter="url(#streaks)"/>
+    </g>
+  </g>
+  <rect x="1" y="1" width="388" height="508" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+
+  <!-- ===== Title + BP ===== -->
+  <rect x="12" y="12" width="156" height="42" fill="#cfcfcf" stroke="#000" stroke-width="1.2"/>
+  <rect x="12" y="12" width="156" height="42" filter="url(#mottle)" opacity="0.35"/>
+  <rect x="12" y="12" width="156" height="42" fill="none" stroke="#000" stroke-width="1.2"/>
+  <text class="title" x="91" y="43" style="fill:#fff">VEHICLE</text>
+  <text class="title" x="90" y="42">VEHICLE</text>
+
+  <rect class="box" x="172" y="12" width="78" height="42"/>
+  <text class="lbl" x="176" y="25">B<tspan font-size="9">P</tspan>:</text>
+
+  <!-- ===== Info column ===== -->
+  <rect class="box" x="254" y="12"  width="124" height="46"/>
+  <rect class="box" x="254" y="58"  width="124" height="46"/>
+  <rect class="box" x="254" y="104" width="124" height="46"/>
+  <rect class="box" x="254" y="150" width="124" height="46"/>
+  <rect class="box" x="254" y="196" width="124" height="46"/>
+  <text class="lbl" x="258" y="25">NAME:</text>
+  <text class="lbl" x="258" y="71">TYPE:</text>
+  <text class="lbl" x="258" y="117">M<tspan font-size="9">V</tspan>:</text>
+  <text class="lbl" x="258" y="163">T<tspan font-size="9">P</tspan>:</text>
+  <text class="lbl" x="258" y="209">ARMOR:</text>
+
+  <!-- ===== Armor grid ===== -->
+  <!-- cells: columns x=44..250 (10 x 20.6), rows y=90..210 (6 x 20) -->
+  <rect class="box" x="12" y="58" width="238" height="184"/>
+  <rect class="bar" x="44" y="58"  width="206" height="15"/>
+  <rect class="bar" x="44" y="210" width="206" height="15"/>
+  <text class="hdr" x="50" y="69">HIT LOCATIONS</text>
+  <text class="hdr" x="50" y="221">CRITICAL SYSTEMS AREA</text>
+
+  <g transform="translate(28 74) rotate(-25)">
+    <text class="sm" text-anchor="middle" x="0" y="-1" style="font-size:5.5px">ARMOR</text>
+    <text class="sm" text-anchor="middle" x="0" y="6" style="font-size:5.5px">GRID</text>
+  </g>
+  <g transform="translate(28 226) rotate(-25)">
+    <text class="sm" text-anchor="middle" x="0" y="-1" style="font-size:5.5px">ARMOR</text>
+    <text class="sm" text-anchor="middle" x="0" y="6" style="font-size:5.5px">GRID</text>
+  </g>
+
+  <path class="gl" d="
+    M64.6 73V210 M85.2 73V210 M105.8 73V210 M126.4 73V210 M147 73V210
+    M167.6 73V210 M188.2 73V210 M208.8 73V210 M229.4 73V210
+    M64.6 225V242 M85.2 225V242 M105.8 225V242 M126.4 225V242 M147 225V242
+    M167.6 225V242 M188.2 225V242 M208.8 225V242 M229.4 225V242
+    M12 110H250 M12 130H250 M12 150H250 M12 170H250 M12 190H250"/>
+  <path d="M44 58V242 M12 90H250 M12 210H250" stroke="#000" stroke-width="1.2"/>
+
+  <g id="hit-numbers">
+    <text class="num" x="54.3"  y="86">1</text>
+    <text class="num" x="74.9"  y="86">2</text>
+    <text class="num" x="95.5"  y="86">3</text>
+    <text class="num" x="116.1" y="86">4</text>
+    <text class="num" x="136.7" y="86">5</text>
+    <text class="num" x="157.3" y="86">6</text>
+    <text class="num" x="177.9" y="86">7</text>
+    <text class="num" x="198.5" y="86">8</text>
+    <text class="num" x="219.1" y="86">9</text>
+    <text class="num" x="239.7" y="86">10</text>
+  </g>
+  <use xlink:href="#hit-numbers" href="#hit-numbers" y="152"/>
+
+  <g id="armor-values">
+    <text class="num" x="28" y="104">60</text>
+    <text class="num" x="28" y="124">50</text>
+    <text class="num" x="28" y="144">40</text>
+    <text class="num" x="28" y="164">30</text>
+    <text class="num" x="28" y="184">20</text>
+    <text class="num" x="28" y="204">10</text>
+  </g>
+
+  <rect class="frame" x="12" y="58" width="238" height="184"/>
+
+  <!-- ===== Notes ===== -->
+  <rect class="box" x="12" y="246" width="366" height="154"/>
+  <text class="lbl" x="16" y="259">NOTES:</text>
+  <rect class="frame" x="12" y="246" width="366" height="154"/>
+
+  <!-- ===== Turret / cargo bay ===== -->
+  <!-- 6x8 tracking grid: x=320..378, y=418..498 -->
+  <rect class="box" x="12" y="404" width="366" height="94"/>
+  <rect class="bar" x="12" y="404" width="366" height="14"/>
+  <text class="hdr" x="195" y="414.5" text-anchor="middle">TURRET / CARGO BAY</text>
+  <path d="M232 418V498 M320 418V498" stroke="#000" stroke-width="1.2"/>
+  <path class="gl" stroke-width="0.4" d="
+    M329.67 418V498 M339.33 418V498 M349 418V498 M358.67 418V498 M368.33 418V498
+    M320 428H378 M320 438H378 M320 448H378 M320 458H378
+    M320 468H378 M320 478H378 M320 488H378"/>
+  <text class="sm" x="16" y="431" style="font-size:11px">WEAPON / EQUIPMENT:</text>
+  <text class="lbl" x="236" y="431">R<tspan font-size="9">V</tspan>:</text>
+  <rect class="frame" x="12" y="404" width="366" height="94"/>
+
+  <!-- ===== Sample data (the app will generate this group) ===== -->
+  <g id="data">
+    <!-- unused armor layers crossed out: armor 40 → rows 60..50 -->
+    <rect class="crossed" x="44" y="90" width="206" height="40"/>
+    <path d="M44 90L250 130 M44 130L250 90" stroke="#333" stroke-width="0.8" opacity="0.6"/>
+
+    <text class="val" data-field="bp"    x="211" y="46" text-anchor="middle" font-size="16">95</text>
+    <text class="val" data-field="name"  x="258" y="44">Hellhound</text>
+    <text class="val" data-field="type"  x="258" y="90">Tracked Tank</text>
+    <text class="val" data-field="mv"    x="258" y="136">5</text>
+    <text class="val" data-field="tp"    x="258" y="182">3</text>
+    <text class="val" data-field="armor" x="258" y="228">40</text>
+    <text class="val" data-field="notes" x="16" y="277" font-size="10">
+      <tspan x="16">Amphibious</tspan>
+      <tspan x="16" dy="14">Smoke launchers (1/game)</tspan>
+    </text>
+
+    <text class="val" data-field="weapon" x="16"  y="451" font-size="11">Heavy Autocannon</text>
+    <text class="val" data-field="rv"     x="276" y="466" text-anchor="middle" font-size="16">3</text>
+  </g>
+</svg>
