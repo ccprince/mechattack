@@ -1,6 +1,6 @@
 import mechTemplate from '../../cards/mech-card.svg?raw';
 import { hardpoints, type Hardpoint, type MechProfile } from '../domain/mech';
-import { findWeapon } from '../domain/weapons';
+import { findCatalogEntry, formatRv } from '../domain/catalog';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { addCrossOut, addValue, addWrappedValue, parseTemplate } from './svgTemplate';
@@ -50,13 +50,14 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
   addWrappedValue(data, 'notes', wrapLines(profile.notes, 116, 10, 12, measure), 258, 260, 10, 14);
 
   for (const hardpoint of hardpoints) {
-    const weaponName = profile.hardpoints[hardpoint];
-    const weapon = weaponName ? findWeapon(weaponName) : undefined;
-    if (!weapon) continue;
+    const entryName = profile.hardpoints[hardpoint];
+    const entry = entryName ? findCatalogEntry(entryName) : undefined;
+    if (!entry) continue;
     const { prefix, labelX, rvX, y } = hardpointFields[hardpoint];
-    line(`${prefix}-weapon`, weapon.shortName, labelX, y - 3, 60, 9);
-    centered(`${prefix}-rv`, `${weapon.rv.normal}/${weapon.rv.extended}`, rvX, y, 35, 11);
-    centered(`${prefix}-hv`, String(weapon.hv ?? ''), rvX + hvOffset, y, 35, 11);
+    line(`${prefix}-weapon`, entry.shortName, labelX, y - 3, 60, 9);
+    if (entry.rv) centered(`${prefix}-rv`, formatRv(entry.rv), rvX, y, 35, 11);
+    if (entry.hv !== undefined)
+      centered(`${prefix}-hv`, String(entry.hv), rvX + hvOffset, y, 35, 11);
   }
 
   return svg;
