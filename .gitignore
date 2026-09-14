@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+*.local
+.vitest
+__screenshots__
+# Copyrighted style reference; never commit or publish.
+RecordSheets.pdf
+test-output

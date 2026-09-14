@@ -54,8 +54,9 @@ At sleeve scale, labels print at ~4 pt and values at ~5.5 pt. That's tiny but ma
 
 Every template has the same layers, in paint order:
 
-1. `<g id="texture">`: stone background made with SVG filters (`#mottle`, `#streaks`). The title
-   panel also has a `filter="url(#mottle)"` overlay rect. **These filters don't survive svg2pdf.**
+1. `<g id="texture">`: stone background made with SVG filters (`#mottle`, `#streaks`), including
+   the title panel's gray fill and mottle overlay, so the group holds everything filtered and nothing
+   else. **These filters don't survive svg2pdf.**
    See [Texture](#texture).
 2. Static artwork: boxes (`.box`), gray header bars (`.bar`), grid lines (`.gl`), heavy outlines
    (`.frame`), labels (`.lbl` 12px field labels, `.hdr` 9px bar headers, `.sm` small labels, `.num`
@@ -103,9 +104,10 @@ Conventions across all cards:
 | `ra-rv` / `ra-hv` | 284 / 327, 467 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
 | `lt-rv` / `lt-hv` | 101 / 144, 496 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
 | `rt-rv` / `rt-hv` | 284 / 327, 496 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
+| `la-weapon` / `lt-weapon` | 15, 464 / 493, 9px | 12–80 × 440–469 / 469–498 | Weapon short name, under the hardpoint label |
+| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 9px | 195–263 × 440–469 / 469–498 | Weapon short name, under the hardpoint label |
 
-Each hardpoint also needs the Weapon's **short name** (from the Weapon Catalog). The template has no
-field for it yet: find space in the hardpoint row and add a `*-weapon` field.
+An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out.
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
 110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
 
@@ -155,8 +157,9 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
      down to ~8px, then truncate with "…".
    - `notes` and `weapon`: word-wrap to the box width, one `<tspan>` per line, and cap the line
      count from the field map.
-   - Measure with the same font the PDF uses: either `getComputedTextLength()` on an in-DOM SVG
-     after `document.fonts.ready`, or `doc.getTextWidth()` once the font is registered with jsPDF.
+   - Measure with the same font the PDF uses: canvas `measureText()` in `600 <size>px "Roboto Slab"`
+     once the card fonts have loaded. This needs no in-DOM SVG, so the fitting logic takes the
+     measure function as a parameter and is tested in Node with a fake one.
 4. **Cross out unused capacity.** Draw one `rect.crossed` per contiguous block, plus an X path
    corner to corner across the block (see the sample `#data` groups).
    - Mech/Vehicle armor grid: cross out every row whose value is greater than `armor`. A block
@@ -165,42 +168,42 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
      part of row 0 and all of row 1, so draw one rect per row.
 5. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
 6. **Place on the page:**
-   `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card
-   `await doc.svg(svgEl, { x, y, width, height })`, with position and size in pt from the page
-   layout table (scale 1.0 or 0.641). Put each Troop card in a free half slot, and add a page when
-   the grid fills. Verify svg2pdf's
-   `x/y/width/height` units against its current docs on first use.
+   `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card draw the texture
+   image and then `await svg2pdf(svgEl, doc, { x, y, width, height })`, with position and size in
+   pt (the doc's unit, verified) from the page layout table (scale 1.0 or 0.641). Put each Troop card
+   in a free half slot, and add a page when the grid fills.
 7. **Download** with `doc.save('mech-attack-cards.pdf')`.
 
 ### Texture
 
 svg2pdf ignores `<filter>`, so the texture has to become an image:
 
-- Build a texture-only SVG per card size: the `#texture` group plus the title-panel overlay rect,
-  no text. Render it through `new Image()` with a blob URL onto a canvas at ~150–200 dpi. Filters
-  do render in `<img>`; only the web fonts don't, and this SVG has no text.
-- Export it as JPEG to keep the PDF small. Cache one per card type.
-- Either swap `#texture` for `<image href="data:…">` in the SVG, or remove it and draw the image
-  first with `doc.addImage(data, 'JPEG', x, y, w, h, alias)`. With a fixed `alias`, jsPDF embeds
-  the image once no matter how many cards use it, which is the better choice for PDF size.
+- Build a texture-only SVG per card type: `<defs>` plus the `#texture` group, no text. Render it
+  through `new Image()` with a blob URL onto a canvas at 200 dpi. Filters do render in `<img>`;
+  only the web fonts don't, and this SVG has no text.
+- Paint the canvas white first, then export JPEG to keep the PDF small. JPEG has no alpha, so the
+  rounded corners outside `#cardClip` would otherwise turn black. Cache one per card type.
+- Remove `#texture` from the export copy and draw the image first with
+  `doc.addImage(data, 'JPEG', x, y, w, h, alias)`. With a fixed `alias`, jsPDF embeds the image
+  once no matter how many cards use it.
 
 ### Fonts
 
 - The app self-hosts one set of font files for everything: Alfa Slab One Regular and Roboto Slab
-  SemiBold (600), both SIL OFL, bundled in `src/assets/fonts/`. The same TTFs back an `@font-face`
-  rule in the app (preview and text measurement) and jsPDF (export), so text that fits in the
-  preview fits in the PDF. Measure only after `document.fonts.ready`.
+  SemiBold (600), static TTFs (SIL OFL and Apache 2.0; licenses alongside), bundled in
+  `src/assets/fonts/`. The card builder adds them to the page with the `FontFace` API (preview and
+  text measurement) and jsPDF embeds the same files (export), so text that fits in the preview fits
+  in the PDF.
 - The `@import` in the templates is for opening an SVG on its own (see
   [Previewing a template](#previewing-a-template)). It does nothing for svg2pdf, and the card
   builder removes it.
 - Register each with jsPDF (`addFileToVFS` + `addFont`) under the exact family names used in the
-  SVG CSS.
-- svg2pdf maps `font-weight` to jsPDF font styles. Check whether weight 600 finds Roboto Slab or
-  falls back to Helvetica. If it falls back, register SemiBold as the `normal` style and set
-  `.val` to `font-weight: normal` in the export copy.
-- Also check that svg2pdf applies the in-file `<style>` class rules and handles `<use>`
-  (`#hit-numbers`, `#minigrid`). If either fails, inline the styles and clone the `<use>` targets
-  before export.
+  SVG CSS, **passing the weight**: `addFont(file, 'Roboto Slab', 'normal', 600)`. svg2pdf looks
+  fonts up by a style key built from `font-weight` (`'normal'` for 400, `'600normal'` for 600). A
+  font registered under any other key is silently replaced by Times-Roman. The font still shows as
+  embedded, but its width table is empty (`/W []`), which the export test checks for.
+- Verified with svg2pdf 2.8: in-file `<style>` class rules apply, and `<use>` (`#hit-numbers`,
+  `#minigrid`) renders. No inlining is needed.
 
 ## Previewing a template
 

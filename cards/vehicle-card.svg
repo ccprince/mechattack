@@ -46,12 +46,13 @@
     <g transform="rotate(-38 195 255)">
       <rect x="-180" y="-160" width="750" height="830" filter="url(#streaks)"/>
     </g>
+    <!-- title panel backdrop (its outline is drawn below) -->
+    <rect x="12" y="12" width="156" height="42" fill="#cfcfcf"/>
+    <rect x="12" y="12" width="156" height="42" filter="url(#mottle)" opacity="0.35"/>
   </g>
   <rect x="1" y="1" width="388" height="508" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
 
   <!-- ===== Title + BP ===== -->
-  <rect x="12" y="12" width="156" height="42" fill="#cfcfcf" stroke="#000" stroke-width="1.2"/>
-  <rect x="12" y="12" width="156" height="42" filter="url(#mottle)" opacity="0.35"/>
   <rect x="12" y="12" width="156" height="42" fill="none" stroke="#000" stroke-width="1.2"/>
   <text class="title" x="91" y="43" style="fill:#fff">VEHICLE</text>
   <text class="title" x="90" y="42">VEHICLE</text>
