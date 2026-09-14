@@ -1,0 +1,26 @@
+name,kind,class,bp,rv_min,rv_normal,rv_extended,hv,short_name
+Light Cannon, Weapon, Light, 2, , 6, 12, 1, LC
+Light Laser, Weapon, Light, 1, , 6, 10, 2, LL
+Light Laser (Twin Linked), Weapon, Light, 2, , 6, 10, 2, LL-TL
+Light Machine Gun, Weapon, Light, 1, , 8, 12, 1, LMG
+Light Machine Gun (Twin Linked), Weapon, Light, 2, , 8, 12, 1, LMG-TL
+Light Machine Gun (w/Armor Piercing Ammo), Weapon, Light, 3, , 8, 12, 1, LMG-AP
+Light Missile, Weapon, Light, 1, 3, 10, 14, 1, LM
+Remote Guided Missile System, Support Equipment, Light, 1, , , , , RGMS
+Anti-Missile Defense System, Support Equipment, Light, 1, , , , , AMDS
+Medium Cannon, Weapon, Medium, 3, , 6, 12, 1, MC
+Medium Laser, Weapon, Medium, 2, , 6, 10, 2, ML
+Medium Laser (Twin Linked), Weapon, Medium, 3, , 6, 10, 2, ML-TL
+Medium Machine Gun, Weapon, Medium, 2, , 8, 12, 1, MMG
+Medium Machine Gun (Twin Linked), Weapon, Medium, 3, , 8, 12, 1, MMG-TL
+Medium Machine Gun (w/Armor Piercing Ammo), Weapon, Medium, 4, , 8, 12, 1, MMG-AP
+Medium Missile, Weapon, Medium, 2, 3, 10, 14, 1, MM
+Improved Weapon Targeting System, Support Equipment, Medium, 2, , 8, 12, , IWTS
+Heavy Cannon, Weapon, Heavy, 4, , 6, 12, 1, HC
+Heavy Laser, Weapon, Heavy, 3, , 6, 10, 2, HL
+Heavy Laser (Twin Linked), Weapon, Heavy, 4, , 6, 10, 2, HL-TL
+Heavy Machine Gun, Weapon, Heavy, 3, , 8, 12, 1, HMG
+Heavy Machine Gun (Twin Linked), Weapon, Heavy, 4, , 8, 12, 1, HMG-TL
+Heavy Machine Gun (w/Armor Piercing Ammo), Weapon, Heavy, 5, , 8, 12, 1, HMG-AP
+Heavy Missile, Weapon, Heavy, 3, 3, 10, 14, 1, HM
+Electronic Counter Targeting System, Support Equipment, Heavy, 3, , , , 1, ECTS
