@@ -15,6 +15,11 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
 - **Two print sizes from one template.** "Large" (native size, for readability) and "Sleeve"
   (scaled to fit standard 2.5" × 3.5" card sleeves). The layout is identical; only the scale and
   page grid change.
+- **One print size per job, mixed unit kinds allowed.** The whole Army List prints by default, and
+  checkboxes leave units out. Every page uses the Mech/Vehicle slot grid, and a Troop card fills half
+  a slot (see [Page layout](#page-layout)).
+- **Sample data is invented.** The names and numbers in each template's `#data` group don't follow
+  the game rules. Terms are defined in `CONTEXT.md`.
 
 ## Templates
 
@@ -31,14 +36,17 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
 US Letter (8.5" × 11"), portrait. Center the card grid on the page. Most home printers can't print
 the outer ~0.25", so keep every card inside that margin. The card's black outer frame is the cut line.
 
-| Layout | Card size | Grid | Gutter (h / v) | Resulting margins (h / v) |
-|---|---|---|---|---|
-| Mech/Vehicle large | 3.9 × 5.1 | 2 × 2 | 0.2 / 0.2 | 0.25 / 0.3 |
-| Troops large | 3.9 × 2.5 | 2 × 4 | 0.2 / 0.15 | 0.25 / 0.275 |
-| Mech/Vehicle sleeve | 2.5 × 3.27 (scale 0.641) | 3 × 3 | 0.15 / 0.15 | 0.35 / 0.445 |
-| Troops sleeve | 2.5 × 1.60 (scale 0.641) | 3 × 6 | 0.15 / 0.1 | 0.35 / 0.44 |
+Every page uses one **slot** grid. A Mech or Vehicle card fills one slot. A Troop card fills the top
+or bottom half, so two Troops stack in a slot, with the vertical gutter between them. This lets
+mixed unit kinds share a page. An odd Troop leaves the other half of its slot empty.
 
-Sleeve scale = 2.5 / 3.9. Two sleeve-size Troops cards stacked fit one sleeve, as in the original sheets.
+| Size | Slot size | Grid | Gutter (h / v) | Troop half-slot gap | Resulting margins (h / v) |
+|---|---|---|---|---|---|
+| Large | 3.9 × 5.1 | 2 × 2 | 0.2 / 0.2 | 0.1 | 0.25 / 0.3 |
+| Sleeve | 2.5 × 3.27 (scale 0.641) | 3 × 3 | 0.15 / 0.15 | 0.064 | 0.35 / 0.445 |
+
+Troop cards are 3.9 × 2.5 (Large) or 2.5 × 1.60 (Sleeve), so two plus the gap equal one slot height.
+Sleeve scale = 2.5 / 3.9. Two sleeve-size Troop cards stacked fit one sleeve, as in the original sheets.
 At sleeve scale, labels print at ~4 pt and values at ~5.5 pt. That's tiny but matches the original.
 
 ### SVG structure conventions
@@ -70,6 +78,14 @@ Anchor = `x`,`y` of the `<text>` (baseline). "Center" means `text-anchor="middle
 the value must stay inside: use its width minus ~8 units of padding as the max text width. Value
 font is 12px unless noted.
 
+Conventions across all cards:
+- Rv prints as `normal/extended`, like `12/24`, in its single box.
+- Only Mechs track heat, so only the Mech card has Hc and Hv.
+- The small hand-drawn grids next to each weapon (5×5 on the Mech in the template) are placeholders.
+  They'll be replaced by printed **Dp** at 5×5 (Mech), 4×4 (Vehicle) and 3×3 (Troop). The layout
+  is **pending the Dp design session**.
+- The Vehicle and Troop cards keep the label "Type" for the value the app calls Class.
+
 ### Mech (`mech-card.svg`)
 
 | data-field | Anchor | Box (x1–x2 × y1–y2) | Notes |
@@ -87,6 +103,8 @@ font is 12px unless noted.
 | `lt-rv` / `lt-hv` | 101 / 144, 496 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
 | `rt-rv` / `rt-hv` | 284 / 327, 496 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
 
+Each hardpoint also needs the Weapon's **short name** (from the Weapon Catalog). The template has no
+field for it yet: find space in the hardpoint row and add a `*-weapon` field.
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
 110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
 
@@ -101,7 +119,7 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 | `tp` | 258, 182 | 254–378 × 150–196 | |
 | `armor` | 258, 228 | 254–378 × 196–242 | Also drives the armor cross-out |
 | `notes` | 16, 277, 10px | 12–378 × 246–400 | Multi-line: `dy="14"`, ≤ 9 lines |
-| `weapon` | 16, 451, 11px | 12–232 × 418–498 | Turret/cargo bay weapon or equipment; 3 lines fit at `dy="14"` |
+| `weapon` | 16, 451, 11px | 12–232 × 418–498 | Turret/cargo bay weapon or equipment; 3 lines fit at `dy="14"`. **Pending the Hull Options session:** a Vehicle can have a Turret, a Static Weapon Mount and a Cargo Bay, so this single box may change. |
 | `rv` | 276, 466 center, 16px | 232–320 × 418–498 | |
 
 Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; columns x = 44–250.
@@ -145,7 +163,8 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
 6. **Place on the page:**
    `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card
    `await doc.svg(svgEl, { x, y, width, height })`, with position and size in pt from the page
-   layout table (scale 1.0 or 0.641). Add a page when the grid fills. Verify svg2pdf's
+   layout table (scale 1.0 or 0.641). Put each Troop card in a free half slot, and add a page when
+   the grid fills. Verify svg2pdf's
    `x/y/width/height` units against its current docs on first use.
 7. **Download** with `doc.save('mech-attack-cards.pdf')`.
 
@@ -187,16 +206,19 @@ Headless Chromium (from the Playwright cache) screenshots an SVG with web fonts 
 
 Use window height 490 for Mech/Vehicle and 240 for Troops. The screenshot is 2× the window size.
 
-## Open questions (ask the user)
+## Settled rules
 
-The sample units (Ironclad, Hellhound, Rangers) and all their stats are invented. The game rules
-haven't been checked, so confirm these before building input forms or validation:
+- Armor is always a multiple of 10. Cross out every armor row above it.
+- Troop Sv is at most 20. Cross out every strength box above it; players mark damage on the rest.
+- The Critical Systems Area row is static artwork. Its numbers repeat the column numbers so hits
+  are easier to mark, and it never takes printed data.
 
-- What BP, MV, TP, HC, SV, RV and HV mean, and their value types and ranges.
-- What the small tracking grids in the hardpoint, turret and crew-weapon boxes are for. They're
-  copied from the original sheets.
-- Whether the armor cross-out rule holds when armor isn't a multiple of 10.
-- Whether strength boxes above starting strength should be crossed out. That was a guess, copied
-  from the armor-grid instructions.
-- Whether the Critical Systems Area row ever takes printed data.
-- Whether a print job should allow mixed card types, or sizes, on one page.
+## Pending design sessions
+
+Don't build against the current guesses for these:
+
+- **Dp:** how a Damage Profile is stored and drawn, including multiplier boxes. It replaces the
+  hand-drawn grids.
+- **Vehicle Hull Options:** Turret, Static Weapon Mount and Cargo Bay, and how the Vehicle card shows them.
+- **Weapon eligibility by Class:** which Weapons each Class may mount.
+- **Bp formulas and per-Class Bp limits.** Until then, Bp is typed in.
