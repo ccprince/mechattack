@@ -23,3 +23,17 @@ each layer imports only from the layers above it:
 
 Tests: Vitest runs pure logic in Node. Anything that measures text or renders SVG/PDF runs in Vitest
 browser mode (Playwright). Keep geometry in pure functions so most tests stay in Node.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for `ccprince/mechattack` (via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
