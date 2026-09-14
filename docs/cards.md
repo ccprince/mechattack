@@ -11,7 +11,8 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
   Kilareski), so treat it as a style reference only and keep it out of the published site.
   The templates copy its layout and look without reusing its artwork.
 - **Card art is SVG; the PDF is built with jsPDF + svg2pdf.js.** The same SVG drives the on-screen
-  preview and the PDF, so output stays vector and sharp.
+  preview and the PDF, so output stays vector and sharp. The templates stay SVG files rather than
+  React components (ADR 0002).
 - **Two print sizes from one template.** "Large" (native size, for readability) and "Sleeve"
   (scaled to fit standard 2.5" × 3.5" card sleeves). The layout is identical; only the scale and
   page grid change.
@@ -143,7 +144,10 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
 
 ## Processing: unit data → PDF
 
-1. **Load the template** with `fetch('cards/<type>-card.svg')` and parse it with `DOMParser`.
+1. **Load the template** by importing it as raw text (`import mechSvg from '../../cards/mech-card.svg?raw'`)
+   and parse it with `DOMParser`. Remove the Google Fonts `@import` from the parsed copy; the app
+   supplies the fonts (see [Fonts](#fonts)). This happens in the framework-free card builder, and
+   its output feeds both the preview and the PDF (ADR 0002).
 2. **Empty `#data`** and rebuild it from the unit's values. Set text with `textContent`, which
    escapes user input safely.
 3. **Fit text.**
@@ -182,8 +186,13 @@ svg2pdf ignores `<filter>`, so the texture has to become an image:
 
 ### Fonts
 
-- The `@import` in the templates does nothing for svg2pdf. Bundle the TTFs in the repo; both are
-  SIL OFL fonts from Google Fonts: Alfa Slab One Regular and Roboto Slab SemiBold (600).
+- The app self-hosts one set of font files for everything: Alfa Slab One Regular and Roboto Slab
+  SemiBold (600), both SIL OFL, bundled in `src/assets/fonts/`. The same TTFs back an `@font-face`
+  rule in the app (preview and text measurement) and jsPDF (export), so text that fits in the
+  preview fits in the PDF. Measure only after `document.fonts.ready`.
+- The `@import` in the templates is for opening an SVG on its own (see
+  [Previewing a template](#previewing-a-template)). It does nothing for svg2pdf, and the card
+  builder removes it.
 - Register each with jsPDF (`addFileToVFS` + `addFont`) under the exact family names used in the
   SVG CSS.
 - svg2pdf maps `font-weight` to jsPDF font styles. Check whether weight 600 finds Roboto Slab or
