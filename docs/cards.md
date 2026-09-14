@@ -81,8 +81,8 @@ the value must stay inside: use its width minus ~8 units of padding as the max t
 font is 12px unless noted.
 
 Conventions across all cards:
-- Rv prints as `normal/extended`, like `12/24`, in its single box.
-- Only Mechs track heat, so only the Mech card has Hc and Hv.
+- Rv prints as `normal/extended`, like `10/14`, or `min-normal/extended`, like `3-10/14`, in its single box. It stays blank for Support Equipment with no range.
+- Only Mechs track heat, so only the Mech card has Hc and Hv. Hv stays blank when the entry generates none.
 - The small hand-drawn grids next to each weapon (5×5 on the Mech in the template) are placeholders.
   They'll be replaced by printed **Dp** at 5×5 (Mech), 4×4 (Vehicle) and 3×3 (Troop). The layout
   is **pending the Dp design session**.
@@ -104,8 +104,8 @@ Conventions across all cards:
 | `ra-rv` / `ra-hv` | 284 / 327, 467 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
 | `lt-rv` / `lt-hv` | 101 / 144, 496 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
 | `rt-rv` / `rt-hv` | 284 / 327, 496 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
-| `la-weapon` / `lt-weapon` | 15, 464 / 493, 9px | 12–80 × 440–469 / 469–498 | Weapon short name, under the hardpoint label |
-| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 9px | 195–263 × 440–469 / 469–498 | Weapon short name, under the hardpoint label |
+| `la-weapon` / `lt-weapon` | 15, 464 / 493, 9px | 12–80 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
+| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 9px | 195–263 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
 
 An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out.
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to

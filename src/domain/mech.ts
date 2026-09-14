@@ -14,7 +14,7 @@ export interface MechProfile {
   /** A multiple of 10, at most 150. */
   armor: number;
   notes: string;
-  /** Weapon name per Hardpoint, or null when empty. */
+  /** Catalog name (Weapon or Support Equipment) per Hardpoint, or null when empty. */
   hardpoints: Record<Hardpoint, string | null>;
 }
 
@@ -30,9 +30,9 @@ export const sampleMech: MechProfile = {
   armor: 110,
   notes: 'Jump jets (Mv +2). ECM suite blocks enemy targeting within 6".',
   hardpoints: {
-    leftArm: 'Autocannon',
-    rightArm: 'Laser',
-    leftTorso: 'Short Range Missiles',
+    leftArm: 'Heavy Missile',
+    rightArm: 'Heavy Laser',
+    leftTorso: 'Improved Weapon Targeting System',
     rightTorso: null,
   },
 };

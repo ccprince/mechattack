@@ -16,7 +16,7 @@ PDF generation, runs client-side.
 React + Vite + TypeScript, built by GitHub Actions and deployed to Pages from `dist/`. Code is layered;
 each layer imports only from the layers above it:
 
-1. `src/domain`: Army List types, Zod schemas, reducer, migrations, Weapon Catalog. Pure; tested in Node.
+1. `src/domain`: Army List types, Zod schemas, reducer, migrations, Catalog. Pure; tested in Node.
 2. `src/cards`: turns a Unit Profile into card SVG (text fitting, cross-outs, page slots). No React.
 3. `src/pdf`: jsPDF + svg2pdf export. Lazy-loaded when printing.
 4. `src/ui`: React components with `useReducer` + Context, styled with CSS Modules.

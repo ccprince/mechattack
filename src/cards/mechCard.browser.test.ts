@@ -14,10 +14,37 @@ describe('buildMechCardSvg', () => {
     const svg = buildMechCardSvg(sampleMech, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Ironclad');
     expect(field(svg, 'armor')?.textContent).toBe('110');
-    expect(field(svg, 'la-weapon')?.textContent).toBe('AC');
-    expect(field(svg, 'la-rv')?.textContent).toBe('12/24');
+    expect(field(svg, 'ra-weapon')?.textContent).toBe('HL');
+    expect(field(svg, 'ra-rv')?.textContent).toBe('6/10');
+    expect(field(svg, 'ra-hv')?.textContent).toBe('2');
     expect(field(svg, 'rt-rv')).toBeNull();
     expect(svg.querySelectorAll('#data rect.crossed')).toHaveLength(1);
+  });
+
+  it('prints a minimum Rv ahead of the normal and extended Rv', () => {
+    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    expect(field(svg, 'la-weapon')?.textContent).toBe('HM');
+    expect(field(svg, 'la-rv')?.textContent).toBe('3-10/14');
+  });
+
+  it('leaves Hv blank for an entry that generates no heat', () => {
+    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    expect(field(svg, 'lt-weapon')?.textContent).toBe('IWTS');
+    expect(field(svg, 'lt-rv')?.textContent).toBe('8/12');
+    expect(field(svg, 'lt-hv')?.textContent ?? '').toBe('');
+  });
+
+  it('leaves Rv blank for Support Equipment without range', () => {
+    const svg = buildMechCardSvg(
+      {
+        ...sampleMech,
+        hardpoints: { ...sampleMech.hardpoints, rightTorso: 'Electronic Counter Targeting System' },
+      },
+      createValueMeasure(),
+    );
+    expect(field(svg, 'rt-weapon')?.textContent).toBe('ECTS');
+    expect(field(svg, 'rt-rv')?.textContent ?? '').toBe('');
+    expect(field(svg, 'rt-hv')?.textContent).toBe('1');
   });
 
   it('removes the Google Fonts import', () => {
