@@ -1,0 +1,16 @@
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #d9a400;
+  border-radius: 4px;
+  background: #fff4cc;
+}
+
+.message {
+  flex: 1 1 16rem;
+  margin: 0;
+}

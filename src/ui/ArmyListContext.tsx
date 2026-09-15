@@ -1,23 +1,50 @@
-import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+  type Dispatch,
+  type ReactNode,
+} from 'react';
+import type { ArmyList } from '../domain/armyList';
 import {
   armyListReducer,
   type ArmyListAction,
   type ArmyListState,
 } from '../domain/armyListReducer';
+import { saveArmyList, type KeyValueStore } from '../domain/armyListStorage';
 
-// In memory only for now: every visit starts from this empty list.
-const initialState: ArmyListState = {
-  list: { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] },
-  selectedId: null,
-};
+const freshList: ArmyList = { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
 
 const ArmyListContext = createContext<
-  { state: ArmyListState; dispatch: Dispatch<ArmyListAction> } | undefined
+  { state: ArmyListState; dispatch: Dispatch<ArmyListAction>; autosaveFailed: boolean } | undefined
 >(undefined);
 
-export function ArmyListProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(armyListReducer, initialState);
-  return <ArmyListContext value={{ state, dispatch }}>{children}</ArmyListContext>;
+/** Holds the Army List, starting from `savedList` (or a fresh one), and autosaves every change. */
+export function ArmyListProvider({
+  store,
+  savedList,
+  children,
+}: {
+  store: KeyValueStore;
+  savedList: ArmyList | undefined;
+  children: ReactNode;
+}) {
+  const [state, dispatch] = useReducer(armyListReducer, savedList, (list = freshList) => ({
+    list,
+    selectedId: list.unitProfiles[0]?.id ?? null,
+  }));
+  const [autosaveFailed, setAutosaveFailed] = useState(false);
+
+  useEffect(() => {
+    // Storage is the external system here: its answer is only known once the save is attempted,
+    // and React skips the re-render while the answer stays the same.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAutosaveFailed(!saveArmyList(store, state.list));
+  }, [store, state.list]);
+
+  return <ArmyListContext value={{ state, dispatch, autosaveFailed }}>{children}</ArmyListContext>;
 }
 
 export function useArmyList() {
