@@ -1,9 +1,17 @@
 import mechTemplate from '../../cards/mech-card.svg?raw';
 import { hardpoints, type Hardpoint, type MechProfile } from '../domain/mech';
 import { findCatalogEntry, formatRv } from '../domain/catalog';
+import { unitProfileIssues } from '../domain/mechRules';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
-import { addCrossOut, addValue, addWrappedValue, parseTemplate } from './svgTemplate';
+import { illegalNote } from './illegalNote';
+import {
+  addCrossOut,
+  addValue,
+  addWarningTriangle,
+  addWrappedValue,
+  parseTemplate,
+} from './svgTemplate';
 
 // Box widths below are the field map's box width minus 8 units of padding (docs/cards.md).
 const hardpointFields: Record<
@@ -17,9 +25,12 @@ const hardpointFields: Record<
 };
 const hvOffset = 43;
 const topArmorRow = 150;
+const notes = { x: 258, y: 260, width: 116, fontSize: 10, lineHeight: 14, maxLines: 12 };
+const illegalMaxLines = 2;
 
 export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVGElement {
   const { svg, data } = parseTemplate(mechTemplate);
+  const issues = unitProfileIssues(profile);
 
   const crossOut = armorCrossOut(profile.armor, topArmorRow);
   if (crossOut) addCrossOut(data, crossOut);
@@ -39,6 +50,11 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     const fitted = fitLine(text, maxWidth, size, measure);
     addValue(data, field, fitted.text, x, y, fitted.fontSize, 'middle');
   };
+  const wrapped = (field: string, text: string, y: number, maxLines: number) => {
+    const lines = wrapLines(text, notes.width, notes.fontSize, maxLines, measure);
+    addWrappedValue(data, field, lines, notes.x, y, notes.fontSize, notes.lineHeight);
+    return lines.length;
+  };
 
   centered('bp', String(profile.bp), 211, 46, 70, 16);
   line('name', profile.name, 258, 42, 116);
@@ -47,14 +63,30 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
   line('tp', String(profile.tp), 258, 150, 116);
   line('hc', String(profile.hc), 258, 186, 116);
   line('armor', String(profile.armor), 258, 222, 116);
-  addWrappedValue(data, 'notes', wrapLines(profile.notes, 116, 10, 12, measure), 258, 260, 10, 14);
+
+  // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
+  const illegal = illegalNote(issues);
+  const illegalLines = illegal ? wrapped('illegal', illegal, notes.y, illegalMaxLines) : 0;
+  if (illegal) addWarningTriangle(data, 'illegal', { x: 364, y: 15, width: 12, height: 11 });
+  wrapped(
+    'notes',
+    profile.notes,
+    notes.y + illegalLines * notes.lineHeight,
+    notes.maxLines - illegalLines,
+  );
 
   for (const hardpoint of hardpoints) {
+    const { prefix, labelX, rvX, y } = hardpointFields[hardpoint];
+    const marked = issues.some((issue) => 'hardpoint' in issue && issue.hardpoint === hardpoint);
+    if (marked) {
+      const rect = { x: labelX + 52, y: y - 12, width: 11, height: 10 };
+      addWarningTriangle(data, `${prefix}-illegal`, rect);
+    }
+
     const entryName = profile.hardpoints[hardpoint];
     const entry = entryName ? findCatalogEntry(entryName) : undefined;
     if (!entry) continue;
-    const { prefix, labelX, rvX, y } = hardpointFields[hardpoint];
-    line(`${prefix}-weapon`, entry.shortName, labelX, y - 3, 60, 9);
+    line(`${prefix}-weapon`, entry.shortName, labelX, y - 3, marked ? 48 : 60, 9);
     if (entry.rv) centered(`${prefix}-rv`, formatRv(entry.rv), rvX, y, 35, 11);
     if (entry.hv !== undefined)
       centered(`${prefix}-hv`, String(entry.hv), rvX + hvOffset, y, 35, 11);

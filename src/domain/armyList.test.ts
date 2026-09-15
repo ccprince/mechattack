@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   armyListSchema,
   bpTotal,
+  fieldedWithIssues,
   fieldedCopies,
   hasFieldedCopies,
   hasNameClash,
@@ -150,5 +151,19 @@ describe('hasNameClash', () => {
     const blank = mech({ id: 'u1', name: '' });
     const army = list({ unitProfiles: [blank, mech({ id: 'u2', name: '  ' })] });
     expect(hasNameClash(army, blank)).toBe(false);
+  });
+});
+
+describe('fieldedWithIssues', () => {
+  it('lists the fielded Unit Profiles that have Issues, in list order', () => {
+    const army = list({
+      unitProfiles: [
+        mech({ id: 'a', name: 'Sound' }),
+        mech({ id: 'b', name: 'Cheap', bp: 1 }),
+        mech({ id: 'c', name: 'Shelved', bp: 1, quantity: 0 }),
+        mech({ id: 'd', name: 'Overloaded', class: 'Light', quantity: 3 }),
+      ],
+    });
+    expect(fieldedWithIssues(army).map(({ name }) => name)).toEqual(['Cheap', 'Overloaded']);
   });
 });

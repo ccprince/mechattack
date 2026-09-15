@@ -38,3 +38,10 @@ export const unitProfiles = () => page.getByRole('navigation', { name: 'Unit Pro
 export function cardField(field: string): string | null {
   return document.querySelector(`[role="img"] [data-field="${field}"]`)?.textContent ?? null;
 }
+
+/** The `data-mark` of each illegal mark on the card preview. */
+export function cardMarks(): string[] {
+  return Array.from(document.querySelectorAll('[role="img"] [data-mark]'), (mark) =>
+    mark.getAttribute('data-mark'),
+  ).filter((mark) => mark !== null);
+}

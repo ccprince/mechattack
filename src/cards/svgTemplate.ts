@@ -87,6 +87,43 @@ export function addCrossOut(data: SVGGElement, { x, y, width, height }: Rect): v
   data.append(block, cross);
 }
 
+/**
+ * Draws a warning triangle filling `rect`: a black path with a white `!` drawn as shapes, so it needs
+ * no font. `mark` names it as `data-mark`.
+ */
+export function addWarningTriangle(data: SVGGElement, mark: string, rect: Rect): void {
+  const { x, y, width, height } = rect;
+  const doc = data.ownerDocument;
+  const group = doc.createElementNS(svgNs, 'g');
+  group.setAttribute('data-mark', mark);
+
+  const triangle = doc.createElementNS(svgNs, 'path');
+  triangle.setAttribute('d', `M${x + width / 2} ${y}L${x + width} ${y + height}H${x}Z`);
+  triangle.setAttribute('fill', '#000');
+  triangle.setAttribute('stroke', '#000');
+  triangle.setAttribute('stroke-width', '0.8');
+  triangle.setAttribute('stroke-linejoin', 'round');
+
+  // The `!`: a bar from 35% to 70% of the height and a dot at 80%, both centered.
+  const centerX = x + width / 2;
+  const stroke = width * 0.14;
+  const bar = doc.createElementNS(svgNs, 'rect');
+  bar.setAttribute('x', String(centerX - stroke / 2));
+  bar.setAttribute('y', String(y + height * 0.35));
+  bar.setAttribute('width', String(stroke));
+  bar.setAttribute('height', String(height * 0.35));
+  bar.setAttribute('fill', '#fff');
+  const dot = doc.createElementNS(svgNs, 'rect');
+  dot.setAttribute('x', String(centerX - stroke / 2));
+  dot.setAttribute('y', String(y + height * 0.78));
+  dot.setAttribute('width', String(stroke));
+  dot.setAttribute('height', String(stroke));
+  dot.setAttribute('fill', '#fff');
+
+  group.append(triangle, bar, dot);
+  data.append(group);
+}
+
 function createValueText(
   data: SVGGElement,
   field: string,

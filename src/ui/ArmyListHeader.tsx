@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import type { Measure } from '../cards/fitText';
 import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
-import { bpLimitRange, bpTotal, hasFieldedCopies, isOverBpLimit } from '../domain/armyList';
+import {
+  bpLimitRange,
+  bpTotal,
+  fieldedWithIssues,
+  hasFieldedCopies,
+  isOverBpLimit,
+} from '../domain/armyList';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
 import { NumberField } from './NumberField';
@@ -24,6 +30,8 @@ export function ArmyListHeader({
 
   async function downloadPdf() {
     if (!measure) return;
+    const illegal = fieldedWithIssues(list);
+    if (illegal.length > 0 && !window.confirm(illegalPrintQuestion(illegal))) return;
     setPrinting(true);
     onError(undefined);
     try {
@@ -84,4 +92,13 @@ export function ArmyListHeader({
       </div>
     </header>
   );
+}
+
+/** Asks whether to print cards that will be marked illegal, naming their Unit Profiles. */
+function illegalPrintQuestion(profiles: readonly { name: string }[]): string {
+  const names = profiles.map(({ name }) => name);
+  const last = names.pop();
+  const subject = names.length > 0 ? `${names.join(', ')} and ${last} have` : `${last} has`;
+  const cards = names.length > 0 ? 'their cards print' : 'its card prints';
+  return `${subject} Issues, so ${cards} marked ILLEGAL. Download the PDF anyway?`;
 }

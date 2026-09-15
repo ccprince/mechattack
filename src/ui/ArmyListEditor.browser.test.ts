@@ -1,3 +1,4 @@
+import type { jsPDF } from 'jspdf';
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
@@ -5,7 +6,7 @@ import { savedArmyListKey } from '../domain/armyListStorage';
 import type { MechProfile } from '../domain/mech';
 import { fakeStore } from '../domain/testStores';
 import { exportArmyListPdf } from '../pdf/exportPdf';
-import { cardField, setUpApp, unitProfiles } from './testApp';
+import { cardField, cardMarks, setUpApp, unitProfiles } from './testApp';
 
 // Spied on, still real: the app imports it on demand when printing.
 vi.mock('../pdf/exportPdf', { spy: true });
@@ -25,6 +26,8 @@ const field = (label: string) => page.getByLabelText(label, { exact: true });
 /** A select, by its accessible name: its label's text also holds every option, so getByLabelText misses it. */
 const picker = (name: string) => page.getByRole('combobox', { name, exact: true });
 const issues = () => page.getByRole('region', { name: 'Issues' });
+/** Too heavy for the default Light Mech. */
+const heavyLeftArm = { leftArm: 'Heavy Laser', rightArm: null, leftTorso: null, rightTorso: null };
 const downloadPdf = () => page.getByRole('button', { name: 'Download PDF' });
 const profileRow = (name: string) =>
   unitProfiles()
@@ -382,6 +385,23 @@ describe('Issues', () => {
     expect(optionTexts('Right Arm')).not.toContain('Plasma Thrower (not in the Catalog)');
   });
 
+  it('marks the card preview while the Unit Profile has Issues', async () => {
+    await loadWithNewMech();
+    await picker('Class').selectOptions('Heavy');
+    await picker('Left Arm').selectOptions('Heavy Laser');
+    await field('Bp').fill('5');
+    await expect.poll(() => cardField('armor')).not.toBeNull();
+    expect(cardMarks()).toEqual([]);
+
+    await picker('Class').selectOptions('Light');
+    await expect.poll(() => cardField('illegal')).toMatch(/^ILLEGAL: /);
+    expect(cardMarks()).toEqual(['illegal', 'la-illegal']);
+
+    await picker('Class').selectOptions('Heavy');
+    await expect.poll(() => cardField('illegal')).toBeNull();
+    expect(cardMarks()).toEqual([]);
+  });
+
   it('marks only the Unit Profiles with Issues in the list', async () => {
     loadList({
       version: 1,
@@ -458,6 +478,51 @@ describe('Download PDF', () => {
     expect(size).toBe('sleeve');
     await expect.element(downloadPdf()).toBeEnabled();
     expect(page.getByText(/Couldn't build the PDF/).query()).toBeNull();
+  });
+
+  it('asks before printing fielded Unit Profiles with Issues', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList({
+      version: 1,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        mech({ id: 'a', name: 'Sound' }),
+        mech({ id: 'b', name: 'Cheap', bp: 1, hardpoints: heavyLeftArm }),
+        mech({ id: 'c', name: 'Flawed', quantity: 2, hardpoints: heavyLeftArm }),
+      ],
+    });
+
+    await downloadPdf().click();
+    expect(confirm).toHaveBeenCalledWith(
+      'Cheap and Flawed have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
+    );
+    expect(vi.mocked(exportArmyListPdf)).not.toHaveBeenCalled();
+
+    const save = vi.fn();
+    vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
+    confirm.mockReturnValue(true);
+    await downloadPdf().click();
+    await vi.waitFor(() => expect(save).toHaveBeenCalledWith('mech-attack-cards.pdf'));
+  });
+
+  it("doesn't ask about Issues on Unit Profiles that aren't fielded", async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    const save = vi.fn();
+    vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
+    loadList({
+      version: 1,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        mech({ id: 'a', name: 'Sound' }),
+        mech({ id: 'b', name: 'Shelved', quantity: 0, hardpoints: heavyLeftArm }),
+      ],
+    });
+
+    await downloadPdf().click();
+    await vi.waitFor(() => expect(save).toHaveBeenCalledOnce());
+    expect(confirm).not.toHaveBeenCalled();
   });
 });
 
