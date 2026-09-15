@@ -3,6 +3,7 @@ import { commands } from 'vitest/browser';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import { buildMechCardSvg } from '../cards/mechCard';
 import { testMech } from '../cards/testMech';
+import { testTroop } from '../cards/testTroop';
 import { testVehicle } from '../cards/testVehicle';
 import type { ArmyList } from '../domain/armyList';
 import type { UnitProfile } from '../domain/unitProfile';
@@ -88,27 +89,46 @@ describe('exportArmyListPdf', () => {
     ]);
   });
 
-  it("skips Troops, whose card isn't built yet", async () => {
-    const withTroops: ArmyList = {
+  it('prints every fielded copy of a list mixing all three kinds, Troops two to a slot', async () => {
+    // 3 Troops, a Mech, 2 Troops and 2 Vehicles fill 6 Large slots over 2 pages, or 1 Sleeve page.
+    const mixed: ArmyList = {
       version: 2,
       name: 'Combined Arms',
       bpLimit: 200,
       unitProfiles: [
-        {
-          kind: 'Troop',
-          id: 't1',
-          name: 'Rifles',
-          class: 'Light Infantry',
-          crewServedWeapon: null,
-          notes: '',
-          quantity: 2,
-        },
+        { ...testTroop, id: 't1', name: 'Rangers', quantity: 3 },
         { ...testMech, id: 'm1', name: 'Ironclad', quantity: 1 },
+        { ...testTroop, id: 't2', name: 'Skyborne', class: 'Jump Infantry', quantity: 2 },
+        { ...testTroop, id: 't3', name: 'Parked', quantity: 0 },
+        { ...testVehicle, id: 'v1', name: 'Hellhound', quantity: 2 },
       ],
     };
-    const doc = await exportArmyListPdf(withTroops, 'large', createValueMeasure());
-    expect(doc.getNumberOfPages()).toBe(1);
-    expect(doc.output().match(/\/I\d+ Do/g)).toHaveLength(1);
+    for (const [size, pages] of [
+      ['large', 2],
+      ['sleeve', 1],
+    ] as const) {
+      const doc = await exportArmyListPdf(mixed, size, createValueMeasure());
+      const pdf = doc.output();
+      await commands.writeFile(`test-output/all-kinds-army-list-${size}.pdf`, btoa(pdf), 'base64');
+
+      expect(doc.getNumberOfPages()).toBe(pages);
+      expect(pdf.match(/\/I\d+ Do/g)).toHaveLength(8);
+      const names = readPdf(pdf)
+        .texts.map(({ text }) => text)
+        .filter((text) =>
+          ['Rangers', 'Ironclad', 'Skyborne', 'Parked', 'Hellhound'].includes(text),
+        );
+      expect(names).toEqual([
+        'Rangers',
+        'Rangers',
+        'Rangers',
+        'Ironclad',
+        'Skyborne',
+        'Skyborne',
+        'Hellhound',
+        'Hellhound',
+      ]);
+    }
   });
 });
 
@@ -165,5 +185,17 @@ describe('illegal marks', () => {
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: 2 issues', stroked: true });
     expect(texts).toContainEqual({ text: 'Static: Plasma Lance', stroked: false });
+  });
+
+  it('prints the triangles and a bold ILLEGAL line on an illegal Troop card', async () => {
+    const { texts, triangles } = await printed({ ...testTroop, crewServedWeapon: 'Medium Laser' });
+
+    // Positions from the field map in docs/cards.md: beside the name, the Crew Served Weapon row.
+    expect(triangles).toEqual([
+      { x: 364, y: 15, width: 12, height: 11 },
+      { x: 140, y: 205, width: 11, height: 10 },
+    ]);
+    expect(texts).toContainEqual({ text: 'ILLEGAL: Md Laser too heavy', stroked: true });
+    expect(texts).toContainEqual({ text: 'Md Laser', stroked: false });
   });
 });

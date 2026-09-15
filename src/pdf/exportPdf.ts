@@ -2,8 +2,8 @@ import { jsPDF } from 'jspdf';
 import { svg2pdf } from 'svg2pdf.js';
 import type { Measure } from '../cards/fitText';
 import { cardFonts } from '../cards/fonts';
-import { buildUnitCardSvg, hasCard, type CardedUnitProfile } from '../cards/unitCard';
-import { slotRect, slotsPerPage, type PrintSize } from '../cards/pageLayout';
+import { placeCards, type PrintSize } from '../cards/pageLayout';
+import { buildUnitCardSvg } from '../cards/unitCard';
 import { fieldedCopies, type ArmyList } from '../domain/armyList';
 import type { UnitProfile } from '../domain/unitProfile';
 import { rasterizeTexture } from './texture';
@@ -16,8 +16,7 @@ export interface PrintableCard {
 const pointsPerInch = 72;
 
 /**
- * Prints one card per fielded copy of every Mech and Vehicle Unit Profile on the Army List, in list
- * order. Troops don't print yet: their card isn't built.
+ * Prints one card per fielded copy of every Unit Profile on the Army List, in list order.
  */
 export function exportArmyListPdf(
   list: ArmyList,
@@ -25,17 +24,15 @@ export function exportArmyListPdf(
   measure: Measure,
 ): Promise<jsPDF> {
   // Copies of a Unit Profile share one card: exportCardsPdf never changes the SVG it's given.
-  const svgs = new Map<CardedUnitProfile, SVGSVGElement>();
-  const cards = fieldedCopies(list)
-    .filter(hasCard)
-    .map((profile): PrintableCard => {
-      let svg = svgs.get(profile);
-      if (!svg) {
-        svg = buildUnitCardSvg(profile, measure);
-        svgs.set(profile, svg);
-      }
-      return { kind: profile.kind, svg };
-    });
+  const svgs = new Map<UnitProfile, SVGSVGElement>();
+  const cards = fieldedCopies(list).map((profile): PrintableCard => {
+    let svg = svgs.get(profile);
+    if (!svg) {
+      svg = buildUnitCardSvg(profile, measure);
+      svgs.set(profile, svg);
+    }
+    return { kind: profile.kind, svg };
+  });
   return exportCardsPdf(cards, size);
 }
 
@@ -44,14 +41,17 @@ export async function exportCardsPdf(cards: PrintableCard[], size: PrintSize): P
   const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
   await registerFonts(doc);
 
+  const placements = placeCards(
+    cards.map(({ kind }) => kind),
+    size,
+  );
   for (const [index, card] of cards.entries()) {
-    const slotIndex = index % slotsPerPage(size);
-    if (index > 0 && slotIndex === 0) doc.addPage();
-    const slot = slotRect(size, slotIndex);
-    const x = slot.x * pointsPerInch;
-    const y = slot.y * pointsPerInch;
-    const width = slot.width * pointsPerInch;
-    const height = slot.height * pointsPerInch;
+    const { page, rect } = placements[index]!;
+    if (page === doc.getNumberOfPages()) doc.addPage();
+    const x = rect.x * pointsPerInch;
+    const y = rect.y * pointsPerInch;
+    const width = rect.width * pointsPerInch;
+    const height = rect.height * pointsPerInch;
 
     // Draw the texture image first, under the vector card. A fixed alias embeds it once per kind.
     const texture = await rasterizeTexture(card.kind, card.svg);

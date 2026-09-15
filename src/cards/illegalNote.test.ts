@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { illegalNote, vehicleIllegalNote } from './illegalNote';
+import { illegalNote, troopIllegalNote, vehicleIllegalNote } from './illegalNote';
 
 describe('vehicleIllegalNote', () => {
   it('is absent on a Legal card', () => {
@@ -86,6 +86,40 @@ describe('illegalNote', () => {
       illegalNote([
         { rule: 'notInCatalog', hardpoint: 'leftTorso', name: 'Plasma Lance' },
         { rule: 'noBp' },
+      ]),
+    ).toBe('ILLEGAL: 2 issues');
+  });
+});
+
+describe('troopIllegalNote', () => {
+  it('is absent on a Legal card', () => {
+    expect(troopIllegalNote([])).toBeUndefined();
+  });
+
+  it('names a Crew Served Weapon too heavy by its short name', () => {
+    expect(
+      troopIllegalNote([{ rule: 'mountTooHeavy', name: 'Medium Laser', entryClass: 'Medium' }]),
+    ).toBe('ILLEGAL: Md Laser too heavy');
+  });
+
+  it('names a Crew Served Weapon missing from the Catalog', () => {
+    expect(troopIllegalNote([{ rule: 'notInCatalog', name: 'Plasma Lance' }])).toBe(
+      'ILLEGAL: Plasma Lance not in Catalog',
+    );
+  });
+
+  it('reports Bp over the Troop Class max, and counts several Issues', () => {
+    const overMaxBp = {
+      rule: 'overMaxBp',
+      bp: 5,
+      troopClass: 'Light Infantry',
+      maxBp: 4,
+    } as const;
+    expect(troopIllegalNote([overMaxBp])).toBe('ILLEGAL: Bp over max');
+    expect(
+      troopIllegalNote([
+        { rule: 'mountTooHeavy', name: 'Medium Laser', entryClass: 'Medium' },
+        overMaxBp,
       ]),
     ).toBe('ILLEGAL: 2 issues');
   });
