@@ -28,3 +28,19 @@ export function bpTotal(list: ArmyList): number {
 export function isOverBpLimit(list: ArmyList): boolean {
   return bpTotal(list) > list.bpLimit;
 }
+
+/**
+ * Names, trimmed, that more than one Unit Profile shares. A Unit Profile's name should be unique,
+ * so the editor flags these, but a clash isn't an Issue. Blank names are left out.
+ */
+export function duplicateNames(list: ArmyList): Set<string> {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const { name } of list.unitProfiles) {
+    const trimmed = name.trim();
+    if (trimmed === '') continue;
+    if (seen.has(trimmed)) duplicates.add(trimmed);
+    seen.add(trimmed);
+  }
+  return duplicates;
+}

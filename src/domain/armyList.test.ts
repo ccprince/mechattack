@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { armyListSchema, bpTotal, isOverBpLimit, type ArmyList } from './armyList';
+import { armyListSchema, bpTotal, duplicateNames, isOverBpLimit, type ArmyList } from './armyList';
 import type { MechProfile } from './mech';
 
 function mech(overrides: Partial<MechProfile> = {}): MechProfile {
@@ -90,5 +90,31 @@ describe('isOverBpLimit', () => {
     expect(
       isOverBpLimit(list({ bpLimit: 23, unitProfiles: [mech({ bp: 12, quantity: 2 })] })),
     ).toBe(true);
+  });
+});
+
+describe('duplicateNames', () => {
+  it('holds each name two or more Unit Profiles share', () => {
+    const army = list({
+      unitProfiles: [
+        mech({ id: 'u1', name: 'Ironclad' }),
+        mech({ id: 'u2', name: 'Scout' }),
+        mech({ id: 'u3', name: 'Ironclad', quantity: 0 }),
+        mech({ id: 'u4', name: 'Ironclad (copy)' }),
+      ],
+    });
+    expect(duplicateNames(army)).toEqual(new Set(['Ironclad']));
+  });
+
+  it('ignores surrounding spaces, and blank names', () => {
+    const army = list({
+      unitProfiles: [
+        mech({ id: 'u1', name: 'Ironclad ' }),
+        mech({ id: 'u2', name: 'Ironclad' }),
+        mech({ id: 'u3', name: '' }),
+        mech({ id: 'u4', name: '  ' }),
+      ],
+    });
+    expect(duplicateNames(army)).toEqual(new Set(['Ironclad']));
   });
 });

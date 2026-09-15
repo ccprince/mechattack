@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { armyListSchema, isOverBpLimit } from './armyList';
+import { armyListSchema, bpTotal, isOverBpLimit } from './armyList';
 import { armyListReducer, type ArmyListState } from './armyListReducer';
 
 function state(overrides: Partial<ArmyListState['list']> = {}): ArmyListState {
@@ -139,6 +139,117 @@ describe('armyListReducer', () => {
         changes: { mv: 4 },
       });
       expect(next.selectedId).toBe(before.selectedId);
+    });
+  });
+
+  describe('setQuantity', () => {
+    it('sets how many copies of that Unit Profile are fielded, 0 included', () => {
+      let current = armyListReducer(armyListReducer(state(), { type: 'addMech' }), {
+        type: 'addMech',
+      });
+      const [first, second] = current.list.unitProfiles;
+      current = armyListReducer(current, { type: 'setQuantity', id: first!.id, quantity: 3 });
+      current = armyListReducer(current, { type: 'setQuantity', id: second!.id, quantity: 0 });
+      expect(current.list.unitProfiles.map(({ quantity }) => quantity)).toEqual([3, 0]);
+      expect(bpTotal(current.list)).toBe(3);
+    });
+
+    it('leaves the Army List alone for an unknown id', () => {
+      const before = armyListReducer(state(), { type: 'addMech' });
+      expect(armyListReducer(before, { type: 'setQuantity', id: 'missing', quantity: 4 })).toEqual(
+        before,
+      );
+    });
+  });
+
+  describe('duplicateUnitProfile', () => {
+    it('adds an unfielded "(copy)" after the original, and selects it', () => {
+      let current = armyListReducer(armyListReducer(state(), { type: 'addMech' }), {
+        type: 'addMech',
+      });
+      const [first, second] = current.list.unitProfiles;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id: first!.id,
+        changes: { name: 'Ironclad ', bp: 9, hardpoints: { leftArm: 'Light Laser' } },
+      });
+      current = armyListReducer(current, { type: 'duplicateUnitProfile', id: first!.id });
+
+      const [original, copy, last] = current.list.unitProfiles;
+      expect(last).toEqual(second);
+      expect(copy).toEqual({
+        ...original,
+        id: expect.any(String),
+        name: 'Ironclad (copy)',
+        quantity: 0,
+      });
+      expect(copy!.id).not.toBe(original!.id);
+      expect(current.selectedId).toBe(copy!.id);
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+    });
+
+    it('gives a copy of a copy its own id', () => {
+      let current = armyListReducer(state(), { type: 'addMech' });
+      current = armyListReducer(current, {
+        type: 'duplicateUnitProfile',
+        id: current.list.unitProfiles[0]!.id,
+      });
+      current = armyListReducer(current, { type: 'duplicateUnitProfile', id: current.selectedId! });
+      expect(current.list.unitProfiles.map(({ name }) => name)).toEqual([
+        'New Mech',
+        'New Mech (copy)',
+        'New Mech (copy) (copy)',
+      ]);
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+    });
+
+    it('leaves the Army List alone for an unknown id', () => {
+      const before = armyListReducer(state(), { type: 'addMech' });
+      expect(armyListReducer(before, { type: 'duplicateUnitProfile', id: 'missing' })).toEqual(
+        before,
+      );
+    });
+  });
+
+  describe('deleteUnitProfile', () => {
+    const threeMechs = () =>
+      [1, 2, 3].reduce((current) => armyListReducer(current, { type: 'addMech' }), state());
+
+    it('removes that Unit Profile, keeping the selection on another', () => {
+      const before = threeMechs();
+      const [first, second, third] = before.list.unitProfiles;
+      const next = armyListReducer(before, { type: 'deleteUnitProfile', id: first!.id });
+      expect(next.list.unitProfiles).toEqual([second, third]);
+      expect(next.selectedId).toBe(third!.id);
+    });
+
+    it('selects the next Unit Profile when deleting the selected one', () => {
+      let current = threeMechs();
+      const [, second, third] = current.list.unitProfiles;
+      current = armyListReducer(current, { type: 'selectUnitProfile', id: second!.id });
+      current = armyListReducer(current, { type: 'deleteUnitProfile', id: second!.id });
+      expect(current.selectedId).toBe(third!.id);
+    });
+
+    it('selects the previous one when deleting the selected last one', () => {
+      const before = threeMechs();
+      const [, second, third] = before.list.unitProfiles;
+      const next = armyListReducer(before, { type: 'deleteUnitProfile', id: third!.id });
+      expect(next.selectedId).toBe(second!.id);
+    });
+
+    it('clears the selection when deleting the only Unit Profile', () => {
+      const before = armyListReducer(state(), { type: 'addMech' });
+      const next = armyListReducer(before, {
+        type: 'deleteUnitProfile',
+        id: before.list.unitProfiles[0]!.id,
+      });
+      expect(next).toEqual({ ...state(), selectedId: null });
+    });
+
+    it('leaves the Army List alone for an unknown id', () => {
+      const before = threeMechs();
+      expect(armyListReducer(before, { type: 'deleteUnitProfile', id: 'missing' })).toEqual(before);
     });
   });
 
