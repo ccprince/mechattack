@@ -1,23 +1,45 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
+import type { ArmyList } from '../domain/armyList';
 import {
   armyListReducer,
   type ArmyListAction,
   type ArmyListState,
 } from '../domain/armyListReducer';
+import type { KeyValueStore } from '../domain/armyListStorage';
+import { useAutosave } from './useAutosave';
 
-// In memory only for now: every visit starts from this empty list.
-const initialState: ArmyListState = {
-  list: { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] },
-  selectedId: null,
-};
+const freshList: ArmyList = { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
 
 const ArmyListContext = createContext<
-  { state: ArmyListState; dispatch: Dispatch<ArmyListAction> } | undefined
+  | {
+      state: ArmyListState;
+      dispatch: Dispatch<ArmyListAction>;
+      /** Where the Army List autosaves, and its backup lives. */
+      store: KeyValueStore;
+      autosaveFailed: boolean;
+    }
+  | undefined
 >(undefined);
 
-export function ArmyListProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(armyListReducer, initialState);
-  return <ArmyListContext value={{ state, dispatch }}>{children}</ArmyListContext>;
+/** Holds the Army List, starting from `savedList` (or a fresh one), and autosaves every change. */
+export function ArmyListProvider({
+  store,
+  savedList,
+  children,
+}: {
+  store: KeyValueStore;
+  savedList: ArmyList | undefined;
+  children: ReactNode;
+}) {
+  const [state, dispatch] = useReducer(armyListReducer, savedList, (list = freshList) => ({
+    list,
+    selectedId: list.unitProfiles[0]?.id ?? null,
+  }));
+  const autosaveFailed = useAutosave(store, state.list);
+
+  return (
+    <ArmyListContext value={{ state, dispatch, store, autosaveFailed }}>{children}</ArmyListContext>
+  );
 }
 
 export function useArmyList() {
