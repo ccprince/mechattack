@@ -27,6 +27,8 @@ const hvOffset = 43;
 const topArmorRow = 150;
 const notes = { x: 258, y: 260, width: 116, fontSize: 10, lineHeight: 14, maxLines: 12 };
 const illegalMaxLines = 2;
+/** Strokes the ILLEGAL line in the `.val` fill color to embolden it: only the 600 weight is bundled. */
+const illegalStroke = 0.6;
 // Illegal marks (docs/cards.md): the name triangle, and each Hardpoint marker relative to its row.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const hardpointMark = { dx: 52, dy: -12, width: 11, height: 10 };
@@ -54,10 +56,15 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     const fitted = fitLine(text, maxWidth, size, measure);
     addValue(data, field, fitted.text, x, y, fitted.fontSize, 'middle');
   };
-  const wrapInNotesBox = (field: string, text: string, y: number, maxLines: number) => {
-    const lines = wrapLines(text, notes.width, notes.fontSize, maxLines, measure);
-    addWrappedValue(data, field, lines, notes.x, y, notes.fontSize, notes.lineHeight);
-    return lines.length;
+  const wrapInNotesBox = (
+    field: string,
+    text: string,
+    y: number,
+    maxLines: number,
+    maxWidth = notes.width,
+  ) => {
+    const lines = wrapLines(text, maxWidth, notes.fontSize, maxLines, measure);
+    return addWrappedValue(data, field, lines, notes.x, y, notes.fontSize, notes.lineHeight);
   };
 
   centered('bp', String(profile.bp), 211, 46, 70, 16);
@@ -70,10 +77,16 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
   const illegalText = illegalNote(issues);
-  const illegalLines = illegalText
-    ? wrapInNotesBox('illegal', illegalText, notes.y, illegalMaxLines)
-    : 0;
-  if (illegalText) addWarningTriangle(data, 'illegal', nameMark);
+  let illegalLines = 0;
+  if (illegalText) {
+    // The stroke widens each glyph by its width, so the line wraps that much narrower.
+    const maxWidth = notes.width - illegalStroke;
+    const illegal = wrapInNotesBox('illegal', illegalText, notes.y, illegalMaxLines, maxWidth);
+    illegal.style.stroke = '#1a1a1a';
+    illegal.style.strokeWidth = `${illegalStroke}px`;
+    illegalLines = illegal.childElementCount;
+    addWarningTriangle(data, 'illegal', nameMark);
+  }
   wrapInNotesBox(
     'notes',
     profile.notes,

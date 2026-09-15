@@ -19,6 +19,10 @@ function lines(svg: SVGSVGElement, name: string): string[] {
   return Array.from(tspans, (tspan) => tspan.textContent ?? '');
 }
 
+function overlaps(a: DOMRect, b: DOMRect): boolean {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
 function marks(svg: SVGSVGElement): string[] {
   return Array.from(svg.querySelectorAll('[data-mark]'), (mark) => mark.getAttribute('data-mark')!);
 }
@@ -127,14 +131,51 @@ describe('buildMechCardSvg', () => {
     it.each([
       { size: 'large', scale: 1 },
       { size: 'sleeve', scale: 2.5 / 3.9 },
-    ])('renders the marks at $size size', async ({ size, scale }) => {
-      const svg = buildMechCardSvg(illegalMech, createValueMeasure());
+    ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
+      // A mark on every Hardpoint, beside the longest short name, under a name that fills its box.
+      const crowdedMech: MechProfile = {
+        ...illegalMech,
+        name: 'Annihilator Prime Mk. IV Siege Variant',
+        class: 'Light',
+        hardpoints: {
+          leftArm: 'Heavy Machine Gun (w/Armor Piercing Ammo)',
+          rightArm: 'Medium Machine Gun (w/Armor Piercing Ammo)',
+          leftTorso: 'Improved Weapon Targeting System',
+          rightTorso: 'Plasma Lance',
+        },
+      };
+      const svg = buildMechCardSvg(crowdedMech, createValueMeasure());
       svg.setAttribute('width', `${3.9 * scale}in`);
       svg.setAttribute('height', `${5.1 * scale}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({ element: svg, path: `../../test-output/illegal-card-${size}.png` });
+
+      const card = svg.getBoundingClientRect();
+      const texts = Array.from(svg.querySelectorAll('text'), (text) =>
+        text.getBoundingClientRect(),
+      );
+      const markRects = Array.from(svg.querySelectorAll('[data-mark]'), (mark) =>
+        mark.getBoundingClientRect(),
+      );
       svg.remove();
+
+      expect(marks(svg)).toEqual([
+        'illegal',
+        'la-illegal',
+        'ra-illegal',
+        'lt-illegal',
+        'rt-illegal',
+      ]);
+      for (const mark of markRects) {
+        expect(mark.left).toBeGreaterThanOrEqual(card.left);
+        expect(mark.right).toBeLessThanOrEqual(card.right);
+        expect(mark.top).toBeGreaterThanOrEqual(card.top);
+        expect(mark.bottom).toBeLessThanOrEqual(card.bottom);
+        // 11 viewBox units, about 0.07" even at Sleeve size.
+        expect(mark.width).toBeGreaterThanOrEqual(6.5);
+        expect(texts.filter((text) => overlaps(mark, text))).toEqual([]);
+      }
     });
   });
 
