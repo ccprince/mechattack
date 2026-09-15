@@ -8,7 +8,8 @@
 }
 
 .name,
-.limit {
+.limit,
+.printSize {
   display: grid;
   gap: 0.25rem;
   font-size: 0.8rem;
@@ -46,4 +47,10 @@
   flex-basis: 100%;
   margin: 0;
   color: #a31515;
+}
+
+.printControls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
 }

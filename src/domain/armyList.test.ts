@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { armyListSchema, bpTotal, hasNameClash, isOverBpLimit, type ArmyList } from './armyList';
+import {
+  armyListSchema,
+  bpTotal,
+  fieldedCopies,
+  hasFieldedCopies,
+  hasNameClash,
+  isOverBpLimit,
+  type ArmyList,
+} from './armyList';
 import type { MechProfile } from './mech';
 
 function mech(overrides: Partial<MechProfile> = {}): MechProfile {
@@ -32,7 +40,7 @@ describe('armyListSchema', () => {
 
   it('accepts the edges of every range', () => {
     const low = mech({ id: 'u1', bp: 1, mv: 0, tp: 0, hc: 0, armor: 0, quantity: 0 });
-    const high = mech({ id: 'u2', bp: 20, mv: 9, tp: 9, hc: 9, armor: 150 });
+    const high = mech({ id: 'u2', bp: 20, mv: 9, tp: 9, hc: 9, armor: 150, quantity: 100 });
     expect(armyListSchema.safeParse(list({ unitProfiles: [low, high] })).success).toBe(true);
   });
 
@@ -48,6 +56,7 @@ describe('armyListSchema', () => {
     ['negative Armor', { armor: -10 }],
     ['negative quantity', { quantity: -1 }],
     ['fractional quantity', { quantity: 1.5 }],
+    ['quantity 101', { quantity: 101 }],
   ])('rejects %s', (_, overrides) => {
     expect(armyListSchema.safeParse(list({ unitProfiles: [mech(overrides)] })).success).toBe(false);
   });
@@ -90,6 +99,29 @@ describe('isOverBpLimit', () => {
     expect(
       isOverBpLimit(list({ bpLimit: 23, unitProfiles: [mech({ bp: 12, quantity: 2 })] })),
     ).toBe(true);
+  });
+});
+
+describe('fieldedCopies', () => {
+  it('repeats each Unit Profile once per copy fielded, in list order, skipping quantity 0', () => {
+    const pair = mech({ id: 'u1', name: 'Pair', quantity: 2 });
+    const reserve = mech({ id: 'u2', name: 'Reserve', quantity: 0 });
+    const scout = mech({ id: 'u3', name: 'Scout', quantity: 1 });
+    const army = list({ unitProfiles: [pair, reserve, scout] });
+    expect(fieldedCopies(army)).toEqual([pair, pair, scout]);
+  });
+
+  it('is empty when nothing is fielded', () => {
+    expect(fieldedCopies(list({ unitProfiles: [mech({ quantity: 0 })] }))).toEqual([]);
+  });
+});
+
+describe('hasFieldedCopies', () => {
+  it('is true once any Unit Profile has a quantity above 0', () => {
+    const reserve = mech({ id: 'u1', quantity: 0 });
+    expect(hasFieldedCopies(list())).toBe(false);
+    expect(hasFieldedCopies(list({ unitProfiles: [reserve] }))).toBe(false);
+    expect(hasFieldedCopies(list({ unitProfiles: [reserve, mech({ id: 'u2' })] }))).toBe(true);
   });
 });
 

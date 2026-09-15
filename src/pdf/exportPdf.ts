@@ -1,7 +1,11 @@
 import { jsPDF } from 'jspdf';
 import { svg2pdf } from 'svg2pdf.js';
+import type { Measure } from '../cards/fitText';
 import { cardFonts } from '../cards/fonts';
+import { buildMechCardSvg } from '../cards/mechCard';
 import { slotRect, slotsPerPage, type PrintSize } from '../cards/pageLayout';
+import { fieldedCopies, type ArmyList } from '../domain/armyList';
+import type { MechProfile } from '../domain/mech';
 import { rasterizeTexture } from './texture';
 
 export interface PrintableCard {
@@ -10,6 +14,25 @@ export interface PrintableCard {
 }
 
 const pointsPerInch = 72;
+
+/** Prints one card per fielded copy of every Unit Profile on the Army List, in list order. */
+export function exportArmyListPdf(
+  list: ArmyList,
+  size: PrintSize,
+  measure: Measure,
+): Promise<jsPDF> {
+  // Copies of a Unit Profile share one card: exportCardsPdf never changes the SVG it's given.
+  const svgs = new Map<MechProfile, SVGSVGElement>();
+  const cards = fieldedCopies(list).map((profile): PrintableCard => {
+    let svg = svgs.get(profile);
+    if (!svg) {
+      svg = buildMechCardSvg(profile, measure);
+      svgs.set(profile, svg);
+    }
+    return { kind: profile.kind, svg };
+  });
+  return exportCardsPdf(cards, size);
+}
 
 /** Lays cards out on US Letter pages at one print size and returns the PDF document. */
 export async function exportCardsPdf(cards: PrintableCard[], size: PrintSize): Promise<jsPDF> {

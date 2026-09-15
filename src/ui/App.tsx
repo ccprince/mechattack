@@ -53,7 +53,7 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
     <main className={styles.page}>
       <h1 className={styles.title}>Mech Attack List Builder</h1>
       {banner}
-      <ArmyListHeader card={card} onError={setError} />
+      <ArmyListHeader measure={measure} onError={setError} />
       {autosaveFailed && (
         <p role="status">Couldn't save to this browser, so changes will be lost on reload.</p>
       )}

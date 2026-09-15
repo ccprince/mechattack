@@ -24,6 +24,16 @@ export function bpTotal(list: ArmyList): number {
   return list.unitProfiles.reduce((total, profile) => total + profile.bp * profile.quantity, 0);
 }
 
+/** One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing. */
+export function fieldedCopies(list: ArmyList): MechProfile[] {
+  return list.unitProfiles.flatMap((profile) => Array<MechProfile>(profile.quantity).fill(profile));
+}
+
+/** Whether anything would print. */
+export function hasFieldedCopies(list: ArmyList): boolean {
+  return list.unitProfiles.some((profile) => profile.quantity > 0);
+}
+
 /** A warning for the Army List, never a block (and not an Issue). */
 export function isOverBpLimit(list: ArmyList): boolean {
   return bpTotal(list) > list.bpLimit;
