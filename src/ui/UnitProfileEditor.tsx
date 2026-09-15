@@ -1,6 +1,6 @@
 import { useId, useMemo, type ReactNode } from 'react';
 import type { Measure } from '../cards/fitText';
-import { buildUnitCardSvg } from '../cards/unitCard';
+import { buildUnitCardSvg, type CardedUnitProfile } from '../cards/unitCard';
 import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
@@ -53,7 +53,7 @@ export function UnitProfileEditor({
   profile,
   measure,
 }: {
-  profile: MechProfile | VehicleProfile;
+  profile: CardedUnitProfile;
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
 }) {
@@ -116,7 +116,7 @@ function UnitCardPreview({
   profile,
   measure,
 }: {
-  profile: MechProfile | VehicleProfile;
+  profile: CardedUnitProfile;
   measure: Measure | undefined;
 }) {
   // Rebuilt on every edit: the card is never patched in place (ADR 0002).

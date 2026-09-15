@@ -2,12 +2,10 @@ import { jsPDF } from 'jspdf';
 import { svg2pdf } from 'svg2pdf.js';
 import type { Measure } from '../cards/fitText';
 import { cardFonts } from '../cards/fonts';
-import { buildUnitCardSvg } from '../cards/unitCard';
+import { buildUnitCardSvg, hasCard, type CardedUnitProfile } from '../cards/unitCard';
 import { slotRect, slotsPerPage, type PrintSize } from '../cards/pageLayout';
 import { fieldedCopies, type ArmyList } from '../domain/armyList';
-import type { MechProfile } from '../domain/mech';
 import type { UnitProfile } from '../domain/unitProfile';
-import type { VehicleProfile } from '../domain/vehicle';
 import { rasterizeTexture } from './texture';
 
 export interface PrintableCard {
@@ -27,18 +25,17 @@ export function exportArmyListPdf(
   measure: Measure,
 ): Promise<jsPDF> {
   // Copies of a Unit Profile share one card: exportCardsPdf never changes the SVG it's given.
-  const svgs = new Map<MechProfile | VehicleProfile, SVGSVGElement>();
-  const printable = fieldedCopies(list).filter(
-    (profile): profile is MechProfile | VehicleProfile => profile.kind !== 'Troop',
-  );
-  const cards = printable.map((profile): PrintableCard => {
-    let svg = svgs.get(profile);
-    if (!svg) {
-      svg = buildUnitCardSvg(profile, measure);
-      svgs.set(profile, svg);
-    }
-    return { kind: profile.kind, svg };
-  });
+  const svgs = new Map<CardedUnitProfile, SVGSVGElement>();
+  const cards = fieldedCopies(list)
+    .filter(hasCard)
+    .map((profile): PrintableCard => {
+      let svg = svgs.get(profile);
+      if (!svg) {
+        svg = buildUnitCardSvg(profile, measure);
+        svgs.set(profile, svg);
+      }
+      return { kind: profile.kind, svg };
+    });
   return exportCardsPdf(cards, size);
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
+import { hasCard } from '../cards/unitCard';
 import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import styles from './App.module.css';
 import { ArmyListHeader } from './ArmyListHeader';
@@ -25,9 +26,9 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
 
 function ArmyListEditor({ banner }: { banner: ReactNode }) {
   const { autosaveFailed } = useArmyList();
-  const selectedProfile = useSelectedUnitProfile();
-  // Troops can't be edited yet: only Mechs and Vehicles open in the editor.
-  const selected = selectedProfile?.kind === 'Troop' ? undefined : selectedProfile;
+  const selected = useSelectedUnitProfile();
+  // The editor previews the card, so only a Unit Profile whose kind has one opens in it.
+  const editable = selected && hasCard(selected) ? selected : undefined;
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -56,8 +57,8 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
       {error && <p role="alert">{error}</p>}
       <div className={styles.columns}>
         <UnitProfileList />
-        {selected ? (
-          <UnitProfileEditor key={selected.id} profile={selected} measure={measure} />
+        {editable ? (
+          <UnitProfileEditor key={editable.id} profile={editable} measure={measure} />
         ) : (
           <p className={styles.empty}>Add a Mech or Vehicle to start building the Army List.</p>
         )}
