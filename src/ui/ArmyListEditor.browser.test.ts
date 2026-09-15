@@ -50,18 +50,18 @@ describe('header', () => {
     await expect.element(field('Bp Limit')).toHaveValue(50);
 
     await addMech();
-    await field('Bp').fill('7');
+    await field('Armor').fill('70');
     await expect.element(page.getByText('Bp 7 /')).toBeInTheDocument();
   });
 
   it('counts each Unit Profile once per copy fielded', async () => {
     loadList({
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
-        mech({ id: 'a', name: 'Pair', bp: 4, quantity: 2 }),
-        mech({ id: 'b', name: 'Reserve', bp: 9, quantity: 0 }),
+        mech({ id: 'a', name: 'Pair', armor: 40, quantity: 2 }),
+        mech({ id: 'b', name: 'Reserve', armor: 70, quantity: 0 }),
       ],
     });
     await expect.element(page.getByText('Bp 8 /')).toBeInTheDocument();
@@ -69,7 +69,8 @@ describe('header', () => {
 
   it('warns while the Bp total is over the Bp Limit', async () => {
     await loadWithNewMech();
-    await field('Bp').fill('12');
+    await picker('Class').selectOptions('Heavy');
+    await field('Armor').fill('120');
     await field('Bp Limit').fill('10');
     await expect.element(page.getByText('Over the Bp Limit by 2')).toBeInTheDocument();
 
@@ -109,7 +110,7 @@ describe('Unit Profile list', () => {
 
   it('follows name and Bp edits, and marks a blank name', async () => {
     await loadWithNewMech();
-    await field('Bp').fill('6');
+    await field('Armor').fill('60');
     await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
     await field('Name').fill('');
     await expect.element(unitProfiles().getByText('Unnamed')).toBeInTheDocument();
@@ -118,12 +119,12 @@ describe('Unit Profile list', () => {
 
 describe('quantity, Duplicate and Delete', () => {
   const twoMechList = (): ArmyList => ({
-    version: 1,
+    version: 2,
     name: 'Iron Legion',
     bpLimit: 50,
     unitProfiles: [
-      mech({ id: 'a', name: 'Ironclad', bp: 6, quantity: 1 }),
-      mech({ id: 'b', name: 'Scout', bp: 3, quantity: 1 }),
+      mech({ id: 'a', name: 'Ironclad', armor: 60, quantity: 1 }),
+      mech({ id: 'b', name: 'Scout', armor: 30, quantity: 1 }),
     ],
   });
 
@@ -155,7 +156,7 @@ describe('quantity, Duplicate and Delete', () => {
     await expect.element(openButton('Ironclad (copy)')).toHaveAttribute('aria-current', 'true');
     await expect.element(field('Name')).toHaveValue('Ironclad (copy)');
     await expect.element(profileRow('Ironclad (copy)').getByLabelText('Qty')).toHaveValue(0);
-    await expect.element(field('Bp')).toHaveValue(6);
+    await expect.element(field('Armor')).toHaveValue(60);
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
     expect(
       unitProfiles()
@@ -208,41 +209,62 @@ describe('Unit Profile editor', () => {
 
     await field('Name').fill('Ironclad');
     await picker('Class').selectOptions('Heavy');
-    await field('Bp').fill('18');
-    await field('Mv').fill('4');
-    await field('Tp').fill('2');
-    await field('Hc').fill('3');
     await field('Armor').fill('110');
+    await field('Heat Sinks').fill('1');
+    await field('Engine Upgrades').fill('2');
     await field('Notes').fill('Jump jets');
 
     await expect.poll(() => cardField('name')).toBe('Ironclad');
     await expect.poll(() => cardField('class')).toBe('Heavy');
-    await expect.poll(() => cardField('bp')).toBe('18');
+    await expect.poll(() => cardField('bp')).toBe('17');
     await expect.poll(() => cardField('mv')).toBe('4');
-    await expect.poll(() => cardField('tp')).toBe('2');
-    await expect.poll(() => cardField('hc')).toBe('3');
+    await expect.poll(() => cardField('tp')).toBe('4');
+    await expect.poll(() => cardField('hc')).toBe('5');
     await expect.poll(() => cardField('armor')).toBe('110');
     await expect.poll(() => cardField('notes')).toBe('Jump jets');
     await expect.element(page.getByRole('img', { name: 'Ironclad record card' })).toBeVisible();
   });
 
+  it('works out Bp, Mv, Tp and Hc from the Class and upgrades, showing Bp against its max', async () => {
+    await loadWithNewMech();
+    await expect.element(field('Bp')).toHaveTextContent('0 / 8');
+    await expect.element(field('Mv')).toHaveTextContent('5');
+    await expect.element(field('Tp')).toHaveTextContent('5');
+    await expect.element(field('Hc')).toHaveTextContent('4');
+
+    await field('Armor').fill('20');
+    await field('Heat Sinks').fill('2');
+    await field('Engine Upgrades').fill('1');
+    await expect.element(field('Bp')).toHaveTextContent('8 / 8');
+    await expect.element(field('Mv')).toHaveTextContent('6');
+    await expect.element(field('Tp')).toHaveTextContent('5');
+    await expect.element(field('Hc')).toHaveTextContent('6');
+
+    // Changing Class keeps the upgrades and works the stats out from the new Frame.
+    await picker('Class').selectOptions('Heavy');
+    await expect.element(field('Bp')).toHaveTextContent('8 / 20');
+    await expect.element(field('Mv')).toHaveTextContent('4');
+    await expect.element(field('Hc')).toHaveTextContent('6');
+    await expect.element(unitProfiles().getByText('8 Bp')).toBeInTheDocument();
+  });
+
   it('holds an out-of-range value as a draft, then pulls it into range on blur', async () => {
     await loadWithNewMech();
-    await expect.poll(() => cardField('bp')).toBe('1');
-    await field('Bp').fill('25');
-    await expect.element(field('Bp')).toHaveValue(25);
+    await expect.poll(() => cardField('mv')).toBe('5');
+    await field('Engine Upgrades').fill('5');
+    await expect.element(field('Engine Upgrades')).toHaveValue(5);
     // The input renders the draft in the same commit that would have rebuilt the card.
-    expect(cardField('bp')).toBe('1');
+    expect(cardField('mv')).toBe('5');
 
     await field('Name').click();
-    await expect.element(field('Bp')).toHaveValue(20);
-    await expect.poll(() => cardField('bp')).toBe('20');
+    await expect.element(field('Engine Upgrades')).toHaveValue(2);
+    await expect.poll(() => cardField('tp')).toBe('6');
   });
 
   // One case per rule; `numberRange.test.ts` covers the rest in Node.
   it.each([
-    { rule: 'below the min', label: 'Bp', start: '5', typed: '0', settled: 1 },
-    { rule: 'above the max', label: 'Tp', start: '5', typed: '12', settled: 9 },
+    { rule: 'below the min', label: 'Heat Sinks', start: '5', typed: '-1', settled: 0 },
+    { rule: 'above the max', label: 'Engine Upgrades', start: '1', typed: '5', settled: 2 },
     { rule: 'off the step', label: 'Armor', start: '80', typed: '55', settled: 60 },
   ])(
     'settles a value $rule on Enter ($label $typed to $settled)',
@@ -257,10 +279,10 @@ describe('Unit Profile editor', () => {
 
   it('keeps the last value when the typed text is not a number', async () => {
     await loadWithNewMech();
-    await field('Mv').fill('4');
-    await field('Mv').fill('');
+    await field('Heat Sinks').fill('4');
+    await field('Heat Sinks').fill('');
     await field('Name').click();
-    await expect.element(field('Mv')).toHaveValue(4);
+    await expect.element(field('Heat Sinks')).toHaveValue(4);
   });
 });
 
@@ -308,7 +330,6 @@ describe('Issues', () => {
   it('keeps a mount that became too heavy after a Class change, and flags it', async () => {
     await loadWithNewMech();
     await picker('Class').selectOptions('Heavy');
-    await field('Bp').fill('8');
     await picker('Left Arm').selectOptions('Heavy Laser');
     await picker('Right Arm').selectOptions('Heavy Cannon');
     await expect.poll(() => cardField('ra-weapon')).toBe('HC');
@@ -327,29 +348,43 @@ describe('Issues', () => {
     await expect.element(unitProfiles().getByText('2 Issues')).toBeInTheDocument();
   });
 
-  it('flags Bp below the Bp of its mounts, until Bp covers them', async () => {
+  it('flags a Mech costing no Bp, until it costs some', async () => {
     await loadWithNewMech();
-    await picker('Left Arm').selectOptions('Light Cannon');
     await expect
-      .element(issues().getByText('Bp 1 is less than the 2 Bp it mounts'))
+      .element(issues().getByText('Bp is 0; a Mech must cost at least 1'))
       .toBeInTheDocument();
     await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
 
-    await field('Bp').fill('2');
+    await field('Armor').fill('10');
     await expect.element(issues()).not.toBeInTheDocument();
     await expect.element(unitProfiles().getByText(/Issue/)).not.toBeInTheDocument();
   });
 
+  it("flags Bp over the Frame's max, and lets the upgrades go past it", async () => {
+    await loadWithNewMech();
+    await picker('Left Arm').selectOptions('Light Cannon');
+    await field('Heat Sinks').fill('4');
+    await expect.element(field('Heat Sinks')).toHaveValue(4);
+    await expect
+      .element(issues().getByText("Bp 10 is more than a Light Mech's max Bp of 8"))
+      .toBeInTheDocument();
+    await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Bp over max');
+
+    await picker('Class').selectOptions('Medium');
+    await expect.element(issues()).not.toBeInTheDocument();
+    await expect.element(field('Bp')).toHaveTextContent('10 / 14');
+  });
+
   it('flags Support Equipment on an arm and names missing from the Catalog, even at quantity 0', async () => {
     loadList({
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
         mech({
           id: 'a',
           name: 'Oddball',
-          bp: 5,
+          armor: 50,
           quantity: 0,
           hardpoints: {
             leftArm: 'Remote Guided Missile System',
@@ -389,7 +424,7 @@ describe('Issues', () => {
     await loadWithNewMech();
     await picker('Class').selectOptions('Heavy');
     await picker('Left Arm').selectOptions('Heavy Laser');
-    await field('Bp').fill('5');
+    await field('Armor').fill('50');
     await expect.poll(() => cardField('armor')).not.toBeNull();
     expect(cardMarks()).toEqual([]);
 
@@ -404,7 +439,7 @@ describe('Issues', () => {
 
   it('marks only the Unit Profiles with Issues in the list', async () => {
     loadList({
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
@@ -417,7 +452,7 @@ describe('Issues', () => {
       ],
     });
 
-    await expect.element(profileRow('Flawed').getByText('2 Issues')).toBeInTheDocument();
+    await expect.element(profileRow('Flawed').getByText('1 Issue')).toBeInTheDocument();
     expect(profileRow('Sound').getByText(/Issue/).query()).toBeNull();
     // The first Unit Profile is open, and has none to list.
     await expect.element(field('Name')).toHaveValue('Sound');
@@ -452,7 +487,7 @@ describe('Download PDF', () => {
     );
     const createObjectURL = vi.spyOn(URL, 'createObjectURL');
     const list: ArmyList = {
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
@@ -483,12 +518,12 @@ describe('Download PDF', () => {
   it('asks before printing fielded Unit Profiles with Issues', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     loadList({
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
         mech({ id: 'a', name: 'Sound' }),
-        mech({ id: 'b', name: 'Cheap', bp: 1, hardpoints: heavyLeftArm }),
+        mech({ id: 'b', name: 'Cheap', hardpoints: heavyLeftArm }),
         mech({ id: 'c', name: 'Flawed', quantity: 2, hardpoints: heavyLeftArm }),
       ],
     });
@@ -511,7 +546,7 @@ describe('Download PDF', () => {
     const save = vi.fn();
     vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
     loadList({
-      version: 1,
+      version: 2,
       name: 'Iron Legion',
       bpLimit: 50,
       unitProfiles: [
@@ -530,11 +565,10 @@ function mech(profile: Partial<MechProfile> & Pick<MechProfile, 'id' | 'name'>):
   return {
     kind: 'Mech',
     class: 'Light',
-    bp: 1,
-    mv: 0,
-    tp: 0,
-    hc: 0,
-    armor: 0,
+    // 1 Bp, so the default Mech is Legal.
+    armor: 10,
+    heatSinks: 0,
+    engineUpgrades: 0,
     notes: '',
     hardpoints: { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null },
     quantity: 1,

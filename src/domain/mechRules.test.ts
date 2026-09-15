@@ -11,11 +11,9 @@ function mech(overrides: Partial<MechProfile> = {}): MechProfile {
     id: 'u1',
     name: 'Ironclad',
     class: 'Heavy',
-    bp: 20,
-    mv: 3,
-    tp: 4,
-    hc: 5,
     armor: 100,
+    heatSinks: 0,
+    engineUpgrades: 0,
     notes: '',
     hardpoints: { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null },
     quantity: 1,
@@ -28,7 +26,6 @@ describe('unitProfileIssues', () => {
     expect(
       unitProfileIssues(
         mech({
-          bp: 10,
           hardpoints: {
             leftArm: 'Heavy Laser',
             rightArm: 'Medium Cannon',
@@ -42,6 +39,7 @@ describe('unitProfileIssues', () => {
 
   it('flags every Heavy mount, and keeps them, when a Heavy Mech changes to Light', () => {
     const heavy = mech({
+      armor: 0,
       hardpoints: {
         leftArm: 'Heavy Laser',
         rightArm: 'Light Cannon',
@@ -49,7 +47,7 @@ describe('unitProfileIssues', () => {
         rightTorso: 'Electronic Counter Targeting System',
       },
     });
-    const state = { list: { version: 1 as const, name: 'L', bpLimit: 50, unitProfiles: [heavy] } };
+    const state = { list: { version: 2 as const, name: 'L', bpLimit: 50, unitProfiles: [heavy] } };
     const light = armyListReducer(
       { ...state, selectedId: null },
       { type: 'updateUnitProfile', id: heavy.id, changes: { class: 'Light' } },
@@ -65,6 +63,7 @@ describe('unitProfileIssues', () => {
         name: 'Electronic Counter Targeting System',
         entryClass: 'Heavy',
       },
+      { rule: 'overMaxBp', bp: 11, mechClass: 'Light', maxBp: 8 },
     ]);
   });
 
@@ -95,7 +94,7 @@ describe('unitProfileIssues', () => {
     ).toEqual([{ rule: 'notInCatalog', hardpoint: 'rightArm', name: 'Autocannon' }]);
   });
 
-  describe('Bp below its mounts', () => {
+  describe('Bp against the Frame', () => {
     // Heavy Cannon 4 + Heavy Laser 3 twice = 10 Bp, plus an unknown name that costs nothing known.
     const hardpoints = {
       leftArm: 'Heavy Laser',
@@ -104,35 +103,35 @@ describe('unitProfileIssues', () => {
       rightTorso: 'Autocannon',
     };
 
-    it('flags a unit costing less Bp than what it mounts', () => {
-      expect(unitProfileIssues(mech({ bp: 9, hardpoints }))).toContainEqual({
-        rule: 'bpBelowMounts',
-        bp: 9,
-        mountsBp: 10,
-      });
-    });
-
-    it('accepts a unit costing exactly what it mounts, a lower bound only', () => {
-      expect(unitProfileIssues(mech({ bp: 10, hardpoints }))).toEqual([
+    it('accepts a Mech costing exactly its Frame max Bp', () => {
+      // 60 Armor + 2 Heat Sinks = 10 Bp, with 10 Bp of mounts.
+      expect(unitProfileIssues(mech({ armor: 60, heatSinks: 2, hardpoints }))).toEqual([
         { rule: 'notInCatalog', hardpoint: 'rightTorso', name: 'Autocannon' },
       ]);
     });
 
+    it('flags a Mech costing more than its Frame max Bp', () => {
+      expect(unitProfileIssues(mech({ armor: 70, heatSinks: 2, hardpoints }))).toContainEqual({
+        rule: 'overMaxBp',
+        bp: 21,
+        mechClass: 'Heavy',
+        maxBp: 20,
+      });
+    });
+
     it('counts a too-heavy mount, which the Mech still carries', () => {
-      const issues = unitProfileIssues(mech({ class: 'Light', bp: 1, hardpoints }));
-      expect(issues).toContainEqual({ rule: 'bpBelowMounts', bp: 1, mountsBp: 10 });
+      const issues = unitProfileIssues(mech({ class: 'Light', armor: 0, hardpoints }));
+      expect(issues).toContainEqual({ rule: 'overMaxBp', bp: 10, mechClass: 'Light', maxBp: 8 });
+    });
+
+    it('flags a Mech costing no Bp, but not one costing 1', () => {
+      expect(unitProfileIssues(mech({ class: 'Light', armor: 0 }))).toEqual([{ rule: 'noBp' }]);
+      expect(unitProfileIssues(mech({ class: 'Light', armor: 10 }))).toEqual([]);
     });
   });
 
   it('reports Issues on a Unit Profile that is not fielded', () => {
-    const issues = unitProfileIssues(
-      mech({
-        quantity: 0,
-        bp: 1,
-        hardpoints: { leftArm: 'Heavy Laser', rightArm: null, leftTorso: null, rightTorso: null },
-      }),
-    );
-    expect(issues).toEqual([{ rule: 'bpBelowMounts', bp: 1, mountsBp: 3 }]);
+    expect(unitProfileIssues(mech({ quantity: 0, armor: 0 }))).toEqual([{ rule: 'noBp' }]);
   });
 });
 
@@ -193,7 +192,11 @@ describe('describeIssue', () => {
       { rule: 'notInCatalog', hardpoint: 'leftTorso', name: 'Autocannon' },
       'Left Torso: Autocannon is not in the Catalog',
     ],
-    [{ rule: 'bpBelowMounts', bp: 9, mountsBp: 10 }, 'Bp 9 is less than the 10 Bp it mounts'],
+    [
+      { rule: 'overMaxBp', bp: 16, mechClass: 'Light', maxBp: 8 },
+      "Bp 16 is more than a Light Mech's max Bp of 8",
+    ],
+    [{ rule: 'noBp' }, 'Bp is 0; a Mech must cost at least 1'],
   ] as const)('describes %o', (issue, text) => {
     expect(describeIssue(issue)).toBe(text);
   });

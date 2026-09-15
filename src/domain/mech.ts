@@ -14,15 +14,12 @@ export const hardpointLabels: Record<Hardpoint, string> = {
   rightTorso: 'Right Torso',
 };
 
-const stat: NumberRange = { min: 0, max: 9, step: 1 };
-
-/** The typed-in stats' ranges, shared by the schema and the editor. */
-export const mechStatRanges = {
-  bp: { min: 1, max: 20, step: 1 },
-  mv: stat,
-  tp: stat,
-  hc: stat,
+/** The chosen upgrades' ranges, shared by the schema and the editor. Frame Bp is the real limit. */
+export const mechUpgradeRanges = {
   armor: { min: 0, max: 150, step: 10 },
+  /** 10 Heat Sinks cost 20 Bp, the most any Frame allows. */
+  heatSinks: { min: 0, max: 10, step: 1 },
+  engineUpgrades: { min: 0, max: 2, step: 1 },
 } as const satisfies Record<string, NumberRange>;
 
 /** Copies fielded. 100 is far more than any game needs, and keeps printing every copy cheap. */
@@ -41,11 +38,9 @@ export const mechProfileSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   class: z.enum(mechClasses),
-  bp: inRange(mechStatRanges.bp),
-  mv: inRange(mechStatRanges.mv),
-  tp: inRange(mechStatRanges.tp),
-  hc: inRange(mechStatRanges.hc),
-  armor: inRange(mechStatRanges.armor),
+  armor: inRange(mechUpgradeRanges.armor),
+  heatSinks: inRange(mechUpgradeRanges.heatSinks),
+  engineUpgrades: inRange(mechUpgradeRanges.engineUpgrades),
   notes: z.string(),
   hardpoints: z.record(z.enum(hardpoints), mountedName),
   /** Copies fielded; 0 keeps the Unit Profile on the list without fielding it. */

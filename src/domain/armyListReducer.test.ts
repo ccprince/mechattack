@@ -4,7 +4,7 @@ import { armyListReducer, type ArmyListState } from './armyListReducer';
 
 function state(overrides: Partial<ArmyListState['list']> = {}): ArmyListState {
   return {
-    list: { version: 1, name: 'Iron Legion', bpLimit: 40, unitProfiles: [], ...overrides },
+    list: { version: 2, name: 'Iron Legion', bpLimit: 40, unitProfiles: [], ...overrides },
     selectedId: null,
   };
 }
@@ -29,11 +29,9 @@ describe('armyListReducer', () => {
           id: expect.any(String),
           name: 'New Mech',
           class: 'Light',
-          bp: 1,
-          mv: 0,
-          tp: 0,
-          hc: 0,
           armor: 0,
+          heatSinks: 0,
+          engineUpgrades: 0,
           notes: '',
           hardpoints: { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null },
           quantity: 1,
@@ -75,7 +73,12 @@ describe('armyListReducer', () => {
     });
 
     it('still adds a Mech when the Army List is over its Bp Limit', () => {
-      const overLimit = armyListReducer(state({ bpLimit: 0 }), { type: 'addMech' });
+      let overLimit = armyListReducer(state({ bpLimit: 0 }), { type: 'addMech' });
+      overLimit = armyListReducer(overLimit, {
+        type: 'updateUnitProfile',
+        id: overLimit.selectedId!,
+        changes: { armor: 10 },
+      });
       expect(isOverBpLimit(overLimit.list)).toBe(true);
       const next = armyListReducer(overLimit, { type: 'addMech' });
       expect(next.list.unitProfiles).toHaveLength(2);
@@ -92,10 +95,17 @@ describe('armyListReducer', () => {
       const next = armyListReducer(before, {
         type: 'updateUnitProfile',
         id: first!.id,
-        changes: { name: 'Ironclad', class: 'Heavy', bp: 18, armor: 110, notes: 'Jump jets' },
+        changes: { name: 'Ironclad', class: 'Heavy', heatSinks: 2, armor: 110, notes: 'Jump jets' },
       });
       expect(next.list.unitProfiles).toEqual([
-        { ...first, name: 'Ironclad', class: 'Heavy', bp: 18, armor: 110, notes: 'Jump jets' },
+        {
+          ...first,
+          name: 'Ironclad',
+          class: 'Heavy',
+          heatSinks: 2,
+          armor: 110,
+          notes: 'Jump jets',
+        },
         second,
       ]);
     });
@@ -136,7 +146,7 @@ describe('armyListReducer', () => {
       const next = armyListReducer(before, {
         type: 'updateUnitProfile',
         id: before.list.unitProfiles[0]!.id,
-        changes: { mv: 4 },
+        changes: { engineUpgrades: 1 },
       });
       expect(next.selectedId).toBe(before.selectedId);
     });
@@ -148,6 +158,13 @@ describe('armyListReducer', () => {
         type: 'addMech',
       });
       const [first, second] = current.list.unitProfiles;
+      for (const { id } of [first!, second!]) {
+        current = armyListReducer(current, {
+          type: 'updateUnitProfile',
+          id,
+          changes: { armor: 10 },
+        });
+      }
       current = armyListReducer(current, { type: 'setQuantity', id: first!.id, quantity: 3 });
       current = armyListReducer(current, { type: 'setQuantity', id: second!.id, quantity: 0 });
       expect(current.list.unitProfiles.map(({ quantity }) => quantity)).toEqual([3, 0]);
@@ -171,7 +188,7 @@ describe('armyListReducer', () => {
       current = armyListReducer(current, {
         type: 'updateUnitProfile',
         id: first!.id,
-        changes: { name: 'Ironclad ', bp: 9, hardpoints: { leftArm: 'Light Laser' } },
+        changes: { name: 'Ironclad ', heatSinks: 3, hardpoints: { leftArm: 'Light Laser' } },
       });
       current = armyListReducer(current, { type: 'duplicateUnitProfile', id: first!.id });
 

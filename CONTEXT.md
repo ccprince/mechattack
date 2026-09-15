@@ -23,7 +23,7 @@ _Avoid_: Unit template, datasheet
 
 **Legal**:
 A Unit Profile is Legal when it breaks no build rule, such as mounting something heavier than its
-Class, naming something missing from the Catalog, or costing less Bp than what it mounts. Each broken
+Class, naming something missing from the Catalog, or costing more Bp than its Frame allows or no Bp at all. Each broken
 rule is an **Issue**. A printed card is taken as Legal at the table, so an illegal card is printed
 marked as such. Exceeding the Bp Limit is a problem with the Army List, not an Issue.
 _Avoid_: Valid, invalid (for build rules)
@@ -44,14 +44,27 @@ Stat abbreviations are written with an initial capital (Bp, not BP).
 
 **Bp** (Build Points):
 What a unit, Weapon or Support Equipment costs. A unit's Bp is its total cost, including what it
-mounts. It counts against the Bp Limit and is 1 to 20.
+mounts, and counts against the Bp Limit. A Mech's Bp is worked out, never chosen: 1 per 10 Armor,
+2 per Heat Sink, 2 per Engine Upgrade, plus the Bp of its mounts. Its Frame costs nothing.
+
+**Frame**:
+The base a Mech Class gives: starting Mv, Tp and Hc, and the most Bp a Mech of that Class may cost.
+Light: 8 Bp, Mv 5, Tp 5, Hc 4. Medium: 14 Bp, Mv 4, Tp 4, Hc 4. Heavy: 20 Bp, Mv 3, Tp 3, Hc 4.
+A Mech costing more than its Frame allows has an Issue. Comes with the Class; never chosen on its own.
+_Avoid_: Chassis
+
+**Heat Sink**:
+A Mech upgrade costing 2 Bp that adds 1 Hc. A Mech may take any number, within its Frame's Bp.
+
+**Engine Upgrade**:
+A Mech upgrade costing 2 Bp; a Mech takes at most two. The first adds 1 Mv, the second 1 Tp.
 
 **Mv** (Move Value):
 How far a unit moves. Like Tp and Hc, it follows from the unit's Class and upgrades rather than
 being chosen directly.
 
 **Tp** (Target Profile):
-How hard a unit is to hit.
+How hard a unit is to hit; higher is harder.
 
 **Hc** (Heat Control):
 A Mech's capacity to manage heat. Only Mechs track heat. Not the same as Hv.
@@ -60,7 +73,8 @@ A Mech's capacity to manage heat. Only Mechs track heat. Not the same as Hv.
 A Troop unit's starting strength, at most 20. Strength boxes above it are blanked on the card.
 
 **Armor**:
-A Mech or Vehicle's starting armor, always a multiple of 10. A Mech's is 0 to 150. Armor rows
+A Mech or Vehicle's starting armor, always a multiple of 10. A Mech's is 0 to 150 and costs 1 Bp
+per 10. Armor rows
 above it are blanked on the card.
 
 ### Weapons

@@ -1,4 +1,5 @@
 import { hasNameClash } from '../domain/armyList';
+import { mechStats } from '../domain/frame';
 import { quantityRange } from '../domain/mech';
 import { unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
@@ -32,7 +33,7 @@ export function UnitProfileList() {
                     {issueCount} {issueCount === 1 ? 'Issue' : 'Issues'}
                   </span>
                 )}
-                <span className={styles.itemBp}>{profile.bp} Bp</span>
+                <span className={styles.itemBp}>{mechStats(profile).bp} Bp</span>
               </button>
               <div className={styles.actions}>
                 <NumberField

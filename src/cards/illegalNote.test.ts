@@ -32,17 +32,21 @@ describe('illegalNote', () => {
     ).toBe('ILLEGAL: Left Torso not in Catalog');
   });
 
-  it('reports Bp below the mounts', () => {
-    expect(illegalNote([{ rule: 'bpBelowMounts', bp: 2, mountsBp: 6 }])).toBe(
-      'ILLEGAL: Bp below mounts',
+  it('reports Bp over the Frame max', () => {
+    expect(illegalNote([{ rule: 'overMaxBp', bp: 16, mechClass: 'Light', maxBp: 8 }])).toBe(
+      'ILLEGAL: Bp over max',
     );
+  });
+
+  it('reports a Mech costing no Bp', () => {
+    expect(illegalNote([{ rule: 'noBp' }])).toBe('ILLEGAL: Bp is 0');
   });
 
   it('counts several Issues', () => {
     expect(
       illegalNote([
         { rule: 'notInCatalog', hardpoint: 'leftTorso', name: 'Plasma Lance' },
-        { rule: 'bpBelowMounts', bp: 2, mountsBp: 6 },
+        { rule: 'noBp' },
       ]),
     ).toBe('ILLEGAL: 2 issues');
   });

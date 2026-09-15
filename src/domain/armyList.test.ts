@@ -17,11 +17,9 @@ function mech(overrides: Partial<MechProfile> = {}): MechProfile {
     id: 'u1',
     name: 'Ironclad',
     class: 'Heavy',
-    bp: 12,
-    mv: 4,
-    tp: 2,
-    hc: 3,
-    armor: 110,
+    armor: 90,
+    heatSinks: 0,
+    engineUpgrades: 0,
     notes: '',
     hardpoints: { leftArm: 'Heavy Laser', rightArm: null, leftTorso: null, rightTorso: null },
     quantity: 1,
@@ -29,8 +27,10 @@ function mech(overrides: Partial<MechProfile> = {}): MechProfile {
   };
 }
 
+const noMounts = { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null };
+
 function list(overrides: Partial<ArmyList> = {}): ArmyList {
-  return { version: 1, name: 'Iron Legion', bpLimit: 40, unitProfiles: [], ...overrides };
+  return { version: 2, name: 'Iron Legion', bpLimit: 40, unitProfiles: [], ...overrides };
 }
 
 describe('armyListSchema', () => {
@@ -40,18 +40,16 @@ describe('armyListSchema', () => {
   });
 
   it('accepts the edges of every range', () => {
-    const low = mech({ id: 'u1', bp: 1, mv: 0, tp: 0, hc: 0, armor: 0, quantity: 0 });
-    const high = mech({ id: 'u2', bp: 20, mv: 9, tp: 9, hc: 9, armor: 150, quantity: 100 });
+    const low = mech({ id: 'u1', armor: 0, heatSinks: 0, engineUpgrades: 0, quantity: 0 });
+    const high = mech({ id: 'u2', armor: 150, heatSinks: 10, engineUpgrades: 2, quantity: 100 });
     expect(armyListSchema.safeParse(list({ unitProfiles: [low, high] })).success).toBe(true);
   });
 
   it.each<[string, Partial<MechProfile>]>([
-    ['Bp 0', { bp: 0 }],
-    ['Bp 21', { bp: 21 }],
-    ['fractional Bp', { bp: 2.5 }],
-    ['Mv 10', { mv: 10 }],
-    ['negative Tp', { tp: -1 }],
-    ['Hc 10', { hc: 10 }],
+    ['negative Heat Sinks', { heatSinks: -1 }],
+    ['11 Heat Sinks', { heatSinks: 11 }],
+    ['3 Engine Upgrades', { engineUpgrades: 3 }],
+    ['fractional Engine Upgrades', { engineUpgrades: 1.5 }],
     ['Armor off a step of 10', { armor: 105 }],
     ['Armor 160', { armor: 160 }],
     ['negative Armor', { armor: -10 }],
@@ -63,7 +61,12 @@ describe('armyListSchema', () => {
   });
 
   it('rejects an unknown version', () => {
-    expect(armyListSchema.safeParse({ ...list(), version: 2 }).success).toBe(false);
+    expect(armyListSchema.safeParse({ ...list(), version: 3 }).success).toBe(false);
+  });
+
+  it('drops typed-in stats, which are worked out instead', () => {
+    const typed = { ...mech(), bp: 12, mv: 4, tp: 2, hc: 3 };
+    expect(armyListSchema.parse(list({ unitProfiles: [typed] })).unitProfiles[0]).toEqual(mech());
   });
 
   it('rejects two Unit Profiles with the same id', () => {
@@ -74,11 +77,12 @@ describe('armyListSchema', () => {
 
 describe('bpTotal', () => {
   it('sums each Unit Profile Bp times its quantity', () => {
+    // The default Mech costs 9 Armor + 3 Heavy Laser = 12 Bp.
     const army = list({
       unitProfiles: [
-        mech({ id: 'u1', bp: 12, quantity: 2 }),
-        mech({ id: 'u2', bp: 5, quantity: 3 }),
-        mech({ id: 'u3', bp: 20, quantity: 0 }),
+        mech({ id: 'u1', quantity: 2 }),
+        mech({ id: 'u2', armor: 50, hardpoints: noMounts, quantity: 3 }),
+        mech({ id: 'u3', armor: 150, quantity: 0 }),
       ],
     });
     expect(bpTotal(army)).toBe(39);
@@ -91,15 +95,11 @@ describe('bpTotal', () => {
 
 describe('isOverBpLimit', () => {
   it('is false at exactly the Bp Limit', () => {
-    expect(
-      isOverBpLimit(list({ bpLimit: 24, unitProfiles: [mech({ bp: 12, quantity: 2 })] })),
-    ).toBe(false);
+    expect(isOverBpLimit(list({ bpLimit: 24, unitProfiles: [mech({ quantity: 2 })] }))).toBe(false);
   });
 
   it('is true once the Bp total passes the Bp Limit', () => {
-    expect(
-      isOverBpLimit(list({ bpLimit: 23, unitProfiles: [mech({ bp: 12, quantity: 2 })] })),
-    ).toBe(true);
+    expect(isOverBpLimit(list({ bpLimit: 23, unitProfiles: [mech({ quantity: 2 })] }))).toBe(true);
   });
 });
 
@@ -159,11 +159,11 @@ describe('fieldedWithIssues', () => {
     const army = list({
       unitProfiles: [
         mech({ id: 'a', name: 'Sound' }),
-        mech({ id: 'b', name: 'Cheap', bp: 1 }),
-        mech({ id: 'c', name: 'Shelved', bp: 1, quantity: 0 }),
+        mech({ id: 'b', name: 'Bare', armor: 0, hardpoints: noMounts }),
+        mech({ id: 'c', name: 'Shelved', armor: 0, hardpoints: noMounts, quantity: 0 }),
         mech({ id: 'd', name: 'Overloaded', class: 'Light', quantity: 3 }),
       ],
     });
-    expect(fieldedWithIssues(army).map(({ name }) => name)).toEqual(['Cheap', 'Overloaded']);
+    expect(fieldedWithIssues(army).map(({ name }) => name)).toEqual(['Bare', 'Overloaded']);
   });
 });

@@ -1,6 +1,7 @@
 import mechTemplate from '../../cards/mech-card.svg?raw';
 import { hardpoints, type Hardpoint, type MechProfile } from '../domain/mech';
 import { findCatalogEntry, formatRv } from '../domain/catalog';
+import { mechStats } from '../domain/frame';
 import { unitProfileIssues } from '../domain/mechRules';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
@@ -67,12 +68,13 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     return addWrappedValue(data, field, lines, notes.x, y, notes.fontSize, notes.lineHeight);
   };
 
-  centered('bp', String(profile.bp), 211, 46, 70, 16);
+  const stats = mechStats(profile);
+  centered('bp', String(stats.bp), 211, 46, 70, 16);
   line('name', profile.name, 258, 42, 116);
   line('class', profile.class, 258, 78, 116);
-  line('mv', String(profile.mv), 258, 114, 116);
-  line('tp', String(profile.tp), 258, 150, 116);
-  line('hc', String(profile.hc), 258, 186, 116);
+  line('mv', String(stats.mv), 258, 114, 116);
+  line('tp', String(stats.tp), 258, 150, 116);
+  line('hc', String(stats.hc), 258, 186, 116);
   line('armor', String(profile.armor), 258, 222, 116);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).

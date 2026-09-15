@@ -20,8 +20,10 @@ function shortIssue(issue: Issue): string {
       return `${shortName(issue.name)} on an arm`;
     case 'notInCatalog':
       return `${hardpointLabels[issue.hardpoint]} not in Catalog`;
-    case 'bpBelowMounts':
-      return 'Bp below mounts';
+    case 'overMaxBp':
+      return 'Bp over max';
+    case 'noBp':
+      return 'Bp is 0';
   }
 }
 

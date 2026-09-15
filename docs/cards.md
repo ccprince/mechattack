@@ -120,7 +120,7 @@ prints with three marks. A Legal card has none of them.
 
 A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. One Issue's
 wording is short to leave room for notes: `HL too heavy`, `ECTS on an arm` (short names),
-`Left Arm not in Catalog` (the name may be long) or `Bp below mounts`.
+`Left Arm not in Catalog` (the name may be long), `Bp over max` or `Bp is 0`.
 
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
 110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
@@ -249,5 +249,6 @@ Don't build against the current guesses for these:
 - **Weapon eligibility by Class for Vehicles and Troops:** which Weapons each Class may mount.
   Settled for Mechs: a Mech mounts Catalog entries of its Class or lighter, and Support Equipment
   only on a torso Hardpoint.
-- **Unit construction:** base stats by Class, upgrades, and Bp. Until then, Bp and stats are typed
-  in, and the only Bp Issue is a unit costing less than the total Bp of its mounts.
+- **Unit construction for Vehicles and Troops:** base stats, upgrades and Bp. Settled for Mechs:
+  Bp, Mv, Tp and Hc are worked out from the Class's Frame, Armor, Heat Sinks, Engine Upgrades and
+  mounts, and print in the same fields (see `CONTEXT.md`).
