@@ -166,16 +166,33 @@ Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; col
 |---|---|---|---|
 | `bp` | 211, 43 center, 16px | 172–250 × 12–50 | |
 | `name` | 258, 44 | 254–378 × 12–57.2 | |
-| `type` | 258, 89.2 | 254–378 × 57.2–102.4 | |
+| `type` | 258, 89.2 | 254–378 × 57.2–102.4 | The Troop Class in full, `Heavy Infantry` |
 | `mv` | 258, 134.4 | 254–378 × 102.4–147.6 | |
 | `tp` | 258, 179.6 | 254–378 × 147.6–192.8 | |
-| `sv` | 258, 224.8 | 254–378 × 192.8–238 | |
-| `notes` | 16, 143, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`, **≤ 2 lines** |
-| `weapon` | 15, 214, 11px | 12–155 × 182–238 | Crew-served weapon |
-| `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | |
+| `sv` | 258, 224.8 | 254–378 × 192.8–238 | Also drives the strength cross-out |
+| `illegal` | 16, 143, 10px | 12–250 × 113–164 | Only with Issues: `ILLEGAL: …`, emboldened like the Mech's, **1 line** |
+| `standard-equipment` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | One line: `Individual Weapons` or `Individual Weapons, Jump Packs` |
+| `notes` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`. The three fields share **2 lines**; `notes` gets what's left, cut off with "…", and is left out when none are |
+| `weapon` | 15, 214, 11px | 12–155 × 182–238 | The Crew Served Weapon's short name, one line, 136 wide |
+| `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | Blank for Support Equipment with no range |
+
+**Crew Served Weapon.** Only a filled Crew Served Weapon prints `weapon` and `rv`. A name missing
+from the Catalog has no short name, so it prints as stored, with a blank Rv. Standard Equipment isn't
+stored: it follows from the Troop Class.
+
+**Illegal marks.** As on the Mech, a Legal card has none.
+
+| Mark | Position | Notes |
+|---|---|---|
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
+| `<g data-mark="weapon-illegal">` | Triangle 140–151 × 205–215 | On the Crew Served Weapon row when it has an Issue, at the right of the weapon line. `weapon` fits 120 wide instead of 136 |
+
+One Issue's wording: `Md Laser too heavy` (short name), `Plasma Lance not in Catalog`, `Bp over max`.
 
 Strength tracker: box *n* (1–20) is in column *c* = (*n* − 1) mod 10 and row *r* = floor((*n* − 1) / 10).
 It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5–109 (row 1).
+Every box above Sv is crossed out, one block per row: Sv 5 crosses out boxes 6–10 (x = 131–250) and
+all of row 1; Sv 10 crosses out row 1.
 
 ## Processing: unit data → PDF
 
@@ -197,14 +214,15 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
    corner to corner across the block (see the sample `#data` groups).
    - Mech/Vehicle armor grid: cross out every row whose value is greater than `armor`. A block
      spans x = 44–250 from the top row down.
-   - Troops strength tracker: cross out boxes *n* > starting strength. If strength < 10 this covers
-     part of row 0 and all of row 1, so draw one rect per row.
+   - Troops strength tracker: cross out boxes *n* > Sv. Sv 5 covers part of row 0 and all of row 1,
+     so draw one rect per row.
 5. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
 6. **Place on the page:**
    `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card draw the texture
    image and then `await svg2pdf(svgEl, doc, { x, y, width, height })`, with position and size in
-   pt (the doc's unit, verified) from the page layout table (scale 1.0 or 0.641). Put each Troop card
-   in a free half slot, and add a page when the grid fills.
+   pt (the doc's unit, verified) from the page layout table (scale 1.0 or 0.641). Cards keep list
+   order: a Troop takes the bottom half of the slot when the card before it is a Troop in that slot's
+   top half, and otherwise the top half of the next slot. Add a page when the grid fills.
 7. **Download** with `doc.save('mech-attack-cards.pdf')`.
 
 ### Texture
@@ -254,7 +272,8 @@ Use window height 490 for Mech/Vehicle and 240 for Troops. The screenshot is 2×
 ## Settled rules
 
 - Armor is always a multiple of 10. Cross out every armor row above it.
-- Troop Sv is at most 20. Cross out every strength box above it; players mark damage on the rest.
+- Troop Sv is 5 or 10, set by its Troop Class. Cross out every strength box above it; players mark
+  damage on the rest.
 - The Critical Systems Area row is static artwork. Its numbers repeat the column numbers so hits
   are easier to mark, and it never takes printed data.
 
@@ -264,9 +283,7 @@ Don't build against the current guesses for these:
 
 - **Dp:** how a Damage Profile is stored and drawn, including multiplier boxes. It replaces the
   hand-drawn grids.
-- **Weapon eligibility by Class for Vehicles and Troops:** which Weapons each Class may mount.
-  Settled for Mechs: a Mech mounts Catalog entries of its Class or lighter, and Support Equipment
-  only on a torso Hardpoint.
-- **Unit construction for Vehicles and Troops:** base stats, upgrades and Bp. Settled for Mechs:
-  Bp, Mv, Tp and Hc are worked out from the Class's Frame, Armor, Heat Sinks, Engine Upgrades and
-  mounts, and print in the same fields (see `CONTEXT.md`).
+- **Weapon eligibility by Class for Vehicles:** which Weapons each Class may mount.
+  Settled for Mechs and Troops (see `CONTEXT.md`).
+- **Unit construction for Vehicles:** base stats, upgrades and Bp. Settled for Mechs and Troops:
+  Bp, Mv, Tp and Hc or Sv are worked out and print in the same fields (see `CONTEXT.md`).

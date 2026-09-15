@@ -644,8 +644,31 @@ describe('Troops', () => {
       .element(page.getByRole('textbox', { name: 'Notes' }))
       .toHaveValue('Holds the ridge');
     expect(issues().query()).toBeNull();
-    // No Troop card is built yet: a placeholder stands in for the preview.
-    await expect.element(page.getByText('No Troop card yet.')).toBeInTheDocument();
+  });
+
+  it('previews the card, marked while the Troop has Issues', async () => {
+    await loadWithNewTroop();
+    await field('Notes').fill('Holds the ridge');
+    await picker('Crew Served Weapon').selectOptions('Light Missile');
+    await expect.element(page.getByRole('img', { name: 'New Troop record card' })).toBeVisible();
+    await expect.poll(() => cardField('weapon')).toBe('Lt Missile');
+    expect(cardField('type')).toBe('Light Infantry');
+    expect(cardField('sv')).toBe('5');
+    expect(cardField('rv')).toBe('3-10/14');
+    expect(cardField('standard-equipment')).toBe('Individual Weapons');
+    expect(cardField('notes')).toBe('Holds the ridge');
+    expect(cardMarks()).toEqual([]);
+
+    await picker('Class').selectOptions('Jump Infantry');
+    await picker('Crew Served Weapon').selectOptions('Light Laser');
+    await expect.poll(() => cardField('standard-equipment')).toBe('Individual Weapons, Jump Packs');
+    expect(cardField('illegal')).toBeNull();
+
+    await picker('Class').selectOptions('Light Infantry');
+    await picker('Crew Served Weapon').selectOptions('Light Cannon');
+    await picker('Class').selectOptions('Jump Infantry');
+    await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Bp over max');
+    expect(cardMarks()).toEqual(['illegal']);
   });
 
   it('works out Bp as a Crew Served Weapon is picked', async () => {
@@ -808,12 +831,21 @@ describe('Download PDF', () => {
         mech({ id: 'b', name: 'Cheap', hardpoints: heavyLeftArm }),
         mech({ id: 'c', name: 'Flawed', quantity: 2, hardpoints: heavyLeftArm }),
         vehicle({ id: 'd', name: 'Overloaded', cargoBays: 2, turret: true }),
+        {
+          kind: 'Troop',
+          id: 'e',
+          name: 'Heavy Handed',
+          class: 'Light Infantry',
+          crewServedWeapon: 'Medium Laser',
+          notes: '',
+          quantity: 1,
+        },
       ],
     });
 
     await downloadPdf().click();
     expect(confirm).toHaveBeenCalledWith(
-      'Cheap, Flawed and Overloaded have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
+      'Cheap, Flawed, Overloaded and Heavy Handed have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
     );
     expect(vi.mocked(exportArmyListPdf)).not.toHaveBeenCalled();
 

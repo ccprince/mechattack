@@ -1,6 +1,6 @@
 import { useId, useMemo, type ReactNode } from 'react';
 import type { Measure } from '../cards/fitText';
-import { buildUnitCardSvg, hasCard, type CardedUnitProfile } from '../cards/unitCard';
+import { buildUnitCardSvg } from '../cards/unitCard';
 import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
@@ -114,11 +114,7 @@ export function UnitProfileEditor({
           </section>
         )}
       </form>
-      {hasCard(profile) ? (
-        <UnitCardPreview profile={profile} measure={measure} />
-      ) : (
-        <p>No {profile.kind} card yet.</p>
-      )}
+      <UnitCardPreview profile={profile} measure={measure} />
     </section>
   );
 }
@@ -127,7 +123,7 @@ function UnitCardPreview({
   profile,
   measure,
 }: {
-  profile: CardedUnitProfile;
+  profile: UnitProfile;
   measure: Measure | undefined;
 }) {
   // Rebuilt on every edit: the card is never patched in place (ADR 0002).

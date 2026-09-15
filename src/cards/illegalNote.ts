@@ -1,6 +1,7 @@
 import { findCatalogEntry } from '../domain/catalog';
 import { hardpointLabels } from '../domain/mech';
 import type { MechIssue } from '../domain/mechRules';
+import type { TroopIssue } from '../domain/troopRules';
 import { vehicleMountRowLabels } from '../domain/vehicle';
 import type { VehicleIssue } from '../domain/vehicleRules';
 
@@ -18,6 +19,11 @@ export function illegalNote(issues: readonly MechIssue[]): string | undefined {
 /** The `ILLEGAL:` line that heads Notes on a Vehicle card with Issues, or undefined on a Legal card. */
 export function vehicleIllegalNote(issues: readonly VehicleIssue[]): string | undefined {
   return note(issues, shortVehicleIssue);
+}
+
+/** The `ILLEGAL:` line that heads Notes on a Troop card with Issues, or undefined on a Legal card. */
+export function troopIllegalNote(issues: readonly TroopIssue[]): string | undefined {
+  return note(issues, shortTroopIssue);
 }
 
 function note<I>(issues: readonly I[], shortIssue: (issue: I) => string): string | undefined {
@@ -53,6 +59,17 @@ function shortVehicleIssue(issue: VehicleIssue): string {
       return 'Bp over max';
     case 'noBp':
       return 'Bp is 0';
+  }
+}
+
+function shortTroopIssue(issue: TroopIssue): string {
+  switch (issue.rule) {
+    case 'mountTooHeavy':
+      return `${shortName(issue.name)} too heavy`;
+    case 'notInCatalog':
+      return `${issue.name} not in Catalog`;
+    case 'overMaxBp':
+      return 'Bp over max';
   }
 }
 
