@@ -5,6 +5,7 @@ import type { ArmyList } from '../domain/armyList';
 import { savedArmyListKey } from '../domain/armyListStorage';
 import type { MechProfile } from '../domain/mech';
 import { fakeStore } from '../domain/testStores';
+import type { VehicleProfile } from '../domain/vehicle';
 import { exportArmyListPdf } from '../pdf/exportPdf';
 import { cardField, cardMarks, setUpApp, unitProfiles } from './testApp';
 
@@ -80,11 +81,30 @@ describe('header', () => {
 });
 
 describe('Unit Profile list', () => {
-  it('invites adding a Mech while the Army List is empty', async () => {
+  it('invites adding a Mech or Vehicle while the Army List is empty', async () => {
     load(fakeStore());
     await expect
-      .element(page.getByText('Add a Mech to start building the Army List.'))
+      .element(page.getByText('Add a Mech or Vehicle to start building the Army List.'))
       .toBeInTheDocument();
+  });
+
+  it('shows Vehicles with their Bp and quantity, counted in the Bp total', async () => {
+    loadList({
+      version: 2,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        mech({ id: 'a', name: 'Ironclad', armor: 60 }),
+        vehicle({ id: 'b', name: 'Hauler', armor: 20, cargoBays: 1, quantity: 2 }),
+      ],
+    });
+    await expect.element(profileRow('Hauler').getByText('3 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('Hauler').getByLabelText('Qty')).toHaveValue(2);
+    await expect.element(page.getByText('Bp 12 /')).toBeInTheDocument();
+
+    await openButton('Hauler').click();
+    await expect.element(field('Name')).toHaveValue('Hauler');
+    await expect.element(field('Cargo Bays')).toHaveValue(1);
   });
 
   it('adds and selects a new Unit Profile with Add Mech', async () => {
@@ -460,6 +480,121 @@ describe('Issues', () => {
   });
 });
 
+describe('Vehicles', () => {
+  const addVehicle = () => page.getByRole('button', { name: 'Add Vehicle' }).click();
+  const checkbox = (name: string) => page.getByRole('checkbox', { name, exact: true });
+
+  /** Starts the app with a fresh Army List and one new Vehicle selected. */
+  async function loadWithNewVehicle() {
+    load(fakeStore());
+    await addVehicle();
+  }
+
+  it('adds and opens a new Vehicle, with its own fields and worked-out stats', async () => {
+    await loadWithNewVehicle();
+    await expect.element(openButton('New Vehicle')).toHaveAttribute('aria-current', 'true');
+    await expect.element(field('Name')).toHaveValue('New Vehicle');
+    await expect.poll(() => optionTexts('Class')).toEqual(['Ultra-light', 'Light', 'Medium']);
+    await expect.element(picker('Class')).toHaveValue('Light');
+    expect(field('Heat Sinks').query()).toBeNull();
+    expect(field('Hc').query()).toBeNull();
+    await expect.element(field('Bp')).toHaveTextContent('0 / 5');
+    await expect.element(field('Mv')).toHaveTextContent('4');
+    await expect.element(field('Tp')).toHaveTextContent('4');
+
+    await field('Armor').fill('30');
+    await field('Engine Upgrades').fill('1');
+    await expect.element(field('Bp')).toHaveTextContent('5 / 5');
+    await expect.element(field('Mv')).toHaveTextContent('5');
+    await expect.element(unitProfiles().getByText('5 Bp')).toBeInTheDocument();
+
+    await picker('Class').selectOptions('Ultra-light');
+    await expect.element(field('Bp')).toHaveTextContent('5 / 4');
+    await expect.element(field('Mv')).toHaveTextContent('6');
+    await expect
+      .element(issues().getByText("Bp 5 is more than an Ultra-light Vehicle's max Bp of 4"))
+      .toBeInTheDocument();
+  });
+
+  it('takes a Turret, offering what its Class may mount, and empties it when unticked', async () => {
+    await loadWithNewVehicle();
+    expect(picker('Turret').query()).toBeNull();
+
+    await checkbox('Turret').click();
+    await expect.element(field('Hull Options')).toHaveTextContent('1 / 2');
+    await expect.poll(() => optionTexts('Turret')).toContain('Light Laser');
+    expect(optionTexts('Turret')[0]).toBe('Empty');
+    expect(optionTexts('Turret')).toContain('Remote Guided Missile System');
+    expect(optionTexts('Turret')).not.toContain('Medium Laser');
+
+    await picker('Turret').selectOptions('Light Cannon');
+    await expect.element(field('Bp')).toHaveTextContent('2 / 5');
+    await expect.element(unitProfiles().getByText('2 Bp')).toBeInTheDocument();
+
+    await picker('Class').selectOptions('Medium');
+    await expect.poll(() => optionTexts('Turret')).toContain('Medium Laser');
+    expect(optionTexts('Turret')).not.toContain('Heavy Laser');
+
+    await checkbox('Turret').click();
+    await expect.element(picker('Turret')).not.toBeInTheDocument();
+    await expect.element(field('Bp')).toHaveTextContent('0 / 6');
+    await checkbox('Turret').click();
+    await expect.element(picker('Turret')).toHaveDisplayValue('Empty');
+  });
+
+  it('takes a Static Mount with two pickers, and flags going over the Hull Options', async () => {
+    await loadWithNewVehicle();
+    await checkbox('Static Mount').click();
+    await expect.element(field('Hull Options')).toHaveTextContent('2 / 2');
+    await picker('Static Mount 1').selectOptions('Light Laser');
+    await picker('Static Mount 2').selectOptions('Light Missile');
+    await expect.element(field('Bp')).toHaveTextContent('2 / 5');
+    expect(issues().query()).toBeNull();
+
+    await checkbox('Turret').click();
+    await field('Cargo Bays').fill('2');
+    await expect.element(field('Hull Options')).toHaveTextContent('5 / 2');
+    await expect
+      .element(issues().getByText("5 Hull Options is more than a Light Vehicle's 2"))
+      .toBeInTheDocument();
+    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+
+    await checkbox('Static Mount').click();
+    await field('Cargo Bays').fill('1');
+    await expect.element(field('Hull Options')).toHaveTextContent('2 / 2');
+    await expect.element(issues()).not.toBeInTheDocument();
+    await expect.element(field('Bp')).toHaveTextContent('1 / 5');
+  });
+
+  it('keeps mounts that became too heavy after a Class change, and flags them', async () => {
+    await loadWithNewVehicle();
+    await picker('Class').selectOptions('Medium');
+    await checkbox('Turret').click();
+    await picker('Turret').selectOptions('Medium Laser');
+    await expect.element(field('Bp')).toHaveTextContent('2 / 6');
+    expect(issues().query()).toBeNull();
+
+    await picker('Class').selectOptions('Light');
+    await expect.element(picker('Turret')).toHaveDisplayValue('Medium Laser (Issue)');
+    await expect
+      .element(
+        issues().getByText(
+          "Turret: Medium Laser is Medium, heavier than the Vehicle's Class may mount",
+        ),
+      )
+      .toBeInTheDocument();
+    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+  });
+
+  it('shows a placeholder instead of a card preview', async () => {
+    await loadWithNewVehicle();
+    await expect
+      .element(page.getByText('Vehicle cards are not available yet.'))
+      .toBeInTheDocument();
+    expect(page.getByRole('img').query()).toBeNull();
+  });
+});
+
 describe('Download PDF', () => {
   it('is unavailable while no copy is fielded', async () => {
     load(fakeStore());
@@ -571,6 +706,25 @@ function mech(profile: Partial<MechProfile> & Pick<MechProfile, 'id' | 'name'>):
     engineUpgrades: 0,
     notes: '',
     hardpoints: { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null },
+    quantity: 1,
+    ...profile,
+  };
+}
+
+function vehicle(
+  profile: Partial<VehicleProfile> & Pick<VehicleProfile, 'id' | 'name'>,
+): VehicleProfile {
+  return {
+    kind: 'Vehicle',
+    class: 'Light',
+    // 1 Bp, so the default Vehicle is Legal.
+    armor: 10,
+    engineUpgrades: 0,
+    turret: false,
+    staticMount: false,
+    cargoBays: 0,
+    notes: '',
+    mounts: { turret: null, staticMount1: null, staticMount2: null },
     quantity: 1,
     ...profile,
   };

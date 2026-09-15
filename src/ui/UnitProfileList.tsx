@@ -65,9 +65,14 @@ export function UnitProfileList() {
           );
         })}
       </ul>
-      <button type="button" onClick={() => dispatch({ type: 'addMech' })}>
-        Add Mech
-      </button>
+      <div className={styles.add}>
+        <button type="button" onClick={() => dispatch({ type: 'addMech' })}>
+          Add Mech
+        </button>
+        <button type="button" onClick={() => dispatch({ type: 'addVehicle' })}>
+          Add Vehicle
+        </button>
+      </div>
     </nav>
   );
 }

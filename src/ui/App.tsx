@@ -26,9 +26,7 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
 
 function ArmyListEditor({ banner }: { banner: ReactNode }) {
   const { autosaveFailed } = useArmyList();
-  const selectedProfile = useSelectedUnitProfile();
-  // Vehicles can't be edited yet: only Mechs open in the editor.
-  const selected = selectedProfile?.kind === 'Mech' ? selectedProfile : undefined;
+  const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -45,9 +43,9 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
   }, []);
 
   const measure = useMemo(() => (fontsLoaded ? createValueMeasure() : undefined), [fontsLoaded]);
-  // Rebuilt on every edit: the card is never patched in place (ADR 0002).
+  // Rebuilt on every edit: the card is never patched in place (ADR 0002). Vehicles have no card yet.
   const card = useMemo(
-    () => (measure && selected ? buildMechCardSvg(selected, measure) : undefined),
+    () => (measure && selected?.kind === 'Mech' ? buildMechCardSvg(selected, measure) : undefined),
     [measure, selected],
   );
 
@@ -65,7 +63,7 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
         {selected ? (
           <UnitProfileEditor key={selected.id} profile={selected} card={card} />
         ) : (
-          <p className={styles.empty}>Add a Mech to start building the Army List.</p>
+          <p className={styles.empty}>Add a Mech or Vehicle to start building the Army List.</p>
         )}
       </div>
     </main>
