@@ -5,24 +5,23 @@ import {
   hardpointLabels,
   hardpoints,
   mechClasses,
-  mechStatRanges,
+  mechUpgradeRanges,
   type Hardpoint,
   type MechClass,
   type MechProfile,
 } from '../domain/mech';
 import { findCatalogEntry } from '../domain/catalog';
+import { frames, mechStats } from '../domain/frame';
 import { describeIssue, eligibleMounts, unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
 import { CardPreview } from './CardPreview';
 import { NumberField } from './NumberField';
 import styles from './UnitProfileEditor.module.css';
 
-const statFields = [
-  { key: 'bp', label: 'Bp' },
-  { key: 'mv', label: 'Mv' },
-  { key: 'tp', label: 'Tp' },
-  { key: 'hc', label: 'Hc' },
+const upgradeFields = [
   { key: 'armor', label: 'Armor' },
+  { key: 'heatSinks', label: 'Heat Sinks' },
+  { key: 'engineUpgrades', label: 'Engine Upgrades' },
 ] as const;
 
 export function UnitProfileEditor({
@@ -38,6 +37,13 @@ export function UnitProfileEditor({
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
 
   const issues = unitProfileIssues(profile);
+  const stats = mechStats(profile);
+  const statOutputs = [
+    { label: 'Bp', value: `${stats.bp} / ${frames[profile.class].maxBp}` },
+    { label: 'Mv', value: stats.mv },
+    { label: 'Tp', value: stats.tp },
+    { label: 'Hc', value: stats.hc },
+  ];
   const nameClashes = hasNameClash(state.list, profile);
   const clashId = useId();
 
@@ -59,6 +65,15 @@ export function UnitProfileEditor({
             </span>
           )}
         </div>
+        {/* Worked out from the Class's Frame, the upgrades and the mounts; never typed in. */}
+        <div className={styles.stats}>
+          {statOutputs.map(({ label, value }) => (
+            <div key={label} className={styles.stat}>
+              <span aria-hidden="true">{label}</span>
+              <output aria-label={label}>{value}</output>
+            </div>
+          ))}
+        </div>
         <label className={styles.field}>
           <span>Class</span>
           <select
@@ -70,14 +85,14 @@ export function UnitProfileEditor({
             ))}
           </select>
         </label>
-        <div className={styles.stats}>
-          {statFields.map(({ key, label }) => (
+        <div className={styles.upgrades}>
+          {upgradeFields.map(({ key, label }) => (
             <NumberField
               key={key}
               className={styles.field}
               label={label}
               value={profile[key]}
-              range={mechStatRanges[key]}
+              range={mechUpgradeRanges[key]}
               onChange={(value) => update({ [key]: value })}
             />
           ))}

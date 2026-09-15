@@ -11,7 +11,7 @@ const load = setUpApp();
 const listName = () => page.getByLabelText('Army List name');
 const banner = () => page.getByRole('alert').filter({ hasText: "couldn't be read" });
 
-const ironLegion: ArmyList = { version: 1, name: 'Iron Legion', bpLimit: 40, unitProfiles: [] };
+const ironLegion: ArmyList = { version: 2, name: 'Iron Legion', bpLimit: 40, unitProfiles: [] };
 
 describe('autosave', () => {
   beforeEach(() => localStorage.clear());

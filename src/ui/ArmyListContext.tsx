@@ -8,7 +8,7 @@ import {
 import type { KeyValueStore } from '../domain/armyListStorage';
 import { useAutosave } from './useAutosave';
 
-const freshList: ArmyList = { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
+const freshList: ArmyList = { version: 2, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
 
 const ArmyListContext = createContext<
   | {

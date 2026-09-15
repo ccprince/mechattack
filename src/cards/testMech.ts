@@ -1,16 +1,14 @@
 import type { MechProfile } from '../domain/mech';
 
-/** A fully loaded Mech for card and PDF tests. */
+/** A fully loaded, Legal Mech for card and PDF tests: 19 of its Frame's 20 Bp. */
 export const testMech: MechProfile = {
   kind: 'Mech',
   id: 'test',
   name: 'Ironclad',
   class: 'Heavy',
-  bp: 18,
-  mv: 4,
-  tp: 2,
-  hc: 3,
-  armor: 110,
+  armor: 70,
+  heatSinks: 1,
+  engineUpgrades: 1,
   notes: 'Jump jets (Mv +2). ECM suite blocks enemy targeting within 6".',
   hardpoints: {
     leftArm: 'Heavy Missile',

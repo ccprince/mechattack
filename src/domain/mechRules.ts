@@ -5,6 +5,7 @@ import {
   type CatalogClass,
   type CatalogEntry,
 } from './catalog';
+import { frames, mechStats } from './frame';
 import {
   hardpointLabels,
   hardpoints,
@@ -18,7 +19,8 @@ export type Issue =
   | { rule: 'mountTooHeavy'; hardpoint: Hardpoint; name: string; entryClass: CatalogClass }
   | { rule: 'supportEquipmentOnArm'; hardpoint: Hardpoint; name: string }
   | { rule: 'notInCatalog'; hardpoint: Hardpoint; name: string }
-  | { rule: 'bpBelowMounts'; bp: number; mountsBp: number };
+  | { rule: 'overMaxBp'; bp: number; mechClass: MechClass; maxBp: number }
+  | { rule: 'noBp' };
 
 const armHardpoints: readonly Hardpoint[] = ['leftArm', 'rightArm'];
 
@@ -45,7 +47,6 @@ function fitsHardpoint(entry: CatalogEntry, hardpoint: Hardpoint): boolean {
  */
 export function unitProfileIssues(profile: MechProfile): Issue[] {
   const issues: Issue[] = [];
-  let mountsBp = 0;
   for (const hardpoint of hardpoints) {
     const name = profile.hardpoints[hardpoint];
     if (name === null) continue;
@@ -54,7 +55,6 @@ export function unitProfileIssues(profile: MechProfile): Issue[] {
       issues.push({ rule: 'notInCatalog', hardpoint, name });
       continue;
     }
-    mountsBp += entry.bp;
     if (!fitsClass(entry.class, profile.class)) {
       issues.push({ rule: 'mountTooHeavy', hardpoint, name: entry.name, entryClass: entry.class });
     }
@@ -62,16 +62,19 @@ export function unitProfileIssues(profile: MechProfile): Issue[] {
       issues.push({ rule: 'supportEquipmentOnArm', hardpoint, name: entry.name });
     }
   }
-  // A lower bound only: Armor and upgrades also cost Bp, pending the Unit construction session.
-  if (profile.bp < mountsBp) issues.push({ rule: 'bpBelowMounts', bp: profile.bp, mountsBp });
+  const { bp } = mechStats(profile);
+  const { maxBp } = frames[profile.class];
+  if (bp > maxBp) issues.push({ rule: 'overMaxBp', bp, mechClass: profile.class, maxBp });
+  if (bp === 0) issues.push({ rule: 'noBp' });
   return issues;
 }
 
 /** An Issue in words, for the editor. */
 export function describeIssue(issue: Issue): string {
-  if (issue.rule === 'bpBelowMounts') {
-    return `Bp ${issue.bp} is less than the ${issue.mountsBp} Bp it mounts`;
+  if (issue.rule === 'overMaxBp') {
+    return `Bp ${issue.bp} is more than a ${issue.mechClass} Mech's max Bp of ${issue.maxBp}`;
   }
+  if (issue.rule === 'noBp') return 'Bp is 0; a Mech must cost at least 1';
   const mount = `${hardpointLabels[issue.hardpoint]}: ${issue.name}`;
   switch (issue.rule) {
     case 'mountTooHeavy':

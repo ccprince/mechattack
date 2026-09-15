@@ -29,7 +29,7 @@ describe('exportCardsPdf', () => {
 describe('exportArmyListPdf', () => {
   // 11 fielded copies: 3 Large pages (4-up) or 2 Sleeve pages (9-up).
   const list: ArmyList = {
-    version: 1,
+    version: 2,
     name: 'Iron Legion',
     bpLimit: 200,
     unitProfiles: [
@@ -58,7 +58,7 @@ describe('exportArmyListPdf', () => {
 
 describe('illegal marks', () => {
   const printed = async (profile: MechProfile) => {
-    const list: ArmyList = { version: 1, name: 'Marks', bpLimit: 50, unitProfiles: [profile] };
+    const list: ArmyList = { version: 2, name: 'Marks', bpLimit: 50, unitProfiles: [profile] };
     const doc = await exportArmyListPdf(list, 'large', createValueMeasure());
     return readPdf(doc.output());
   };
@@ -67,6 +67,8 @@ describe('illegal marks', () => {
     const { texts, triangles } = await printed({
       ...testMech,
       class: 'Medium',
+      // Kept within the Medium Frame's Bp, so only the mounts have Issues.
+      armor: 0,
       hardpoints: {
         leftArm: 'Heavy Missile',
         rightArm: 'Medium Laser',

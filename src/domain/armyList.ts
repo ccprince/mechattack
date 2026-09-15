@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { mechStats } from './frame';
 import { mechProfileSchema, type MechProfile } from './mech';
 import { unitProfileIssues } from './mechRules';
 import type { NumberRange } from './numberRange';
@@ -8,7 +9,7 @@ export const bpLimitRange: NumberRange = { min: 0, max: Number.MAX_SAFE_INTEGER,
 
 export const armyListSchema = z.object({
   /** Bumped with a migration whenever the saved shape changes. */
-  version: z.literal(1),
+  version: z.literal(2),
   name: z.string(),
   bpLimit: z.number().int().min(bpLimitRange.min).max(bpLimitRange.max),
   unitProfiles: z
@@ -22,7 +23,10 @@ export type ArmyList = z.infer<typeof armyListSchema>;
 
 /** Bp of every fielded copy: each Unit Profile's Bp times its quantity. */
 export function bpTotal(list: ArmyList): number {
-  return list.unitProfiles.reduce((total, profile) => total + profile.bp * profile.quantity, 0);
+  return list.unitProfiles.reduce(
+    (total, profile) => total + mechStats(profile).bp * profile.quantity,
+    0,
+  );
 }
 
 /** One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing. */

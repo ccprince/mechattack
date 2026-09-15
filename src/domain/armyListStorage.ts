@@ -1,4 +1,5 @@
 import { armyListSchema, type ArmyList } from './armyList';
+import { migrateArmyList } from './migrations';
 
 /** The part of the Web Storage API the app uses, so Node tests can pass a fake. */
 export interface KeyValueStore {
@@ -19,7 +20,7 @@ export interface SavedArmyList {
 }
 
 /**
- * Reads the saved Army List, checked against `armyListSchema`. An unreadable save moves to the
+ * Reads the saved Army List, migrated and checked against `armyListSchema`. An unreadable save moves to the
  * backup key so autosave can't overwrite it. Storage errors never throw: the app starts fresh.
  */
 export function loadArmyList(store: KeyValueStore): SavedArmyList {
@@ -68,6 +69,6 @@ function parseArmyList(raw: string): ArmyList | undefined {
   } catch {
     return undefined;
   }
-  const result = armyListSchema.safeParse(json);
+  const result = armyListSchema.safeParse(migrateArmyList(json));
   return result.success ? result.data : undefined;
 }

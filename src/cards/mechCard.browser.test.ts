@@ -31,7 +31,12 @@ describe('buildMechCardSvg', () => {
   it('replaces the sample data with the Unit Profile', () => {
     const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Ironclad');
-    expect(field(svg, 'armor')?.textContent).toBe('110');
+    // Worked out from the Heavy Frame: 70 Armor, 1 Heat Sink, 1 Engine Upgrade, 8 Bp of mounts.
+    expect(field(svg, 'bp')?.textContent).toBe('19');
+    expect(field(svg, 'mv')?.textContent).toBe('4');
+    expect(field(svg, 'tp')?.textContent).toBe('3');
+    expect(field(svg, 'hc')?.textContent).toBe('5');
+    expect(field(svg, 'armor')?.textContent).toBe('70');
     expect(field(svg, 'ra-weapon')?.textContent).toBe('HL');
     expect(field(svg, 'ra-rv')?.textContent).toBe('6/10');
     expect(field(svg, 'ra-hv')?.textContent).toBe('2');
@@ -81,6 +86,8 @@ describe('buildMechCardSvg', () => {
     const illegalMech: MechProfile = {
       ...testMech,
       class: 'Medium',
+      // Kept within the Medium Frame's Bp, so only the mounts have Issues.
+      armor: 0,
       notes: longNotes,
       hardpoints: {
         leftArm: 'Heavy Missile',
@@ -110,9 +117,9 @@ describe('buildMechCardSvg', () => {
     });
 
     it('marks an Issue that belongs to no Hardpoint only beside the name', () => {
-      const svg = buildMechCardSvg({ ...testMech, bp: 1 }, createValueMeasure());
+      const svg = buildMechCardSvg({ ...testMech, heatSinks: 2 }, createValueMeasure());
       expect(marks(svg)).toEqual(['illegal']);
-      expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: Bp below mounts');
+      expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: Bp over max');
     });
 
     it('keeps the notes inside their box below the ILLEGAL line', () => {

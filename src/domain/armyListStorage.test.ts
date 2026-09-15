@@ -10,7 +10,7 @@ import {
 import { fakeStore, unavailableStore as unavailable } from './testStores';
 
 const ironLegion: ArmyList = {
-  version: 1,
+  version: 2,
   name: 'Iron Legion',
   bpLimit: 40,
   unitProfiles: [
@@ -19,11 +19,9 @@ const ironLegion: ArmyList = {
       id: 'u1',
       name: 'Ironclad',
       class: 'Heavy',
-      bp: 12,
-      mv: 4,
-      tp: 2,
-      hc: 3,
       armor: 110,
+      heatSinks: 1,
+      engineUpgrades: 2,
       notes: 'Holds the line',
       hardpoints: { leftArm: 'Heavy Laser', rightArm: null, leftTorso: null, rightTorso: null },
       quantity: 2,
@@ -36,6 +34,27 @@ describe('saveArmyList and loadArmyList', () => {
     const store = fakeStore();
     saveArmyList(store, ironLegion);
     expect(loadArmyList(store)).toEqual({ list: ironLegion, backup: undefined });
+  });
+
+  it('migrates a list saved before the current version', () => {
+    const version1 = {
+      ...ironLegion,
+      version: 1,
+      unitProfiles: ironLegion.unitProfiles.map((profile) => ({
+        ...profile,
+        heatSinks: undefined,
+        engineUpgrades: undefined,
+        bp: 12,
+        mv: 4,
+        tp: 2,
+        hc: 3,
+      })),
+    };
+    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(version1) });
+    expect(loadArmyList(store).list).toEqual({
+      ...ironLegion,
+      unitProfiles: [{ ...ironLegion.unitProfiles[0], heatSinks: 0, engineUpgrades: 0 }],
+    });
   });
 
   it('starts fresh when nothing is saved', () => {
