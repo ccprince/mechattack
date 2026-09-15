@@ -83,9 +83,9 @@ font is 12px unless noted.
 Conventions across all cards:
 - Rv prints as `normal/extended`, like `10/14`, or `min-normal/extended`, like `3-10/14`, in its single box. It stays blank for Support Equipment with no range.
 - Only Mechs track heat, so only the Mech card has Hc and Hv. Hv stays blank when the entry generates none.
-- The small hand-drawn grids next to each weapon (5×5 on the Mech in the template) are placeholders.
-  They'll be replaced by printed **Dp** at 5×5 (Mech), 4×4 (Vehicle) and 3×3 (Troop). The layout
-  is **pending the Dp design session**.
+- Each weapon row has a **Dp area** where the entry's Dp is drawn (see [Dp](#dp)). The hand-drawn
+  grids in those areas are placeholders: the app draws the shape itself, so the grid lines come out
+  of the templates.
 - The Vehicle and Troop cards keep the label "Type" for the value the app calls Class.
 
 ### Mech (`mech-card.svg`)
@@ -194,6 +194,43 @@ It spans x = 12 + 23.8*c* to 35.8 + 23.8*c*, and y = 68–88.5 (row 0) or 88.5�
 Every box above Sv is crossed out, one block per row: Sv 5 crosses out boxes 6–10 (x = 131–250) and
 all of row 1; Sv 10 crosses out row 1.
 
+## Dp
+
+A Weapon's Dp is stored in the Catalog as a compact string and drawn as solid boxes, the way the
+rules' weapon table prints it. `CONTEXT.md` defines Dp, Impact Box and Rolls.
+
+**Notation** (the `dp` column of `catalog.csv`): an optional `N x` roll count, then one digit per
+row, top to bottom, giving how many boxes that row holds. `331` is three rows of 3, 3 and 1; `5x11`
+is 5 Rolls of a two-row, one-box-wide shape. Every row is odd, since a shape is symmetric about its
+center column, and the whole shape fits the entry's Class: 3×3 Light, 4×4 Medium, 5×5 Heavy. A
+Weapon must have a Dp; Support Equipment must leave the cell blank. The Catalog loader rejects
+anything else, so a typo fails the build.
+
+**Drawing.** Boxes are squares of a fixed size per card, with a gap of 20% of the box between them.
+The Impact Box (top row center) is black; every other box is `#888`. Rolls print as `N×` in Roboto
+Slab 600 to the left of the shape, vertically centered on it, at the size of that card's weapon name.
+Shape and text together are centered in the Dp area. Only Machine Guns have Rolls, and their shapes
+are one box wide, so the text always fits.
+
+| Card | Dp area (x1–x2 × y1–y2) | Grid | Box | `N×` size |
+|---|---|---|---|---|
+| Mech | 166–195 / 349–378 × 440–469 (arms), 469–498 (torsos) | 5×5 | 5.8 | 9px |
+| Vehicle | 320–378 × 435–466 (mount 1), 466–498 (mount 2) | 4×4 | 7.75 | 11px |
+| Troops | 214–250 × 182–238 | 3×3 | 12 | 11px |
+
+The box size is the area's smaller side divided by the grid, so a Light Laser is the same size on
+every row of a card rather than stretched to fill its area.
+
+An empty mount, a Support Equipment and a name missing from the Catalog all print nothing, like a
+blank Rv. An illegal Unit Profile can mount a Weapon too heavy for its card's grid (a Heavy Laser on
+a Vehicle is 5 rows in a 4×4 area): shrink that row's boxes until the shape fits rather than clipping
+it. The card is already marked illegal.
+
+**Template changes.** Drop the grid lines from all three Dp areas, keeping the surrounding box: the
+Mech's `#minigrid` def and its four `<use>`s, the Vehicle's 6×8 grid path and the Troops' 6×9 grid
+path. The Vehicle's Dp column is one box spanning both mount rows; the two Dp areas line up with the
+mount rows, leaving the 418–435 label strip empty. The areas take no `DP:` label, on any card.
+
 ## Processing: unit data → PDF
 
 1. **Load the template** by importing it as raw text (`import mechSvg from '../../cards/mech-card.svg?raw'`)
@@ -216,14 +253,16 @@ all of row 1; Sv 10 crosses out row 1.
      spans x = 44–250 from the top row down.
    - Troops strength tracker: cross out boxes *n* > Sv. Sv 5 covers part of row 0 and all of row 1,
      so draw one rect per row.
-5. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
-6. **Place on the page:**
+5. **Draw each Dp** (see [Dp](#dp)): one `<rect>` per box in the row's Dp area, plus the `N×` text
+   when the entry has Rolls. Pure geometry, so it's tested in Node.
+6. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
+7. **Place on the page:**
    `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card draw the texture
    image and then `await svg2pdf(svgEl, doc, { x, y, width, height })`, with position and size in
    pt (the doc's unit, verified) from the page layout table (scale 1.0 or 0.641). Cards keep list
    order: a Troop takes the bottom half of the slot when the card before it is a Troop in that slot's
    top half, and otherwise the top half of the next slot. Add a page when the grid fills.
-7. **Download** with `doc.save('mech-attack-cards.pdf')`.
+8. **Download** with `doc.save('mech-attack-cards.pdf')`.
 
 ### Texture
 
@@ -281,8 +320,6 @@ Use window height 490 for Mech/Vehicle and 240 for Troops. The screenshot is 2×
 
 Don't build against the current guesses for these:
 
-- **Dp:** how a Damage Profile is stored and drawn, including multiplier boxes. It replaces the
-  hand-drawn grids.
 - **Weapon eligibility by Class for Vehicles:** which Weapons each Class may mount.
   Settled for Mechs and Troops (see `CONTEXT.md`).
 - **Unit construction for Vehicles:** base stats, upgrades and Bp. Settled for Mechs and Troops:

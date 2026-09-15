@@ -140,9 +140,29 @@ What a Troop has because of its Class, costing nothing and outside the Catalog: 
 on every Troop, plus Jump Packs on Jump Infantry. Never chosen.
 
 **Dp** (Damage Profile):
-The pattern of boxes a weapon's hit fills, some marked with a multiplier. Fits a 5×5 area for
-Mech weapons, 4×4 for Vehicle and 3×3 for Troop.
+The shape of boxes a Weapon's hit fills on a Mech or Vehicle target's Armor Grid. Its **Impact Box**, centered in
+the top row, lands on the rolled Hit Location's outermost unmarked layer; boxes below it go deeper,
+boxes beside it spread into neighboring Hit Locations. Every Weapon has one Dp, whatever mounts it.
+A shape is symmetric about its center column, and each row's boxes are contiguous. A Light Weapon's
+Dp fits 3×3, a Medium one's 4×4 and a Heavy one's 5×5, which is why only a Mech card has room for 5×5.
+A Troop target ignores the shape: how much a hit costs its Sv follows from the Weapon, not its Dp.
 _Avoid_: Damage shape, template
+
+**Impact Box**:
+The one box of a Dp that lands on the rolled Hit Location, centered in its top row.
+_Avoid_: Black box, center box
+
+**Rolls**:
+How many Hit Locations one hit of a Weapon rolls, drawing its Dp at each; 1 unless shown, as in 5×.
+Five matching rolls stack five Dp deep in one column; five different rolls put one in each of five.
+_Avoid_: Multiplier
+
+**Armor Grid**:
+The grid on a Mech or Vehicle card where damage is marked: a column per Hit Location, 1 to 10, and a
+row per 10 Armor, outermost at the top. Rows above the unit's Armor are blanked.
+
+**Hit Location**:
+One of the ten numbered columns of the Armor Grid, rolled to place a Dp's Impact Box.
 
 **Rv** (Range Value):
 A weapon's range, given as a normal and an extended value, plus a minimum range for some (missiles),
