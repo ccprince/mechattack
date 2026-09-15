@@ -2,14 +2,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import { buildMechCardSvg } from '../cards/mechCard';
-import { sampleMech } from '../domain/mech';
+import { testMech } from '../cards/testMech';
 import { exportCardsPdf } from './exportPdf';
 
 beforeAll(loadCardFonts);
 
 describe('exportCardsPdf', () => {
   it('prints a Mech card with the card fonts embedded', async () => {
-    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
     const doc = await exportCardsPdf([{ kind: 'Mech', svg }], 'large');
     const pdf = doc.output();
     // Written to disk for inspection by eye (gitignored).

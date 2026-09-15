@@ -1,20 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import { buildMechCardSvg } from '../cards/mechCard';
-import { sampleMech } from '../domain/mech';
 import styles from './App.module.css';
-import { CardPreview } from './CardPreview';
+import { ArmyListHeader } from './ArmyListHeader';
+import { ArmyListProvider, useSelectedUnitProfile } from './ArmyListContext';
+import { UnitProfileEditor } from './UnitProfileEditor';
+import { UnitProfileList } from './UnitProfileList';
 
 export function App() {
-  const [card, setCard] = useState<SVGSVGElement>();
-  const [printing, setPrinting] = useState(false);
+  return (
+    <ArmyListProvider>
+      <ArmyListEditor />
+    </ArmyListProvider>
+  );
+}
+
+function ArmyListEditor() {
+  const selected = useSelectedUnitProfile();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
     let cancelled = false;
     loadCardFonts()
       .then(() => {
-        if (!cancelled) setCard(buildMechCardSvg(sampleMech, createValueMeasure()));
+        if (!cancelled) setFontsLoaded(true);
       })
       .catch((reason: unknown) => setError(`Couldn't load the card fonts: ${String(reason)}`));
     return () => {
@@ -22,32 +32,26 @@ export function App() {
     };
   }, []);
 
-  async function downloadPdf() {
-    if (!card) return;
-    setPrinting(true);
-    setError(undefined);
-    try {
-      // Loaded on demand: jsPDF and svg2pdf are most of the bundle.
-      const { exportCardsPdf } = await import('../pdf/exportPdf');
-      const doc = await exportCardsPdf([{ kind: 'Mech', svg: card }], 'large');
-      doc.save('mech-attack-cards.pdf');
-    } catch (reason) {
-      setError(`Couldn't build the PDF: ${String(reason)}`);
-    } finally {
-      setPrinting(false);
-    }
-  }
+  const measure = useMemo(() => (fontsLoaded ? createValueMeasure() : undefined), [fontsLoaded]);
+  // Rebuilt on every edit: the card is never patched in place (ADR 0002).
+  const card = useMemo(
+    () => (measure && selected ? buildMechCardSvg(selected, measure) : undefined),
+    [measure, selected],
+  );
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Mech Attack List Builder</h1>
-        <button type="button" onClick={downloadPdf} disabled={!card || printing}>
-          {printing ? 'Building PDF…' : 'Download PDF'}
-        </button>
-      </header>
+      <h1 className={styles.title}>Mech Attack List Builder</h1>
+      <ArmyListHeader card={card} onError={setError} />
       {error && <p role="alert">{error}</p>}
-      {card ? <CardPreview svg={card} label={`${sampleMech.name} record card`} /> : <p>Loading…</p>}
+      <div className={styles.columns}>
+        <UnitProfileList />
+        {selected ? (
+          <UnitProfileEditor key={selected.id} profile={selected} card={card} />
+        ) : (
+          <p className={styles.empty}>Add a Mech to start building the Army List.</p>
+        )}
+      </div>
     </main>
   );
 }

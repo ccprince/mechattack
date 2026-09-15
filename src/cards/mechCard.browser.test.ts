@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { sampleMech } from '../domain/mech';
+import { testMech } from './testMech';
 import { createValueMeasure, loadCardFonts } from './fonts';
 import { buildMechCardSvg } from './mechCard';
 
@@ -11,7 +11,7 @@ function field(svg: SVGSVGElement, name: string) {
 
 describe('buildMechCardSvg', () => {
   it('replaces the sample data with the Unit Profile', () => {
-    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Ironclad');
     expect(field(svg, 'armor')?.textContent).toBe('110');
     expect(field(svg, 'ra-weapon')?.textContent).toBe('HL');
@@ -22,13 +22,13 @@ describe('buildMechCardSvg', () => {
   });
 
   it('prints a minimum Rv ahead of the normal and extended Rv', () => {
-    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'la-weapon')?.textContent).toBe('HM');
     expect(field(svg, 'la-rv')?.textContent).toBe('3-10/14');
   });
 
   it('leaves Hv blank for an entry that generates no heat', () => {
-    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'lt-weapon')?.textContent).toBe('IWTS');
     expect(field(svg, 'lt-rv')?.textContent).toBe('8/12');
     expect(field(svg, 'lt-hv')?.textContent ?? '').toBe('');
@@ -37,8 +37,8 @@ describe('buildMechCardSvg', () => {
   it('leaves Rv blank for Support Equipment without range', () => {
     const svg = buildMechCardSvg(
       {
-        ...sampleMech,
-        hardpoints: { ...sampleMech.hardpoints, rightTorso: 'Electronic Counter Targeting System' },
+        ...testMech,
+        hardpoints: { ...testMech.hardpoints, rightTorso: 'Electronic Counter Targeting System' },
       },
       createValueMeasure(),
     );
@@ -48,14 +48,14 @@ describe('buildMechCardSvg', () => {
   });
 
   it('removes the Google Fonts import', () => {
-    const svg = buildMechCardSvg(sampleMech, createValueMeasure());
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(svg.querySelector('style')?.textContent).not.toContain('@import');
   });
 
   it('keeps a long name inside its box in the real value font', async () => {
     const measure = createValueMeasure();
     const svg = buildMechCardSvg(
-      { ...sampleMech, name: 'Annihilator Prime Mk. IV Siege Variant' },
+      { ...testMech, name: 'Annihilator Prime Mk. IV Siege Variant' },
       measure,
     );
     document.body.append(svg);
