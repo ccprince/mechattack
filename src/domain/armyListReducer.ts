@@ -1,5 +1,6 @@
 import type { ArmyList } from './armyList';
 import type { MechProfile } from './mech';
+import type { TroopProfile } from './troop';
 import type { UnitProfile } from './unitProfile';
 import { takenMounts, vehicleMounts, type VehicleProfile } from './vehicle';
 
@@ -14,6 +15,7 @@ export type ArmyListAction =
   | { type: 'setBpLimit'; bpLimit: number }
   | { type: 'addMech' }
   | { type: 'addVehicle' }
+  | { type: 'addTroop' }
   | { type: 'updateUnitProfile'; id: string; changes: UnitProfileChanges }
   | { type: 'setQuantity'; id: string; quantity: number }
   | { type: 'duplicateUnitProfile'; id: string }
@@ -24,7 +26,7 @@ export type ArmyListAction =
  * Fields to overwrite, for a Unit Profile of that kind; Hardpoints and Vehicle mounts merge one by
  * one. Kind and id never change.
  */
-export type UnitProfileChanges = MechChanges | VehicleChanges;
+export type UnitProfileChanges = MechChanges | VehicleChanges | TroopChanges;
 
 type MechChanges = Partial<Omit<MechProfile, 'kind' | 'id' | 'hardpoints'>> & {
   hardpoints?: Partial<MechProfile['hardpoints']>;
@@ -33,6 +35,8 @@ type MechChanges = Partial<Omit<MechProfile, 'kind' | 'id' | 'hardpoints'>> & {
 type VehicleChanges = Partial<Omit<VehicleProfile, 'kind' | 'id' | 'mounts'>> & {
   mounts?: Partial<VehicleProfile['mounts']>;
 };
+
+type TroopChanges = Partial<Omit<TroopProfile, 'kind' | 'id'>>;
 
 /**
  * Values are stored as given, not range-checked: the editor parses typed-in values before
@@ -48,6 +52,8 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
       return addUnitProfile(state, newMech);
     case 'addVehicle':
       return addUnitProfile(state, newVehicle);
+    case 'addTroop':
+      return addUnitProfile(state, newTroop);
     case 'updateUnitProfile': {
       const { id, changes } = action;
       const { unitProfiles } = state.list;
@@ -129,7 +135,8 @@ function addUnitProfile(
 
 /**
  * Changes must suit the Unit Profile's kind: fields meant for the other kind aren't checked here.
- * Unticking a Turret or Static Mount empties its mounts.
+ * Unticking a Turret or Static Mount empties its mounts. Changing a Troop's Class keeps its Crew
+ * Served Weapon.
  */
 function applyChanges(profile: UnitProfile, changes: UnitProfileChanges): UnitProfile {
   if (profile.kind === 'Mech') {
@@ -140,6 +147,7 @@ function applyChanges(profile: UnitProfile, changes: UnitProfileChanges): UnitPr
       hardpoints: { ...profile.hardpoints, ...mechChanges.hardpoints },
     };
   }
+  if (profile.kind === 'Troop') return { ...profile, ...(changes as TroopChanges) };
   const vehicleChanges = changes as VehicleChanges;
   const next = { ...profile, ...vehicleChanges };
   const mounts = { ...profile.mounts, ...vehicleChanges.mounts };
@@ -192,6 +200,18 @@ function newVehicle(id: string, freeName: (base: string) => string): VehicleProf
     cargoBays: 0,
     notes: '',
     mounts: { turret: null, staticMount1: null, staticMount2: null },
+    quantity: 1,
+  };
+}
+
+function newTroop(id: string, freeName: (base: string) => string): TroopProfile {
+  return {
+    kind: 'Troop',
+    id,
+    name: freeName('New Troop'),
+    class: 'Light Infantry',
+    crewServedWeapon: null,
+    notes: '',
     quantity: 1,
   };
 }

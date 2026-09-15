@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { armyListReducer } from './armyListReducer';
 import { describeUnitProfileIssues, type UnitProfile } from './unitProfile';
+import type { TroopProfile } from './troop';
 import type { VehicleProfile } from './vehicle';
 
-/** A new Unit Profile of that kind, as Add Mech or Add Vehicle makes it. */
-function added(type: 'addMech' | 'addVehicle'): UnitProfile {
+/** A new Unit Profile of that kind, as Add Mech, Add Vehicle or Add Troop makes it. */
+function added(type: 'addMech' | 'addVehicle' | 'addTroop'): UnitProfile {
   const state = armyListReducer(
     { list: { version: 2, name: 'Test', bpLimit: 50, unitProfiles: [] }, selectedId: null },
     { type },
@@ -31,7 +32,21 @@ describe('describeUnitProfileIssues', () => {
     ]);
   });
 
+  it("describes a Troop's Issues in Troop terms", () => {
+    const troop: TroopProfile = {
+      ...(added('addTroop') as TroopProfile),
+      class: 'Jump Infantry',
+      crewServedWeapon: 'Medium Laser',
+    };
+    expect(describeUnitProfileIssues(troop)).toEqual([
+      'Crew Served Weapon: Medium Laser is Medium, but a Troop may mount only Light',
+      "Bp 7 is more than a Jump Infantry Troop's max Bp of 6",
+    ]);
+  });
+
   it('is empty for a Legal Unit Profile', () => {
-    expect(describeUnitProfileIssues({ ...added('addVehicle'), armor: 10 })).toEqual([]);
+    expect(
+      describeUnitProfileIssues({ ...(added('addVehicle') as VehicleProfile), armor: 10 }),
+    ).toEqual([]);
   });
 });

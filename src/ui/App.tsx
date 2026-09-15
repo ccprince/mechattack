@@ -25,7 +25,9 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
 
 function ArmyListEditor({ banner }: { banner: ReactNode }) {
   const { autosaveFailed } = useArmyList();
-  const selected = useSelectedUnitProfile();
+  const selectedProfile = useSelectedUnitProfile();
+  // Troops can't be edited yet: only Mechs and Vehicles open in the editor.
+  const selected = selectedProfile?.kind === 'Troop' ? undefined : selectedProfile;
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
 

@@ -123,6 +123,116 @@ describe('armyListReducer', () => {
     });
   });
 
+  describe('addTroop', () => {
+    it('adds a default New Troop and selects it', () => {
+      const next = armyListReducer(state(), { type: 'addTroop' });
+      expect(next.list.unitProfiles).toEqual([
+        {
+          kind: 'Troop',
+          id: expect.any(String),
+          name: 'New Troop',
+          class: 'Light Infantry',
+          crewServedWeapon: null,
+          notes: '',
+          quantity: 1,
+        },
+      ]);
+      expect(next.selectedId).toBe(next.list.unitProfiles[0]?.id);
+      expect(armyListSchema.safeParse(next.list).success).toBe(true);
+      expect(unitProfileIssues(next.list.unitProfiles[0]!)).toEqual([]);
+    });
+
+    it('suffixes the name so it stays unique, apart from other kinds, with ids unique across all', () => {
+      const next = (['addTroop', 'addMech', 'addVehicle', 'addTroop'] as const).reduce(
+        (current, type) => armyListReducer(current, { type }),
+        state(),
+      );
+      expect(next.list.unitProfiles.map(({ name }) => name)).toEqual([
+        'New Troop',
+        'New Mech',
+        'New Vehicle',
+        'New Troop 2',
+      ]);
+      expect(armyListSchema.safeParse(next.list).success).toBe(true);
+    });
+  });
+
+  describe('updateUnitProfile on a Troop', () => {
+    const oneTroop = () => armyListReducer(state(), { type: 'addTroop' });
+
+    it('changes the given fields', () => {
+      let current = oneTroop();
+      const id = current.selectedId!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { name: 'Skyborne', crewServedWeapon: 'Light Missile', notes: 'Drops in' },
+      });
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { class: 'Jump Infantry' },
+      });
+      expect(current.list.unitProfiles[0]).toEqual({
+        kind: 'Troop',
+        id,
+        name: 'Skyborne',
+        class: 'Jump Infantry',
+        crewServedWeapon: 'Light Missile',
+        notes: 'Drops in',
+        quantity: 1,
+      });
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+    });
+
+    it('keeps the Crew Served Weapon when a Class change leaves an Issue', () => {
+      let current = oneTroop();
+      const id = current.selectedId!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { crewServedWeapon: 'Light Cannon' },
+      });
+      const light = current.list.unitProfiles[0]!;
+      expect(unitProfileIssues(light)).toEqual([]);
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { class: 'Jump Infantry' },
+      });
+      const jump = current.list.unitProfiles[0]!;
+      expect(jump).toEqual({ ...light, class: 'Jump Infantry' });
+      expect(unitProfileIssues(jump)).toEqual([
+        { rule: 'overMaxBp', bp: 7, troopClass: 'Jump Infantry', maxBp: 6 },
+      ]);
+    });
+
+    it('sets the quantity, duplicates and deletes a Troop as it would a Mech', () => {
+      let current = armyListReducer(oneTroop(), { type: 'addVehicle' });
+      const [troop, vehicle] = current.list.unitProfiles;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id: troop!.id,
+        changes: { crewServedWeapon: 'Light Laser' },
+      });
+      current = armyListReducer(current, { type: 'setQuantity', id: troop!.id, quantity: 4 });
+      expect(bpTotal(current.list)).toBe(4 * (2 + 1));
+
+      current = armyListReducer(current, { type: 'duplicateUnitProfile', id: troop!.id });
+      const [original, copy] = current.list.unitProfiles;
+      expect(copy).toEqual({
+        ...original,
+        id: expect.any(String),
+        name: 'New Troop (copy)',
+        quantity: 0,
+      });
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+
+      current = armyListReducer(current, { type: 'deleteUnitProfile', id: troop!.id });
+      expect(current.list.unitProfiles).toEqual([copy, vehicle]);
+    });
+  });
+
   describe('updateUnitProfile on a Vehicle', () => {
     const oneVehicle = () => armyListReducer(state(), { type: 'addVehicle' });
 
