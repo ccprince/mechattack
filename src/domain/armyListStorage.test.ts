@@ -83,17 +83,10 @@ describe('saveArmyList and loadArmyList', () => {
 });
 
 describe('when storage fails', () => {
-  const unavailable: KeyValueStore = {
-    getItem: () => {
-      throw new DOMException('Storage is disabled', 'SecurityError');
-    },
-    setItem: () => {
-      throw new DOMException('Storage is disabled', 'SecurityError');
-    },
-    removeItem: () => {
-      throw new DOMException('Storage is disabled', 'SecurityError');
-    },
+  const disabled = () => {
+    throw new DOMException('Storage is disabled', 'SecurityError');
   };
+  const unavailable: KeyValueStore = { getItem: disabled, setItem: disabled, removeItem: disabled };
 
   it('loads a fresh Army List', () => {
     expect(loadArmyList(unavailable)).toEqual({ list: undefined, backup: undefined });

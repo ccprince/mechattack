@@ -3,7 +3,7 @@ import styles from './RecoveryBanner.module.css';
 
 /**
  * Offers the unreadable save kept in the backup key. Stays up, across reloads too, until the player
- * downloads or discards it; either way the backup is cleared.
+ * downloads or discards it. Only Discard clears the backup: a download can be blocked or cancelled.
  */
 export function RecoveryBanner({
   store,
@@ -15,11 +15,11 @@ export function RecoveryBanner({
   onClose: () => void;
 }) {
   function download() {
-    downloadText(backup, 'mech-attack-army-list-backup.json', 'application/json');
-    close();
+    downloadJson(backup, 'mech-attack-army-list-backup.json');
+    onClose();
   }
 
-  function close() {
+  function discard() {
     discardBackup(store);
     onClose();
   }
@@ -32,7 +32,7 @@ export function RecoveryBanner({
       <button type="button" onClick={download}>
         Download it
       </button>
-      <button type="button" onClick={close}>
+      <button type="button" onClick={discard}>
         Discard
       </button>
     </div>
@@ -40,8 +40,8 @@ export function RecoveryBanner({
 }
 
 /** Saves `text` as-is, so the raw backup comes back byte for byte. */
-function downloadText(text: string, filename: string, type: string) {
-  const url = URL.createObjectURL(new Blob([text], { type }));
+function downloadJson(text: string, filename: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
