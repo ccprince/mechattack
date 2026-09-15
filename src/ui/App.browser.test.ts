@@ -1,35 +1,14 @@
-import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
-import { backupKey, savedArmyListKey, type KeyValueStore } from '../domain/armyListStorage';
+import { backupKey, savedArmyListKey } from '../domain/armyListStorage';
 import { fakeStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
-import { mountApp } from './mountApp';
+import { setUpApp, unitProfiles } from './testApp';
 
-let container: HTMLElement;
-let root: Root | undefined;
-
-beforeEach(() => {
-  container = document.createElement('div');
-  document.body.append(container);
-});
-
-afterEach(() => {
-  root?.unmount();
-  root = undefined;
-  container.remove();
-  vi.restoreAllMocks();
-});
-
-/** Starts the app, or starts it again from what the store now holds, like a page reload. */
-function load(store: KeyValueStore) {
-  root?.unmount();
-  root = mountApp(container, store);
-}
+const load = setUpApp();
 
 const listName = () => page.getByLabelText('Army List name');
-const unitProfiles = () => page.getByRole('navigation', { name: 'Unit Profiles' });
 const banner = () => page.getByRole('alert').filter({ hasText: "couldn't be read" });
 
 const ironLegion: ArmyList = { version: 1, name: 'Iron Legion', bpLimit: 40, unitProfiles: [] };
