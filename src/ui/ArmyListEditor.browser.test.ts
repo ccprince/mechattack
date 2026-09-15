@@ -124,7 +124,7 @@ describe('quantity, Duplicate and Delete', () => {
     ],
   });
 
-  it('updates the Bp total as the quantity steps, down to 0', async () => {
+  it('updates the Bp total as the quantity steps, from 0 up to 100', async () => {
     loadList(twoMechList());
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
 
@@ -138,6 +138,11 @@ describe('quantity, Duplicate and Delete', () => {
     await quantity.fill('-2');
     await field('Name').click();
     await expect.element(quantity).toHaveValue(0);
+
+    await quantity.fill('150');
+    await field('Name').click();
+    await expect.element(quantity).toHaveValue(100);
+    await expect.element(page.getByText('Bp 603 /')).toBeInTheDocument();
   });
 
   it('duplicates a Unit Profile as an unfielded "(copy)", and opens it', async () => {

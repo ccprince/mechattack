@@ -29,7 +29,7 @@ export function fieldedCopies(list: ArmyList): MechProfile[] {
   return list.unitProfiles.flatMap((profile) => Array<MechProfile>(profile.quantity).fill(profile));
 }
 
-/** Whether anything would print. Doesn't build the copies, so a huge quantity stays cheap. */
+/** Whether anything would print. */
 export function hasFieldedCopies(list: ArmyList): boolean {
   return list.unitProfiles.some((profile) => profile.quantity > 0);
 }

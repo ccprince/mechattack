@@ -40,7 +40,7 @@ describe('armyListSchema', () => {
 
   it('accepts the edges of every range', () => {
     const low = mech({ id: 'u1', bp: 1, mv: 0, tp: 0, hc: 0, armor: 0, quantity: 0 });
-    const high = mech({ id: 'u2', bp: 20, mv: 9, tp: 9, hc: 9, armor: 150 });
+    const high = mech({ id: 'u2', bp: 20, mv: 9, tp: 9, hc: 9, armor: 150, quantity: 100 });
     expect(armyListSchema.safeParse(list({ unitProfiles: [low, high] })).success).toBe(true);
   });
 
@@ -56,6 +56,7 @@ describe('armyListSchema', () => {
     ['negative Armor', { armor: -10 }],
     ['negative quantity', { quantity: -1 }],
     ['fractional quantity', { quantity: 1.5 }],
+    ['quantity 101', { quantity: 101 }],
   ])('rejects %s', (_, overrides) => {
     expect(armyListSchema.safeParse(list({ unitProfiles: [mech(overrides)] })).success).toBe(false);
   });
@@ -121,11 +122,6 @@ describe('hasFieldedCopies', () => {
     expect(hasFieldedCopies(list())).toBe(false);
     expect(hasFieldedCopies(list({ unitProfiles: [reserve] }))).toBe(false);
     expect(hasFieldedCopies(list({ unitProfiles: [reserve, mech({ id: 'u2' })] }))).toBe(true);
-  });
-
-  it('stays cheap for a huge quantity', () => {
-    const horde = mech({ quantity: Number.MAX_SAFE_INTEGER });
-    expect(hasFieldedCopies(list({ unitProfiles: [horde] }))).toBe(true);
   });
 });
 

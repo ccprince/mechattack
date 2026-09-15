@@ -25,8 +25,8 @@ export const mechStatRanges = {
   armor: { min: 0, max: 150, step: 10 },
 } as const satisfies Record<string, NumberRange>;
 
-/** Copies fielded; the max only keeps typed-in values exact. */
-export const quantityRange: NumberRange = { min: 0, max: Number.MAX_SAFE_INTEGER, step: 1 };
+/** Copies fielded. 100 is far more than any game needs, and keeps printing every copy cheap. */
+export const quantityRange: NumberRange = { min: 0, max: 100, step: 1 };
 
 function inRange({ min, max, step }: NumberRange) {
   return z.number().int().min(min).max(max).multipleOf(step);
