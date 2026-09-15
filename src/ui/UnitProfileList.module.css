@@ -92,3 +92,9 @@
   color: #4a3a00;
   font-size: 0.8rem;
 }
+
+.add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

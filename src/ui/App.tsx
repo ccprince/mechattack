@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
-import { buildMechCardSvg } from '../cards/mechCard';
 import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import styles from './App.module.css';
 import { ArmyListHeader } from './ArmyListHeader';
@@ -26,9 +25,7 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
 
 function ArmyListEditor({ banner }: { banner: ReactNode }) {
   const { autosaveFailed } = useArmyList();
-  const selectedProfile = useSelectedUnitProfile();
-  // Vehicles can't be edited yet: only Mechs open in the editor.
-  const selected = selectedProfile?.kind === 'Mech' ? selectedProfile : undefined;
+  const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -45,11 +42,6 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
   }, []);
 
   const measure = useMemo(() => (fontsLoaded ? createValueMeasure() : undefined), [fontsLoaded]);
-  // Rebuilt on every edit: the card is never patched in place (ADR 0002).
-  const card = useMemo(
-    () => (measure && selected ? buildMechCardSvg(selected, measure) : undefined),
-    [measure, selected],
-  );
 
   return (
     <main className={styles.page}>
@@ -63,9 +55,9 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
       <div className={styles.columns}>
         <UnitProfileList />
         {selected ? (
-          <UnitProfileEditor key={selected.id} profile={selected} card={card} />
+          <UnitProfileEditor key={selected.id} profile={selected} measure={measure} />
         ) : (
-          <p className={styles.empty}>Add a Mech to start building the Army List.</p>
+          <p className={styles.empty}>Add a Mech or Vehicle to start building the Army List.</p>
         )}
       </div>
     </main>
