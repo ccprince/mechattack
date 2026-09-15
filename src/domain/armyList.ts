@@ -1,8 +1,11 @@
 import { z } from 'zod';
-import { mechStats } from './frame';
-import { mechProfileSchema, type MechProfile } from './mech';
-import { unitProfileIssues } from './mechRules';
 import type { NumberRange } from './numberRange';
+import {
+  unitProfileBp,
+  unitProfileIssues,
+  unitProfileSchema,
+  type UnitProfile,
+} from './unitProfile';
 
 /** Any whole number of Bp from 0 up; the max only keeps typed-in values exact. */
 export const bpLimitRange: NumberRange = { min: 0, max: Number.MAX_SAFE_INTEGER, step: 1 };
@@ -13,7 +16,7 @@ export const armyListSchema = z.object({
   name: z.string(),
   bpLimit: z.number().int().min(bpLimitRange.min).max(bpLimitRange.max),
   unitProfiles: z
-    .array(mechProfileSchema)
+    .array(unitProfileSchema)
     .refine((profiles) => new Set(profiles.map(({ id }) => id)).size === profiles.length, {
       message: 'Unit Profile ids must be unique',
     }),
@@ -24,14 +27,14 @@ export type ArmyList = z.infer<typeof armyListSchema>;
 /** Bp of every fielded copy: each Unit Profile's Bp times its quantity. */
 export function bpTotal(list: ArmyList): number {
   return list.unitProfiles.reduce(
-    (total, profile) => total + mechStats(profile).bp * profile.quantity,
+    (total, profile) => total + unitProfileBp(profile) * profile.quantity,
     0,
   );
 }
 
 /** One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing. */
-export function fieldedCopies(list: ArmyList): MechProfile[] {
-  return list.unitProfiles.flatMap((profile) => Array<MechProfile>(profile.quantity).fill(profile));
+export function fieldedCopies(list: ArmyList): UnitProfile[] {
+  return list.unitProfiles.flatMap((profile) => Array<UnitProfile>(profile.quantity).fill(profile));
 }
 
 /** Whether anything would print. */
@@ -40,7 +43,7 @@ export function hasFieldedCopies(list: ArmyList): boolean {
 }
 
 /** The fielded Unit Profiles with Issues, in list order: the ones that would print marked. */
-export function fieldedWithIssues(list: ArmyList): MechProfile[] {
+export function fieldedWithIssues(list: ArmyList): UnitProfile[] {
   return list.unitProfiles.filter(
     (profile) => profile.quantity > 0 && unitProfileIssues(profile).length > 0,
   );
@@ -55,7 +58,7 @@ export function isOverBpLimit(list: ArmyList): boolean {
  * Whether another Unit Profile on the list shares this one's name, ignoring surrounding spaces. A
  * name should be unique, so the editor flags a clash, but it isn't an Issue. Blank names never clash.
  */
-export function hasNameClash(list: ArmyList, profile: MechProfile): boolean {
+export function hasNameClash(list: ArmyList, profile: UnitProfile): boolean {
   const name = profile.name.trim();
   return (
     name !== '' &&

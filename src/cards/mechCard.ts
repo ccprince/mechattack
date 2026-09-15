@@ -2,7 +2,7 @@ import mechTemplate from '../../cards/mech-card.svg?raw';
 import { hardpoints, type Hardpoint, type MechProfile } from '../domain/mech';
 import { findCatalogEntry, formatRv } from '../domain/catalog';
 import { mechStats } from '../domain/frame';
-import { unitProfileIssues } from '../domain/mechRules';
+import { mechIssues } from '../domain/mechRules';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalNote } from './illegalNote';
@@ -37,7 +37,7 @@ const weaponWidth = { unmarked: 60, marked: 48 };
 
 export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVGElement {
   const { svg, data } = parseTemplate(mechTemplate);
-  const issues = unitProfileIssues(profile);
+  const issues = mechIssues(profile);
 
   const crossOut = armorCrossOut(profile.armor, topArmorRow);
   if (crossOut) addCrossOut(data, crossOut);
