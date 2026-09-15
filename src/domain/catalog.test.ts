@@ -33,7 +33,7 @@ describe('catalog', () => {
       bp: 2,
       rv: { min: 3, normal: 10, extended: 14 },
       hv: 1,
-      shortName: 'MM',
+      shortName: 'Md Missile',
     });
   });
 
@@ -45,7 +45,7 @@ describe('catalog', () => {
       bp: 3,
       rv: { normal: 6, extended: 10 },
       hv: 2,
-      shortName: 'HL',
+      shortName: 'Hv Laser',
     });
     expect(findCatalogEntry('Anti-Missile Defense System')).toEqual({
       name: 'Anti-Missile Defense System',
