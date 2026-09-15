@@ -36,6 +36,27 @@ describe('saveArmyList and loadArmyList', () => {
     expect(loadArmyList(store)).toEqual({ list: ironLegion, backup: undefined });
   });
 
+  it('round-trips a Troop', () => {
+    const withTroop: ArmyList = {
+      ...ironLegion,
+      unitProfiles: [
+        ...ironLegion.unitProfiles,
+        {
+          kind: 'Troop',
+          id: 'u2',
+          name: 'Skyborne',
+          class: 'Jump Infantry',
+          crewServedWeapon: 'Light Missile',
+          notes: 'Drops in',
+          quantity: 3,
+        },
+      ],
+    };
+    const store = fakeStore();
+    saveArmyList(store, withTroop);
+    expect(loadArmyList(store)).toEqual({ list: withTroop, backup: undefined });
+  });
+
   it('loads a list of Mechs saved before Vehicles, unchanged', () => {
     // Saved text, fixed here so it can't follow later changes to the ArmyList type.
     const raw =
@@ -43,6 +64,21 @@ describe('saveArmyList and loadArmyList', () => {
       '"name":"Ironclad","class":"Heavy","armor":110,"heatSinks":1,"engineUpgrades":2,' +
       '"notes":"Holds the line","hardpoints":{"leftArm":"Heavy Laser","rightArm":null,' +
       '"leftTorso":null,"rightTorso":null},"quantity":2}]}';
+    const store = fakeStore({ [savedArmyListKey]: raw });
+    expect(loadArmyList(store)).toEqual({ list: JSON.parse(raw), backup: undefined });
+    expect(store.entries[savedArmyListKey]).toBe(raw);
+  });
+
+  it('loads a list of Mechs and Vehicles saved before Troops, unchanged', () => {
+    // Saved text, fixed here so it can't follow later changes to the ArmyList type.
+    const raw =
+      '{"version":2,"name":"Iron Legion","bpLimit":40,"unitProfiles":[{"kind":"Mech","id":"u1",' +
+      '"name":"Ironclad","class":"Heavy","armor":110,"heatSinks":1,"engineUpgrades":2,' +
+      '"notes":"Holds the line","hardpoints":{"leftArm":"Heavy Laser","rightArm":null,' +
+      '"leftTorso":null,"rightTorso":null},"quantity":2},{"kind":"Vehicle","id":"u2",' +
+      '"name":"Hellhound","class":"Light","armor":20,"engineUpgrades":0,"turret":true,' +
+      '"staticMount":false,"cargoBays":1,"notes":"","mounts":{"turret":"Light Laser",' +
+      '"staticMount1":null,"staticMount2":null},"quantity":1}]}';
     const store = fakeStore({ [savedArmyListKey]: raw });
     expect(loadArmyList(store)).toEqual({ list: JSON.parse(raw), backup: undefined });
     expect(store.entries[savedArmyListKey]).toBe(raw);

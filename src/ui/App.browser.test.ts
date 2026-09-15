@@ -35,6 +35,27 @@ describe('autosave', () => {
     await expect.element(listName()).toHaveValue('Iron Legion');
     await expect.element(banner()).not.toBeInTheDocument();
   });
+
+  it("lists a saved Troop without opening it, since Troops can't be edited yet", async () => {
+    const withTroop: ArmyList = {
+      ...ironLegion,
+      unitProfiles: [
+        {
+          kind: 'Troop',
+          id: 't1',
+          name: 'Skyborne',
+          class: 'Jump Infantry',
+          crewServedWeapon: 'Light Missile',
+          notes: '',
+          quantity: 2,
+        },
+      ],
+    };
+    load(fakeStore({ [savedArmyListKey]: JSON.stringify(withTroop) }));
+    await expect.element(unitProfiles().getByText('Skyborne')).toBeInTheDocument();
+    await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
+    await expect.element(page.getByLabelText('Name', { exact: true })).not.toBeInTheDocument();
+  });
 });
 
 describe('recovery banner', () => {

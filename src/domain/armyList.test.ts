@@ -10,6 +10,7 @@ import {
   type ArmyList,
 } from './armyList';
 import type { MechProfile } from './mech';
+import type { TroopProfile } from './troop';
 import type { VehicleProfile } from './vehicle';
 
 function mech(overrides: Partial<MechProfile> = {}): MechProfile {
@@ -41,6 +42,19 @@ function vehicle(overrides: Partial<VehicleProfile> = {}): VehicleProfile {
     cargoBays: 1,
     notes: '',
     mounts: { turret: 'Medium Laser', staticMount1: null, staticMount2: null },
+    quantity: 1,
+    ...overrides,
+  };
+}
+
+function troop(overrides: Partial<TroopProfile> = {}): TroopProfile {
+  return {
+    kind: 'Troop',
+    id: 't1',
+    name: 'Rifles',
+    class: 'Heavy Infantry',
+    crewServedWeapon: 'Light Cannon',
+    notes: '',
     quantity: 1,
     ...overrides,
   };
@@ -99,9 +113,42 @@ describe('armyListSchema', () => {
     );
   });
 
+  it('accepts Troops of every Class with Mechs and Vehicles, with or without a Crew Served Weapon', () => {
+    const army = list({
+      unitProfiles: [
+        mech(),
+        vehicle(),
+        troop({ id: 't1', class: 'Light Infantry', crewServedWeapon: null, quantity: 0 }),
+        troop({ id: 't2', class: 'Heavy Infantry', quantity: 100 }),
+        troop({ id: 't3', class: 'Jump Infantry', crewServedWeapon: 'Plasma Lance' }),
+      ],
+    });
+    expect(armyListSchema.parse(army)).toEqual(army);
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ['a Mech Class', { class: 'Light' }],
+    ['no Crew Served Weapon', { crewServedWeapon: undefined }],
+    ['a quantity over 100', { quantity: 101 }],
+  ])('rejects a Troop with %s', (_, overrides) => {
+    const profile = { ...troop(), ...overrides };
+    expect(armyListSchema.safeParse(list({ unitProfiles: [profile as never] })).success).toBe(
+      false,
+    );
+  });
+
+  it('drops Armor and upgrades from a Troop, which has none', () => {
+    const upgraded = { ...troop(), armor: 10, engineUpgrades: 1 };
+    expect(armyListSchema.parse(list({ unitProfiles: [upgraded] })).unitProfiles[0]).toEqual(
+      troop(),
+    );
+  });
+
   it('rejects an unknown kind of unit', () => {
-    const troop = { ...mech(), kind: 'Troop' };
-    expect(armyListSchema.safeParse(list({ unitProfiles: [troop as never] })).success).toBe(false);
+    const aircraft = { ...mech(), kind: 'Aircraft' };
+    expect(armyListSchema.safeParse(list({ unitProfiles: [aircraft as never] })).success).toBe(
+      false,
+    );
   });
 
   it('rejects an unknown version', () => {
@@ -138,6 +185,12 @@ describe('bpTotal', () => {
     expect(bpTotal(army)).toBe(12 + 10);
   });
 
+  it('adds Troops with Mechs and Vehicles', () => {
+    // The default Troop costs 3 Base Bp + 2 Light Cannon = 5 Bp.
+    const army = list({ unitProfiles: [mech(), vehicle(), troop({ quantity: 3 })] });
+    expect(bpTotal(army)).toBe(12 + 5 + 15);
+  });
+
   it('is 0 for an empty Army List', () => {
     expect(bpTotal(list())).toBe(0);
   });
@@ -167,6 +220,18 @@ describe('fieldedCopies', () => {
     const hauler = vehicle({ id: 'u2', quantity: 2 });
     expect(fieldedCopies(list({ unitProfiles: [hauler, ironclad] }))).toEqual([
       hauler,
+      hauler,
+      ironclad,
+    ]);
+  });
+
+  it('includes Troops with Mechs and Vehicles', () => {
+    const ironclad = mech({ id: 'u1' });
+    const hauler = vehicle({ id: 'u2' });
+    const rifles = troop({ id: 'u3', quantity: 2 });
+    expect(fieldedCopies(list({ unitProfiles: [rifles, hauler, ironclad] }))).toEqual([
+      rifles,
+      rifles,
       hauler,
       ironclad,
     ]);
@@ -207,6 +272,15 @@ describe('hasNameClash', () => {
     expect(hasNameClash(army, hauler)).toBe(true);
   });
 
+  it('compares a Troop with a Mech and a Vehicle', () => {
+    const rifles = troop({ id: 'u3', name: 'Ironclad' });
+    const army = list({ unitProfiles: [mech({ id: 'u1' }), vehicle({ id: 'u2' }), rifles] });
+    expect(hasNameClash(army, rifles)).toBe(true);
+    expect(
+      hasNameClash(list({ unitProfiles: [vehicle(), troop({ name: 'Hauler' })] }), vehicle()),
+    ).toBe(true);
+  });
+
   it('ignores surrounding spaces', () => {
     const spaced = mech({ id: 'u1', name: ' Ironclad ' });
     const army = list({ unitProfiles: [spaced, mech({ id: 'u2', name: 'Ironclad' })] });
@@ -236,6 +310,17 @@ describe('fieldedWithIssues', () => {
   it('includes Vehicles with Issues', () => {
     const army = list({
       unitProfiles: [vehicle({ id: 'a', name: 'Sound' }), vehicle({ id: 'b', class: 'Light' })],
+    });
+    expect(fieldedWithIssues(army).map(({ id }) => id)).toEqual(['b']);
+  });
+
+  it('includes Troops with Issues', () => {
+    const army = list({
+      unitProfiles: [
+        troop({ id: 'a' }),
+        troop({ id: 'b', class: 'Jump Infantry' }),
+        troop({ id: 'c', crewServedWeapon: 'Medium Laser', quantity: 0 }),
+      ],
     });
     expect(fieldedWithIssues(army).map(({ id }) => id)).toEqual(['b']);
   });

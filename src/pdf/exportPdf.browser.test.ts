@@ -87,6 +87,29 @@ describe('exportArmyListPdf', () => {
       'Outrider',
     ]);
   });
+
+  it("skips Troops, whose card isn't built yet", async () => {
+    const withTroops: ArmyList = {
+      version: 2,
+      name: 'Combined Arms',
+      bpLimit: 200,
+      unitProfiles: [
+        {
+          kind: 'Troop',
+          id: 't1',
+          name: 'Rifles',
+          class: 'Light Infantry',
+          crewServedWeapon: null,
+          notes: '',
+          quantity: 2,
+        },
+        { ...testMech, id: 'm1', name: 'Ironclad', quantity: 1 },
+      ],
+    };
+    const doc = await exportArmyListPdf(withTroops, 'large', createValueMeasure());
+    expect(doc.getNumberOfPages()).toBe(1);
+    expect(doc.output().match(/\/I\d+ Do/g)).toHaveLength(1);
+  });
 });
 
 describe('illegal marks', () => {
