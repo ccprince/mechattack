@@ -72,6 +72,9 @@ export function UnitProfileList() {
         <button type="button" onClick={() => dispatch({ type: 'addVehicle' })}>
           Add Vehicle
         </button>
+        <button type="button" onClick={() => dispatch({ type: 'addTroop' })}>
+          Add Troop
+        </button>
       </div>
     </nav>
   );

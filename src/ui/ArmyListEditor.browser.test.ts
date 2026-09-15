@@ -81,10 +81,10 @@ describe('header', () => {
 });
 
 describe('Unit Profile list', () => {
-  it('invites adding a Mech or Vehicle while the Army List is empty', async () => {
+  it('invites adding a Mech, Vehicle or Troop while the Army List is empty', async () => {
     load(fakeStore());
     await expect
-      .element(page.getByText('Add a Mech or Vehicle to start building the Army List.'))
+      .element(page.getByText('Add a Mech, Vehicle or Troop to start building the Army List.'))
       .toBeInTheDocument();
   });
 
@@ -610,6 +610,135 @@ describe('Vehicles', () => {
     await expect.poll(() => cardField('mount2-weapon')).toBe('Static: Lt MG');
     await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Hull Options over');
     expect(cardMarks()).toEqual(['illegal']);
+  });
+});
+
+describe('Troops', () => {
+  const addTroop = () => page.getByRole('button', { name: 'Add Troop' }).click();
+
+  /** Starts the app with a fresh Army List and one new Troop selected. */
+  async function loadWithNewTroop() {
+    load(fakeStore());
+    await addTroop();
+  }
+
+  it('adds and opens a new Troop, with its own fields and worked-out stats', async () => {
+    await loadWithNewTroop();
+    await expect.element(openButton('New Troop')).toHaveAttribute('aria-current', 'true');
+    await expect.element(field('Name')).toHaveValue('New Troop');
+    await expect
+      .poll(() => optionTexts('Class'))
+      .toEqual(['Light Infantry', 'Heavy Infantry', 'Jump Infantry']);
+    await expect.element(picker('Class')).toHaveValue('Light Infantry');
+    expect(field('Armor').query()).toBeNull();
+    await expect.element(field('Bp')).toHaveTextContent('2 / 4');
+    await expect.element(field('Mv')).toHaveTextContent('3');
+    await expect.element(field('Tp')).toHaveTextContent('4');
+    await expect.element(field('Sv')).toHaveTextContent('5');
+    await expect.element(field('Standard Equipment')).toHaveTextContent('Individual Weapons');
+    await expect.element(picker('Crew Served Weapon')).toHaveDisplayValue('Empty');
+
+    await field('Notes').fill('Holds the ridge');
+    // The label's text now holds the typed notes too, so find the textarea by role.
+    await expect
+      .element(page.getByRole('textbox', { name: 'Notes' }))
+      .toHaveValue('Holds the ridge');
+    expect(issues().query()).toBeNull();
+    // No Troop card is built yet: a placeholder stands in for the preview.
+    await expect.element(page.getByText('No Troop card yet.')).toBeInTheDocument();
+  });
+
+  it('works out Bp as a Crew Served Weapon is picked', async () => {
+    await loadWithNewTroop();
+    await picker('Crew Served Weapon').selectOptions('Light Cannon');
+    await expect.element(field('Bp')).toHaveTextContent('4 / 4');
+    await expect.element(unitProfiles().getByText('4 Bp')).toBeInTheDocument();
+    await expect.element(page.getByText('Bp 4 /')).toBeInTheDocument();
+
+    await picker('Class').selectOptions('Heavy Infantry');
+    await expect.element(field('Bp')).toHaveTextContent('5 / 5');
+    await expect.element(field('Sv')).toHaveTextContent('10');
+  });
+
+  it('offers the Light entries each Troop Class can afford', async () => {
+    await loadWithNewTroop();
+    const lightExceptAp = [
+      'Empty',
+      'Light Cannon',
+      'Light Laser',
+      'Light Laser (Twin Linked)',
+      'Light Machine Gun',
+      'Light Machine Gun (Twin Linked)',
+      'Light Missile',
+      'Remote Guided Missile System',
+      'Anti-Missile Defense System',
+    ];
+    await expect.poll(() => optionTexts('Crew Served Weapon')).toEqual(lightExceptAp);
+
+    await picker('Class').selectOptions('Jump Infantry');
+    await expect
+      .poll(() => optionTexts('Crew Served Weapon'))
+      .toEqual([
+        'Empty',
+        'Light Laser',
+        'Light Machine Gun',
+        'Light Missile',
+        'Remote Guided Missile System',
+        'Anti-Missile Defense System',
+      ]);
+    await expect
+      .element(field('Standard Equipment'))
+      .toHaveTextContent('Individual Weapons, Jump Packs');
+    await expect.element(field('Mv')).toHaveTextContent('4');
+
+    await picker('Class').selectOptions('Heavy Infantry');
+    await expect.poll(() => optionTexts('Crew Served Weapon')).toEqual(lightExceptAp);
+  });
+
+  it('keeps a Crew Served Weapon the new Class can no longer afford, and flags Bp over max', async () => {
+    await loadWithNewTroop();
+    await picker('Crew Served Weapon').selectOptions('Light Cannon');
+    await expect.element(field('Bp')).toHaveTextContent('4 / 4');
+    expect(issues().query()).toBeNull();
+
+    await picker('Class').selectOptions('Jump Infantry');
+    await expect.element(picker('Crew Served Weapon')).toHaveDisplayValue('Light Cannon (Issue)');
+    await expect.element(field('Bp')).toHaveTextContent('7 / 6');
+    await expect
+      .element(issues().getByText("Bp 7 is more than a Jump Infantry Troop's max Bp of 6"))
+      .toBeInTheDocument();
+    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+
+    await picker('Crew Served Weapon').selectOptions('Light Laser');
+    await expect.element(issues()).not.toBeInTheDocument();
+    expect(optionTexts('Crew Served Weapon')).not.toContain('Light Cannon (Issue)');
+  });
+
+  it('shows Troops with their Bp and quantity, counted in the Bp total', async () => {
+    loadList({
+      version: 2,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        mech({ id: 'a', name: 'Ironclad', armor: 60 }),
+        {
+          kind: 'Troop',
+          id: 'b',
+          name: 'Skyborne',
+          class: 'Jump Infantry',
+          crewServedWeapon: 'Light Missile',
+          notes: '',
+          quantity: 2,
+        },
+      ],
+    });
+    await expect.element(profileRow('Skyborne').getByText('6 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('Skyborne').getByLabelText('Qty')).toHaveValue(2);
+    await expect.element(page.getByText('Bp 18 /')).toBeInTheDocument();
+
+    await openButton('Skyborne').click();
+    await expect.element(field('Name')).toHaveValue('Skyborne');
+    await expect.element(picker('Crew Served Weapon')).toHaveDisplayValue('Light Missile');
   });
 });
 

@@ -36,7 +36,7 @@ describe('autosave', () => {
     await expect.element(banner()).not.toBeInTheDocument();
   });
 
-  it("lists a saved Troop without opening it, since Troops can't be edited yet", async () => {
+  it('opens a saved Troop', async () => {
     const withTroop: ArmyList = {
       ...ironLegion,
       unitProfiles: [
@@ -54,7 +54,7 @@ describe('autosave', () => {
     load(fakeStore({ [savedArmyListKey]: JSON.stringify(withTroop) }));
     await expect.element(unitProfiles().getByText('Skyborne')).toBeInTheDocument();
     await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
-    await expect.element(page.getByLabelText('Name', { exact: true })).not.toBeInTheDocument();
+    await expect.element(page.getByLabelText('Name', { exact: true })).toHaveValue('Skyborne');
   });
 });
 

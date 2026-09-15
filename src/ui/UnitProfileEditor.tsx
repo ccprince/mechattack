@@ -1,6 +1,6 @@
 import { useId, useMemo, type ReactNode } from 'react';
 import type { Measure } from '../cards/fitText';
-import { buildUnitCardSvg, type CardedUnitProfile } from '../cards/unitCard';
+import { buildUnitCardSvg, hasCard, type CardedUnitProfile } from '../cards/unitCard';
 import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
@@ -21,7 +21,16 @@ import {
 } from '../domain/frame';
 import { eligibleMounts } from '../domain/mechRules';
 import type { NumberRange } from '../domain/numberRange';
-import { describeUnitProfileIssues } from '../domain/unitProfile';
+import {
+  standardEquipment,
+  troopClasses,
+  troopClassStats,
+  troopStats,
+  type TroopClass,
+  type TroopProfile,
+} from '../domain/troop';
+import { eligibleCrewServedWeapons } from '../domain/troopRules';
+import { describeUnitProfileIssues, type UnitProfile } from '../domain/unitProfile';
 import {
   vehicleClasses,
   vehicleMountLabels,
@@ -53,7 +62,7 @@ export function UnitProfileEditor({
   profile,
   measure,
 }: {
-  profile: CardedUnitProfile;
+  profile: UnitProfile;
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
 }) {
@@ -83,11 +92,9 @@ export function UnitProfileEditor({
             </span>
           )}
         </div>
-        {profile.kind === 'Mech' ? (
-          <MechFields profile={profile} update={update} />
-        ) : (
-          <VehicleFields profile={profile} update={update} />
-        )}
+        {profile.kind === 'Mech' && <MechFields profile={profile} update={update} />}
+        {profile.kind === 'Vehicle' && <VehicleFields profile={profile} update={update} />}
+        {profile.kind === 'Troop' && <TroopFields profile={profile} update={update} />}
         <label className={styles.field}>
           <span>Notes</span>
           <textarea
@@ -107,7 +114,11 @@ export function UnitProfileEditor({
           </section>
         )}
       </form>
-      <UnitCardPreview profile={profile} measure={measure} />
+      {hasCard(profile) ? (
+        <UnitCardPreview profile={profile} measure={measure} />
+      ) : (
+        <p>No {profile.kind} card yet.</p>
+      )}
     </section>
   );
 }
@@ -244,7 +255,40 @@ function VehicleFields({
   );
 }
 
-/** Worked out from the Class's Frame, the upgrades and the mounts; never typed in. */
+function TroopFields({ profile, update }: { profile: TroopProfile; update: UpdateUnitProfile }) {
+  const stats = troopStats(profile);
+  return (
+    <>
+      <StatOutputs
+        stats={[
+          { label: 'Bp', value: `${stats.bp} / ${troopClassStats[profile.class].maxBp}` },
+          { label: 'Mv', value: stats.mv },
+          { label: 'Tp', value: stats.tp },
+          { label: 'Sv', value: stats.sv },
+        ]}
+      />
+      <ClassPicker
+        classes={troopClasses}
+        value={profile.class}
+        onChange={(troopClass: TroopClass) => update({ class: troopClass })}
+      />
+      <div className={styles.field}>
+        <span aria-hidden="true">Standard Equipment</span>
+        <output aria-label="Standard Equipment">
+          {standardEquipment(profile.class).join(', ')}
+        </output>
+      </div>
+      <MountPicker
+        label="Crew Served Weapon"
+        eligible={eligibleCrewServedWeapons(profile.class)}
+        mounted={profile.crewServedWeapon}
+        onChange={(crewServedWeapon) => update({ crewServedWeapon })}
+      />
+    </>
+  );
+}
+
+/** Worked out from the Unit Profile; never typed in. */
 function StatOutputs({ stats }: { stats: { label: string; value: string | number }[] }) {
   return (
     <div className={styles.stats}>
@@ -336,8 +380,9 @@ function HullOptionCheck({
 }
 
 /**
- * Offers the eligible Catalog entries for one mount. A mount that isn't one of them (too heavy
- * after a Class change, or missing from the Catalog) stays selected and listed until changed.
+ * Offers the eligible Catalog entries for one mount. A mount that isn't one of them (too heavy or
+ * too costly after a Class change, or missing from the Catalog) stays selected and listed until
+ * changed.
  */
 function MountPicker({
   label,
