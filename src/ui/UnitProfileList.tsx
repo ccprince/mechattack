@@ -1,5 +1,8 @@
+import { hasNameClash } from '../domain/armyList';
+import { quantityRange } from '../domain/mech';
 import { unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
+import { NumberField } from './NumberField';
 import styles from './UnitProfileList.module.css';
 
 export function UnitProfileList() {
@@ -9,16 +12,21 @@ export function UnitProfileList() {
     <nav className={styles.panel} aria-label="Unit Profiles">
       <ul className={styles.list}>
         {state.list.unitProfiles.map((profile) => {
+          const { id } = profile;
+          const name = profile.name || 'Unnamed';
           const issueCount = unitProfileIssues(profile).length;
           return (
-            <li key={profile.id}>
+            <li key={id} className={styles.row}>
               <button
                 type="button"
                 className={styles.item}
-                aria-current={profile.id === state.selectedId ? 'true' : undefined}
-                onClick={() => dispatch({ type: 'selectUnitProfile', id: profile.id })}
+                aria-current={id === state.selectedId ? 'true' : undefined}
+                onClick={() => dispatch({ type: 'selectUnitProfile', id })}
               >
-                <span className={styles.itemName}>{profile.name || 'Unnamed'}</span>
+                <span className={styles.itemName}>{name}</span>
+                {hasNameClash(state.list, profile) && (
+                  <span className={styles.itemClash}>Same name</span>
+                )}
                 {issueCount > 0 && (
                   <span className={styles.itemIssues}>
                     {issueCount} {issueCount === 1 ? 'Issue' : 'Issues'}
@@ -26,6 +34,33 @@ export function UnitProfileList() {
                 )}
                 <span className={styles.itemBp}>{profile.bp} Bp</span>
               </button>
+              <div className={styles.actions}>
+                <NumberField
+                  className={styles.quantity}
+                  label="Qty"
+                  value={profile.quantity}
+                  range={quantityRange}
+                  onChange={(quantity) => dispatch({ type: 'setQuantity', id, quantity })}
+                />
+                <button
+                  type="button"
+                  aria-label={`Duplicate ${name}`}
+                  onClick={() => dispatch({ type: 'duplicateUnitProfile', id })}
+                >
+                  Duplicate
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete ${name}`}
+                  onClick={() => {
+                    if (window.confirm(`Delete ${name}?`)) {
+                      dispatch({ type: 'deleteUnitProfile', id });
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </li>
           );
         })}

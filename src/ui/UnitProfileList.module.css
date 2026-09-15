@@ -1,18 +1,46 @@
 .panel {
   display: grid;
+  min-width: 0;
   gap: 0.75rem;
 }
 
 .list {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.row {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0 0.6rem;
+  font-size: 0.85rem;
+}
+
+.quantity {
+  display: flex;
+  flex: 1;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.quantity input {
+  width: 3.5rem;
+  font: inherit;
+}
+
 .item {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   gap: 0.5rem;
   justify-content: space-between;
@@ -35,7 +63,8 @@
 }
 
 .itemName {
-  flex: 1;
+  flex: 1 1 6rem;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -52,5 +81,14 @@
   border-radius: 3px;
   background: #b3261e;
   color: #fff;
+  font-size: 0.8rem;
+}
+
+.itemClash {
+  flex-shrink: 0;
+  padding: 0 0.35rem;
+  border-radius: 3px;
+  background: #f2d98a;
+  color: #4a3a00;
   font-size: 0.8rem;
 }

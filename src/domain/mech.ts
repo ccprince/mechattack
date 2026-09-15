@@ -25,6 +25,9 @@ export const mechStatRanges = {
   armor: { min: 0, max: 150, step: 10 },
 } as const satisfies Record<string, NumberRange>;
 
+/** Copies fielded; the max only keeps typed-in values exact. */
+export const quantityRange: NumberRange = { min: 0, max: Number.MAX_SAFE_INTEGER, step: 1 };
+
 function inRange({ min, max, step }: NumberRange) {
   return z.number().int().min(min).max(max).multipleOf(step);
 }
@@ -46,7 +49,7 @@ export const mechProfileSchema = z.object({
   notes: z.string(),
   hardpoints: z.record(z.enum(hardpoints), mountedName),
   /** Copies fielded; 0 keeps the Unit Profile on the list without fielding it. */
-  quantity: z.number().int().min(0),
+  quantity: inRange(quantityRange),
 });
 
 export type MechProfile = z.infer<typeof mechProfileSchema>;

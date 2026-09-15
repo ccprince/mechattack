@@ -12,6 +12,9 @@ export type ArmyListAction =
   | { type: 'setBpLimit'; bpLimit: number }
   | { type: 'addMech' }
   | { type: 'updateUnitProfile'; id: string; changes: UnitProfileChanges }
+  | { type: 'setQuantity'; id: string; quantity: number }
+  | { type: 'duplicateUnitProfile'; id: string }
+  | { type: 'deleteUnitProfile'; id: string }
   | { type: 'selectUnitProfile'; id: string | null };
 
 /** Fields to overwrite; Hardpoints merge one by one. Kind and id never change. */
@@ -31,10 +34,9 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
       return { ...state, list: { ...state.list, bpLimit: action.bpLimit } };
     case 'addMech': {
       const { unitProfiles } = state.list;
-      const ids = new Set(unitProfiles.map(({ id }) => id));
       const names = new Set(unitProfiles.map(({ name }) => name));
       const mech = newMech(
-        firstFree((n) => `u${n}`, ids),
+        freeId(state.list),
         firstFree((n) => (n === 1 ? 'New Mech' : `New Mech ${n}`), names),
       );
       return {
@@ -62,6 +64,48 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
         },
       };
     }
+    case 'setQuantity':
+      return armyListReducer(state, {
+        type: 'updateUnitProfile',
+        id: action.id,
+        changes: { quantity: action.quantity },
+      });
+    case 'duplicateUnitProfile': {
+      const { unitProfiles } = state.list;
+      const index = unitProfiles.findIndex((profile) => profile.id === action.id);
+      const original = unitProfiles[index];
+      if (!original) return state;
+      // The name may clash with another Unit Profile's: the editor flags it, it isn't an Issue.
+      const copy = {
+        ...original,
+        id: freeId(state.list),
+        name: `${original.name.trim()} (copy)`,
+        quantity: 0,
+      };
+      return {
+        list: {
+          ...state.list,
+          unitProfiles: [
+            ...unitProfiles.slice(0, index + 1),
+            copy,
+            ...unitProfiles.slice(index + 1),
+          ],
+        },
+        selectedId: copy.id,
+      };
+    }
+    case 'deleteUnitProfile': {
+      const { unitProfiles } = state.list;
+      const index = unitProfiles.findIndex((profile) => profile.id === action.id);
+      if (index === -1) return state;
+      const remaining = unitProfiles.filter((profile) => profile.id !== action.id);
+      // Deleting the open Unit Profile opens its neighbour: the next one, or else the previous.
+      const selectedId =
+        state.selectedId === action.id
+          ? (remaining[Math.min(index, remaining.length - 1)]?.id ?? null)
+          : state.selectedId;
+      return { list: { ...state.list, unitProfiles: remaining }, selectedId };
+    }
     case 'selectUnitProfile': {
       const { id } = action;
       if (id !== null && !hasUnitProfile(state.list, id)) return state;
@@ -72,6 +116,10 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
 
 function hasUnitProfile(list: ArmyList, id: string): boolean {
   return list.unitProfiles.some((profile) => profile.id === id);
+}
+
+function freeId(list: ArmyList): string {
+  return firstFree((n) => `u${n}`, new Set(list.unitProfiles.map(({ id }) => id)));
 }
 
 /** The first of `candidate(1)`, `candidate(2)`, … not already taken. */

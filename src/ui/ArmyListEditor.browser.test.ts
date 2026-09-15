@@ -30,6 +30,8 @@ const profileRow = (name: string) =>
   unitProfiles()
     .getByRole('listitem')
     .filter({ has: page.getByText(name, { exact: true }) });
+/** The row's first button, which opens the Unit Profile in the editor. */
+const openButton = (name: string) => profileRow(name).getByRole('button').first();
 
 /** Read once: poll it (`expect.poll`) to wait for renders. */
 function optionTexts(name: string): string[] {
@@ -85,11 +87,9 @@ describe('Unit Profile list', () => {
     await loadWithNewMech();
     await addMech();
 
-    const second = profileRow('New Mech 2').getByRole('button');
+    const second = openButton('New Mech 2');
     await expect.element(second).toHaveAttribute('aria-current', 'true');
-    await expect
-      .element(profileRow('New Mech').getByRole('button'))
-      .not.toHaveAttribute('aria-current');
+    await expect.element(openButton('New Mech')).not.toHaveAttribute('aria-current');
     await expect.element(field('Name')).toHaveValue('New Mech 2');
     expect(unitProfiles().getByRole('listitem').elements()).toHaveLength(2);
   });
@@ -98,7 +98,7 @@ describe('Unit Profile list', () => {
     await loadWithNewMech();
     await addMech();
 
-    const first = profileRow('New Mech').getByRole('button');
+    const first = openButton('New Mech');
     await first.click();
     await expect.element(first).toHaveAttribute('aria-current', 'true');
     await expect.element(field('Name')).toHaveValue('New Mech');
@@ -110,6 +110,86 @@ describe('Unit Profile list', () => {
     await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
     await field('Name').fill('');
     await expect.element(unitProfiles().getByText('Unnamed')).toBeInTheDocument();
+  });
+});
+
+describe('quantity, Duplicate and Delete', () => {
+  const twoMechList = (): ArmyList => ({
+    version: 1,
+    name: 'Iron Legion',
+    bpLimit: 50,
+    unitProfiles: [
+      mech({ id: 'a', name: 'Ironclad', bp: 6, quantity: 1 }),
+      mech({ id: 'b', name: 'Scout', bp: 3, quantity: 1 }),
+    ],
+  });
+
+  it('updates the Bp total as the quantity steps, down to 0', async () => {
+    loadList(twoMechList());
+    await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+
+    const quantity = profileRow('Ironclad').getByLabelText('Qty');
+    await quantity.fill('3');
+    await expect.element(page.getByText('Bp 21 /')).toBeInTheDocument();
+    await quantity.fill('0');
+    await expect.element(page.getByText('Bp 3 /')).toBeInTheDocument();
+    await expect.element(profileRow('Ironclad')).toBeInTheDocument();
+
+    await quantity.fill('-2');
+    await field('Name').click();
+    await expect.element(quantity).toHaveValue(0);
+  });
+
+  it('duplicates a Unit Profile as an unfielded "(copy)", and opens it', async () => {
+    loadList(twoMechList());
+    await profileRow('Ironclad').getByRole('button', { name: 'Duplicate Ironclad' }).click();
+
+    await expect.element(openButton('Ironclad (copy)')).toHaveAttribute('aria-current', 'true');
+    await expect.element(field('Name')).toHaveValue('Ironclad (copy)');
+    await expect.element(profileRow('Ironclad (copy)').getByLabelText('Qty')).toHaveValue(0);
+    await expect.element(field('Bp')).toHaveValue(6);
+    await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+    expect(
+      unitProfiles()
+        .getByRole('button', { name: /^Delete / })
+        .elements()
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Delete Ironclad', 'Delete Ironclad (copy)', 'Delete Scout']);
+  });
+
+  it('deletes a Unit Profile only once confirmed', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList(twoMechList());
+    const deleteIronclad = profileRow('Ironclad').getByRole('button', { name: 'Delete Ironclad' });
+
+    await deleteIronclad.click();
+    expect(confirm).toHaveBeenCalledWith('Delete Ironclad?');
+    await expect.element(profileRow('Ironclad')).toBeInTheDocument();
+    await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+
+    confirm.mockReturnValue(true);
+    await deleteIronclad.click();
+    await expect.element(profileRow('Ironclad')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Bp 3 /')).toBeInTheDocument();
+    await expect.element(field('Name')).toHaveValue('Scout');
+  });
+
+  it('flags both Unit Profiles that share a name, without an Issue', async () => {
+    loadList(twoMechList());
+    await expect.element(unitProfiles().getByText('Same name')).not.toBeInTheDocument();
+
+    await field('Name').fill('Scout');
+    expect(unitProfiles().getByRole('listitem').elements()).toHaveLength(2);
+    await expect.poll(() => unitProfiles().getByText('Same name').elements()).toHaveLength(2);
+    await expect
+      .element(page.getByText('Another Unit Profile is also named Scout'))
+      .toBeInTheDocument();
+    expect(unitProfiles().getByText(/Issue/).query()).toBeNull();
+    expect(issues().query()).toBeNull();
+
+    await field('Name').fill('Scout II');
+    await expect.element(unitProfiles().getByText('Same name')).not.toBeInTheDocument();
+    await expect.element(page.getByText(/Another Unit Profile/)).not.toBeInTheDocument();
   });
 });
 
@@ -345,7 +425,7 @@ describe('Download PDF', () => {
     await addMech();
     await addMech();
     // Neither the first nor the last added.
-    await profileRow('New Mech 2').getByRole('button').click();
+    await openButton('New Mech 2').click();
     await expect.poll(() => cardField('name')).toBe('New Mech 2');
 
     await downloadPdf().click();

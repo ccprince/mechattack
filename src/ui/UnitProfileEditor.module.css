@@ -25,6 +25,10 @@
   min-width: 0;
 }
 
+.clash {
+  color: #6b5200;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));

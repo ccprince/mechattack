@@ -1,3 +1,5 @@
+import { useId } from 'react';
+import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
   hardpointLabels,
@@ -31,19 +33,32 @@ export function UnitProfileEditor({
   /** The profile's card, once the card fonts have loaded. */
   card: SVGSVGElement | undefined;
 }) {
-  const { dispatch } = useArmyList();
+  const { state, dispatch } = useArmyList();
   const update = (changes: UnitProfileChanges) =>
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
 
   const issues = unitProfileIssues(profile);
+  const nameClashes = hasNameClash(state.list, profile);
+  const clashId = useId();
 
   return (
     <section className={styles.editor} aria-label={`Edit ${profile.name}`}>
       <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
-        <label className={styles.field}>
-          <span>Name</span>
-          <input value={profile.name} onChange={(event) => update({ name: event.target.value })} />
-        </label>
+        <div className={styles.field}>
+          <label className={styles.field}>
+            <span>Name</span>
+            <input
+              value={profile.name}
+              aria-describedby={nameClashes ? clashId : undefined}
+              onChange={(event) => update({ name: event.target.value })}
+            />
+          </label>
+          {nameClashes && (
+            <span id={clashId} className={styles.clash}>
+              Another Unit Profile is also named {profile.name.trim()}
+            </span>
+          )}
+        </div>
         <label className={styles.field}>
           <span>Class</span>
           <select
