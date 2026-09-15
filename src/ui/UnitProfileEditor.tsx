@@ -1,5 +1,15 @@
 import type { UnitProfileChanges } from '../domain/armyListReducer';
-import { mechClasses, mechStatRanges, type MechClass, type MechProfile } from '../domain/mech';
+import {
+  hardpointLabels,
+  hardpoints,
+  mechClasses,
+  mechStatRanges,
+  type Hardpoint,
+  type MechClass,
+  type MechProfile,
+} from '../domain/mech';
+import { findCatalogEntry } from '../domain/catalog';
+import { describeIssue, eligibleMounts, unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
 import { CardPreview } from './CardPreview';
 import { NumberField } from './NumberField';
@@ -24,6 +34,8 @@ export function UnitProfileEditor({
   const { dispatch } = useArmyList();
   const update = (changes: UnitProfileChanges) =>
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
+
+  const issues = unitProfileIssues(profile);
 
   return (
     <section className={styles.editor} aria-label={`Edit ${profile.name}`}>
@@ -55,6 +67,18 @@ export function UnitProfileEditor({
             />
           ))}
         </div>
+        <fieldset className={styles.hardpoints}>
+          <legend>Hardpoints</legend>
+          {hardpoints.map((hardpoint) => (
+            <HardpointPicker
+              key={hardpoint}
+              mechClass={profile.class}
+              hardpoint={hardpoint}
+              mounted={profile.hardpoints[hardpoint]}
+              onChange={(name) => update({ hardpoints: { [hardpoint]: name } })}
+            />
+          ))}
+        </fieldset>
         <label className={styles.field}>
           <span>Notes</span>
           <textarea
@@ -63,8 +87,56 @@ export function UnitProfileEditor({
             onChange={(event) => update({ notes: event.target.value })}
           />
         </label>
+        {issues.length > 0 && (
+          <section className={styles.issues} aria-label="Issues">
+            <h2>Issues</h2>
+            <ul>
+              {issues.map((issue) => {
+                const text = describeIssue(issue);
+                return <li key={text}>{text}</li>;
+              })}
+            </ul>
+          </section>
+        )}
       </form>
       {card ? <CardPreview svg={card} label={`${profile.name} record card`} /> : <p>Loading…</p>}
     </section>
+  );
+}
+
+/**
+ * Offers the entries this Mech's Class may mount here. A mount that isn't one of them (too heavy
+ * after a Class change, or missing from the Catalog) stays selected and listed until changed.
+ */
+function HardpointPicker({
+  mechClass,
+  hardpoint,
+  mounted,
+  onChange,
+}: {
+  mechClass: MechClass;
+  hardpoint: Hardpoint;
+  /** The Catalog name on this Hardpoint, or null when empty. */
+  mounted: string | null;
+  onChange: (name: string | null) => void;
+}) {
+  const names = eligibleMounts(mechClass, hardpoint).map(({ name }) => name);
+  const ineligibleMount = mounted !== null && !names.includes(mounted) ? mounted : undefined;
+
+  return (
+    <label className={styles.field}>
+      <span>{hardpointLabels[hardpoint]}</span>
+      <select value={mounted ?? ''} onChange={(event) => onChange(event.target.value || null)}>
+        <option value="">Empty</option>
+        {ineligibleMount !== undefined && (
+          <option value={ineligibleMount}>
+            {ineligibleMount} ({findCatalogEntry(ineligibleMount) ? 'Issue' : 'not in the Catalog'})
+          </option>
+        )}
+        {names.map((name) => (
+          <option key={name}>{name}</option>
+        ))}
+      </select>
+    </label>
   );
 }

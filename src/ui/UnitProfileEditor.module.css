@@ -30,3 +30,35 @@
   grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
   gap: 0.75rem;
 }
+
+.hardpoints {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.hardpoints legend {
+  padding: 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.issues {
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid #b3261e;
+  background: #fbeae9;
+  color: #6b1712;
+}
+
+.issues h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.issues ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}

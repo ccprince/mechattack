@@ -7,6 +7,13 @@ export type MechClass = (typeof mechClasses)[number];
 export const hardpoints = ['leftArm', 'rightArm', 'leftTorso', 'rightTorso'] as const;
 export type Hardpoint = (typeof hardpoints)[number];
 
+export const hardpointLabels: Record<Hardpoint, string> = {
+  leftArm: 'Left Arm',
+  rightArm: 'Right Arm',
+  leftTorso: 'Left Torso',
+  rightTorso: 'Right Torso',
+};
+
 const stat: NumberRange = { min: 0, max: 9, step: 1 };
 
 /** The typed-in stats' ranges, shared by the schema and the editor. */
