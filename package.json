@@ -16,7 +16,8 @@
     "jspdf": "^4.2.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "svg2pdf.js": "^2.8.1"
+    "svg2pdf.js": "^2.8.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
