@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { mechProfileSchema, type MechProfile } from './mech';
+import { unitProfileIssues } from './mechRules';
 import type { NumberRange } from './numberRange';
 
 /** Any whole number of Bp from 0 up; the max only keeps typed-in values exact. */
@@ -32,6 +33,13 @@ export function fieldedCopies(list: ArmyList): MechProfile[] {
 /** Whether anything would print. */
 export function hasFieldedCopies(list: ArmyList): boolean {
   return list.unitProfiles.some((profile) => profile.quantity > 0);
+}
+
+/** The fielded Unit Profiles with Issues, in list order: the ones that would print marked. */
+export function fieldedWithIssues(list: ArmyList): MechProfile[] {
+  return list.unitProfiles.filter(
+    (profile) => profile.quantity > 0 && unitProfileIssues(profile).length > 0,
+  );
 }
 
 /** A warning for the Army List, never a block (and not an Issue). */

@@ -108,6 +108,20 @@ Conventions across all cards:
 | `ra-weapon` / `rt-weapon` | 198, 464 / 493, 9px | 195–263 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
 
 An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out.
+
+**Illegal marks.** A printed card is taken as Legal at the table, so a Unit Profile with Issues
+prints with three marks. A Legal card has none of them.
+
+| Mark | Position | Notes |
+|---|---|---|
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Warning triangle beside the name, in the empty end of the NAME label row |
+| `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 67–78 / 250–261 × 455–465 (arms) or 484–494 (torsos) | On each Hardpoint row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 48 wide instead of 60 |
+| `illegal` data-field | 258, 260, 10px | `ILLEGAL: <Issue>` for one Issue, `ILLEGAL: 2 issues` for several. Emboldened with a 0.6 stroke in the fill color (only weight 600 is bundled), which svg2pdf draws as text render mode 2. Wraps like `notes`, 0.6 narrower, ≤ 2 lines; `notes` starts `dy="14"` below its last line and keeps the remaining lines of the 12 |
+
+A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. One Issue's
+wording is short to leave room for notes: `HL too heavy`, `ECTS on an arm` (short names),
+`Left Arm not in Catalog` (the name may be long) or `Bp below mounts`.
+
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
 110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
 

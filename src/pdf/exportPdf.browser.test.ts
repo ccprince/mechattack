@@ -4,7 +4,9 @@ import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import { buildMechCardSvg } from '../cards/mechCard';
 import { testMech } from '../cards/testMech';
 import type { ArmyList } from '../domain/armyList';
+import type { MechProfile } from '../domain/mech';
 import { exportArmyListPdf, exportCardsPdf } from './exportPdf';
+import { readPdf } from './readPdf';
 
 beforeAll(loadCardFonts);
 
@@ -52,4 +54,41 @@ describe('exportArmyListPdf', () => {
       expect(pdf.match(/\/I\d+ Do/g)).toHaveLength(11);
     },
   );
+});
+
+describe('illegal marks', () => {
+  const printed = async (profile: MechProfile) => {
+    const list: ArmyList = { version: 1, name: 'Marks', bpLimit: 50, unitProfiles: [profile] };
+    const doc = await exportArmyListPdf(list, 'large', createValueMeasure());
+    return readPdf(doc.output());
+  };
+
+  it('prints the triangles and a bold ILLEGAL line on an illegal card', async () => {
+    const { texts, triangles } = await printed({
+      ...testMech,
+      class: 'Medium',
+      hardpoints: {
+        leftArm: 'Heavy Missile',
+        rightArm: 'Medium Laser',
+        leftTorso: 'Improved Weapon Targeting System',
+        rightTorso: 'Plasma Lance',
+      },
+    });
+
+    // Positions from the field map in docs/cards.md: beside the name, Left Arm, Right Torso.
+    expect(triangles).toEqual([
+      { x: 364, y: 15, width: 12, height: 11 },
+      { x: 67, y: 455, width: 11, height: 10 },
+      { x: 250, y: 484, width: 11, height: 10 },
+    ]);
+    expect(texts).toContainEqual({ text: 'ILLEGAL: 2 issues', stroked: true });
+  });
+
+  it('prints no marks on a Legal card', async () => {
+    const { texts, triangles } = await printed(testMech);
+
+    expect(triangles).toEqual([]);
+    expect(texts).toContainEqual({ text: 'Ironclad', stroked: false });
+    expect(texts.filter(({ text }) => text.includes('ILLEGAL'))).toEqual([]);
+  });
 });
