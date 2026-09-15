@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { armyListSchema, bpTotal, hasNameClash, isOverBpLimit, type ArmyList } from './armyList';
+import {
+  armyListSchema,
+  bpTotal,
+  fieldedCopies,
+  hasNameClash,
+  isOverBpLimit,
+  type ArmyList,
+} from './armyList';
 import type { MechProfile } from './mech';
 
 function mech(overrides: Partial<MechProfile> = {}): MechProfile {
@@ -90,6 +97,20 @@ describe('isOverBpLimit', () => {
     expect(
       isOverBpLimit(list({ bpLimit: 23, unitProfiles: [mech({ bp: 12, quantity: 2 })] })),
     ).toBe(true);
+  });
+});
+
+describe('fieldedCopies', () => {
+  it('repeats each Unit Profile once per copy fielded, in list order, skipping quantity 0', () => {
+    const pair = mech({ id: 'u1', name: 'Pair', quantity: 2 });
+    const reserve = mech({ id: 'u2', name: 'Reserve', quantity: 0 });
+    const scout = mech({ id: 'u3', name: 'Scout', quantity: 1 });
+    const army = list({ unitProfiles: [pair, reserve, scout] });
+    expect(fieldedCopies(army)).toEqual([pair, pair, scout]);
+  });
+
+  it('is empty when nothing is fielded', () => {
+    expect(fieldedCopies(list({ unitProfiles: [mech({ quantity: 0 })] }))).toEqual([]);
   });
 });
 

@@ -4,7 +4,7 @@ import type { ArmyList } from '../domain/armyList';
 import { savedArmyListKey } from '../domain/armyListStorage';
 import type { MechProfile } from '../domain/mech';
 import { fakeStore } from '../domain/testStores';
-import { exportCardsPdf } from '../pdf/exportPdf';
+import { exportArmyListPdf } from '../pdf/exportPdf';
 import { cardField, setUpApp, unitProfiles } from './testApp';
 
 // Spied on, still real: the app imports it on demand when printing.
@@ -401,12 +401,17 @@ describe('Issues', () => {
 });
 
 describe('Download PDF', () => {
-  it('is unavailable until a Unit Profile is selected', async () => {
+  it('is unavailable while no copy is fielded', async () => {
     load(fakeStore());
+    await expect.element(downloadPdf()).toBeDisabled();
+
+    await addMech();
+    await expect.element(downloadPdf()).toBeEnabled();
+    await field('Qty').fill('0');
     await expect.element(downloadPdf()).toBeDisabled();
   });
 
-  it("saves the selected Unit Profile's card as a PDF", async () => {
+  it('saves the whole Army List at the chosen print size', async () => {
     const links: HTMLAnchorElement[] = [];
     const createElement = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation(
@@ -421,12 +426,18 @@ describe('Download PDF', () => {
       },
     );
     const createObjectURL = vi.spyOn(URL, 'createObjectURL');
-    await loadWithNewMech();
-    await addMech();
-    await addMech();
-    // Neither the first nor the last added.
-    await openButton('New Mech 2').click();
-    await expect.poll(() => cardField('name')).toBe('New Mech 2');
+    const list: ArmyList = {
+      version: 1,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        mech({ id: 'a', name: 'Pair', quantity: 2 }),
+        mech({ id: 'b', name: 'Reserve', quantity: 0 }),
+      ],
+    };
+    loadList(list);
+    await expect.element(picker('Print size')).toHaveValue('large');
+    await picker('Print size').selectOptions('Sleeve');
 
     await downloadPdf().click();
     await vi.waitFor(
@@ -436,9 +447,10 @@ describe('Download PDF', () => {
     const blob = createObjectURL.mock.calls.at(-1)?.[0] as Blob;
     expect(blob.type).toBe('application/pdf');
 
-    const [cards] = vi.mocked(exportCardsPdf).mock.calls[0] ?? [];
-    expect(cards).toHaveLength(1);
-    expect(cards?.[0]?.svg.querySelector('[data-field="name"]')?.textContent).toBe('New Mech 2');
+    expect(vi.mocked(exportArmyListPdf)).toHaveBeenCalledOnce();
+    const [printed, size] = vi.mocked(exportArmyListPdf).mock.calls[0] ?? [];
+    expect(printed).toEqual(list);
+    expect(size).toBe('sleeve');
     await expect.element(downloadPdf()).toBeEnabled();
     expect(page.getByText(/Couldn't build the PDF/).query()).toBeNull();
   });
