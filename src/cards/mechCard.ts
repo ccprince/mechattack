@@ -27,6 +27,10 @@ const hvOffset = 43;
 const topArmorRow = 150;
 const notes = { x: 258, y: 260, width: 116, fontSize: 10, lineHeight: 14, maxLines: 12 };
 const illegalMaxLines = 2;
+// Illegal marks (docs/cards.md): the name triangle, and each Hardpoint marker relative to its row.
+const nameMark = { x: 364, y: 15, width: 12, height: 11 };
+const hardpointMark = { dx: 52, dy: -12, width: 11, height: 10 };
+const weaponWidth = { unmarked: 60, marked: 48 };
 
 export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVGElement {
   const { svg, data } = parseTemplate(mechTemplate);
@@ -50,7 +54,7 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     const fitted = fitLine(text, maxWidth, size, measure);
     addValue(data, field, fitted.text, x, y, fitted.fontSize, 'middle');
   };
-  const wrapped = (field: string, text: string, y: number, maxLines: number) => {
+  const wrapInNotesBox = (field: string, text: string, y: number, maxLines: number) => {
     const lines = wrapLines(text, notes.width, notes.fontSize, maxLines, measure);
     addWrappedValue(data, field, lines, notes.x, y, notes.fontSize, notes.lineHeight);
     return lines.length;
@@ -65,10 +69,12 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
   line('armor', String(profile.armor), 258, 222, 116);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
-  const illegal = illegalNote(issues);
-  const illegalLines = illegal ? wrapped('illegal', illegal, notes.y, illegalMaxLines) : 0;
-  if (illegal) addWarningTriangle(data, 'illegal', { x: 364, y: 15, width: 12, height: 11 });
-  wrapped(
+  const illegalText = illegalNote(issues);
+  const illegalLines = illegalText
+    ? wrapInNotesBox('illegal', illegalText, notes.y, illegalMaxLines)
+    : 0;
+  if (illegalText) addWarningTriangle(data, 'illegal', nameMark);
+  wrapInNotesBox(
     'notes',
     profile.notes,
     notes.y + illegalLines * notes.lineHeight,
@@ -79,14 +85,21 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     const { prefix, labelX, rvX, y } = hardpointFields[hardpoint];
     const marked = issues.some((issue) => 'hardpoint' in issue && issue.hardpoint === hardpoint);
     if (marked) {
-      const rect = { x: labelX + 52, y: y - 12, width: 11, height: 10 };
-      addWarningTriangle(data, `${prefix}-illegal`, rect);
+      const { dx, dy, width, height } = hardpointMark;
+      addWarningTriangle(data, `${prefix}-illegal`, { x: labelX + dx, y: y + dy, width, height });
     }
 
     const entryName = profile.hardpoints[hardpoint];
     const entry = entryName ? findCatalogEntry(entryName) : undefined;
     if (!entry) continue;
-    line(`${prefix}-weapon`, entry.shortName, labelX, y - 3, marked ? 48 : 60, 9);
+    line(
+      `${prefix}-weapon`,
+      entry.shortName,
+      labelX,
+      y - 3,
+      weaponWidth[marked ? 'marked' : 'unmarked'],
+      9,
+    );
     if (entry.rv) centered(`${prefix}-rv`, formatRv(entry.rv), rvX, y, 35, 11);
     if (entry.hv !== undefined)
       centered(`${prefix}-hv`, String(entry.hv), rvX + hvOffset, y, 35, 11);

@@ -111,7 +111,7 @@ describe('buildMechCardSvg', () => {
       expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: Bp below mounts');
     });
 
-    it('keeps the notes inside their box below the ILLEGAL line', async () => {
+    it('keeps the notes inside their box below the ILLEGAL line', () => {
       const svg = buildMechCardSvg(illegalMech, createValueMeasure());
       document.body.append(svg);
       const notes = field(svg, 'notes')!.getBBox();

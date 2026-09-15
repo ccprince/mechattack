@@ -104,23 +104,24 @@ export function addWarningTriangle(data: SVGGElement, mark: string, rect: Rect):
   triangle.setAttribute('stroke-width', '0.8');
   triangle.setAttribute('stroke-linejoin', 'round');
 
-  // The `!`: a bar from 35% to 70% of the height and a dot at 80%, both centered.
+  // The `!`: a bar from 35% to 70% of the height and a dot from 78%, both centered.
   const centerX = x + width / 2;
   const stroke = width * 0.14;
-  const bar = doc.createElementNS(svgNs, 'rect');
-  bar.setAttribute('x', String(centerX - stroke / 2));
-  bar.setAttribute('y', String(y + height * 0.35));
-  bar.setAttribute('width', String(stroke));
-  bar.setAttribute('height', String(height * 0.35));
-  bar.setAttribute('fill', '#fff');
-  const dot = doc.createElementNS(svgNs, 'rect');
-  dot.setAttribute('x', String(centerX - stroke / 2));
-  dot.setAttribute('y', String(y + height * 0.78));
-  dot.setAttribute('width', String(stroke));
-  dot.setAttribute('height', String(stroke));
-  dot.setAttribute('fill', '#fff');
+  const whiteRect = (top: number, rectHeight: number) => {
+    const rect = doc.createElementNS(svgNs, 'rect');
+    rect.setAttribute('x', String(centerX - stroke / 2));
+    rect.setAttribute('y', String(top));
+    rect.setAttribute('width', String(stroke));
+    rect.setAttribute('height', String(rectHeight));
+    rect.setAttribute('fill', '#fff');
+    return rect;
+  };
 
-  group.append(triangle, bar, dot);
+  group.append(
+    triangle,
+    whiteRect(y + height * 0.35, height * 0.35),
+    whiteRect(y + height * 0.78, stroke),
+  );
   data.append(group);
 }
 

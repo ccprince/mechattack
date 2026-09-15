@@ -30,8 +30,8 @@ export function ArmyListHeader({
 
   async function downloadPdf() {
     if (!measure) return;
-    const illegal = fieldedWithIssues(list);
-    if (illegal.length > 0 && !window.confirm(illegalPrintQuestion(illegal))) return;
+    const markedProfiles = fieldedWithIssues(list);
+    if (markedProfiles.length > 0 && !window.confirm(illegalPrintQuestion(markedProfiles))) return;
     setPrinting(true);
     onError(undefined);
     try {

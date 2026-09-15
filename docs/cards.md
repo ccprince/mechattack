@@ -121,6 +121,7 @@ prints with three marks. A Legal card has none of them.
 A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. One Issue's
 wording is short to leave room for notes: `HL too heavy`, `ECTS on an arm` (short names),
 `Left Arm not in Catalog` (the name may be long) or `Bp below mounts`.
+
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
 110 + 20*i*. Hit-location columns span x = 44–250 (10 × 20.6).
 
