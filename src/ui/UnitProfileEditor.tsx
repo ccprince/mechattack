@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { duplicateNames } from '../domain/armyList';
+import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
   hardpointLabels,
@@ -38,7 +38,7 @@ export function UnitProfileEditor({
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
 
   const issues = unitProfileIssues(profile);
-  const nameClashes = duplicateNames(state.list).has(profile.name.trim());
+  const nameClashes = hasNameClash(state.list, profile);
   const clashId = useId();
 
   return (

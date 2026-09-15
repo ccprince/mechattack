@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { mechProfileSchema } from './mech';
+import { mechProfileSchema, type MechProfile } from './mech';
 import type { NumberRange } from './numberRange';
 
 /** Any whole number of Bp from 0 up; the max only keeps typed-in values exact. */
@@ -30,17 +30,13 @@ export function isOverBpLimit(list: ArmyList): boolean {
 }
 
 /**
- * Names, trimmed, that more than one Unit Profile shares. A Unit Profile's name should be unique,
- * so the editor flags these, but a clash isn't an Issue. Blank names are left out.
+ * Whether another Unit Profile on the list shares this one's name, ignoring surrounding spaces. A
+ * name should be unique, so the editor flags a clash, but it isn't an Issue. Blank names never clash.
  */
-export function duplicateNames(list: ArmyList): Set<string> {
-  const seen = new Set<string>();
-  const duplicates = new Set<string>();
-  for (const { name } of list.unitProfiles) {
-    const trimmed = name.trim();
-    if (trimmed === '') continue;
-    if (seen.has(trimmed)) duplicates.add(trimmed);
-    seen.add(trimmed);
-  }
-  return duplicates;
+export function hasNameClash(list: ArmyList, profile: MechProfile): boolean {
+  const name = profile.name.trim();
+  return (
+    name !== '' &&
+    list.unitProfiles.some((other) => other.id !== profile.id && other.name.trim() === name)
+  );
 }

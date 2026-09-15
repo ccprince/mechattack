@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { armyListSchema, bpTotal, duplicateNames, isOverBpLimit, type ArmyList } from './armyList';
+import { armyListSchema, bpTotal, hasNameClash, isOverBpLimit, type ArmyList } from './armyList';
 import type { MechProfile } from './mech';
 
 function mech(overrides: Partial<MechProfile> = {}): MechProfile {
@@ -93,28 +93,30 @@ describe('isOverBpLimit', () => {
   });
 });
 
-describe('duplicateNames', () => {
-  it('holds each name two or more Unit Profiles share', () => {
-    const army = list({
-      unitProfiles: [
-        mech({ id: 'u1', name: 'Ironclad' }),
-        mech({ id: 'u2', name: 'Scout' }),
-        mech({ id: 'u3', name: 'Ironclad', quantity: 0 }),
-        mech({ id: 'u4', name: 'Ironclad (copy)' }),
-      ],
-    });
-    expect(duplicateNames(army)).toEqual(new Set(['Ironclad']));
+describe('hasNameClash', () => {
+  it('is true for each Unit Profile whose name another one shares, fielded or not', () => {
+    const ironclad = mech({ id: 'u1', name: 'Ironclad' });
+    const reserve = mech({ id: 'u2', name: 'Ironclad', quantity: 0 });
+    const scout = mech({ id: 'u3', name: 'Scout' });
+    const copy = mech({ id: 'u4', name: 'Ironclad (copy)' });
+    const army = list({ unitProfiles: [ironclad, scout, reserve, copy] });
+    expect([ironclad, scout, reserve, copy].map((profile) => hasNameClash(army, profile))).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
   });
 
-  it('ignores surrounding spaces, and blank names', () => {
-    const army = list({
-      unitProfiles: [
-        mech({ id: 'u1', name: 'Ironclad ' }),
-        mech({ id: 'u2', name: 'Ironclad' }),
-        mech({ id: 'u3', name: '' }),
-        mech({ id: 'u4', name: '  ' }),
-      ],
-    });
-    expect(duplicateNames(army)).toEqual(new Set(['Ironclad']));
+  it('ignores surrounding spaces', () => {
+    const spaced = mech({ id: 'u1', name: ' Ironclad ' });
+    const army = list({ unitProfiles: [spaced, mech({ id: 'u2', name: 'Ironclad' })] });
+    expect(hasNameClash(army, spaced)).toBe(true);
+  });
+
+  it('is false for blank names', () => {
+    const blank = mech({ id: 'u1', name: '' });
+    const army = list({ unitProfiles: [blank, mech({ id: 'u2', name: '  ' })] });
+    expect(hasNameClash(army, blank)).toBe(false);
   });
 });

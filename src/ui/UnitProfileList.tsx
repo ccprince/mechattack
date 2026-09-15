@@ -1,4 +1,4 @@
-import { duplicateNames } from '../domain/armyList';
+import { hasNameClash } from '../domain/armyList';
 import { quantityRange } from '../domain/mech';
 import { unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
@@ -7,7 +7,6 @@ import styles from './UnitProfileList.module.css';
 
 export function UnitProfileList() {
   const { state, dispatch } = useArmyList();
-  const clashes = duplicateNames(state.list);
 
   return (
     <nav className={styles.panel} aria-label="Unit Profiles">
@@ -25,7 +24,7 @@ export function UnitProfileList() {
                 onClick={() => dispatch({ type: 'selectUnitProfile', id })}
               >
                 <span className={styles.itemName}>{name}</span>
-                {clashes.has(profile.name.trim()) && (
+                {hasNameClash(state.list, profile) && (
                   <span className={styles.itemClash}>Same name</span>
                 )}
                 {issueCount > 0 && (
