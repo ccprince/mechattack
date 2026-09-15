@@ -37,7 +37,7 @@ describe('buildMechCardSvg', () => {
     expect(field(svg, 'tp')?.textContent).toBe('3');
     expect(field(svg, 'hc')?.textContent).toBe('5');
     expect(field(svg, 'armor')?.textContent).toBe('70');
-    expect(field(svg, 'ra-weapon')?.textContent).toBe('HL');
+    expect(field(svg, 'ra-weapon')?.textContent).toBe('Hv Laser');
     expect(field(svg, 'ra-rv')?.textContent).toBe('6/10');
     expect(field(svg, 'ra-hv')?.textContent).toBe('2');
     expect(field(svg, 'rt-rv')).toBeNull();
@@ -46,7 +46,7 @@ describe('buildMechCardSvg', () => {
 
   it('prints a minimum Rv ahead of the normal and extended Rv', () => {
     const svg = buildMechCardSvg(testMech, createValueMeasure());
-    expect(field(svg, 'la-weapon')?.textContent).toBe('HM');
+    expect(field(svg, 'la-weapon')?.textContent).toBe('Hv Missile');
     expect(field(svg, 'la-rv')?.textContent).toBe('3-10/14');
   });
 
@@ -112,7 +112,7 @@ describe('buildMechCardSvg', () => {
         { ...illegalMech, hardpoints: { ...illegalMech.hardpoints, rightTorso: null } },
         createValueMeasure(),
       );
-      expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: HM too heavy');
+      expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: Hv Missile too heavy');
       expect(marks(svg)).toEqual(['illegal', 'la-illegal']);
     });
 

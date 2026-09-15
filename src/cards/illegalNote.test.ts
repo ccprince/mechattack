@@ -11,7 +11,7 @@ describe('illegalNote', () => {
       illegalNote([
         { rule: 'mountTooHeavy', hardpoint: 'rightArm', name: 'Heavy Laser', entryClass: 'Heavy' },
       ]),
-    ).toBe('ILLEGAL: HL too heavy');
+    ).toBe('ILLEGAL: Hv Laser too heavy');
   });
 
   it('names Support Equipment on an arm by its short name', () => {

@@ -316,7 +316,7 @@ describe('Hardpoints', () => {
     await picker('Right Arm').selectOptions('Heavy Laser');
     await picker('Left Torso').selectOptions('Improved Weapon Targeting System');
 
-    await expect.poll(() => cardField('ra-weapon')).toBe('HL');
+    await expect.poll(() => cardField('ra-weapon')).toBe('Hv Laser');
     await expect.poll(() => cardField('ra-rv')).toBe('6/10');
     await expect.poll(() => cardField('ra-hv')).toBe('2');
     await expect.poll(() => cardField('lt-weapon')).toBe('IWTS');
@@ -332,7 +332,7 @@ describe('Issues', () => {
     await picker('Class').selectOptions('Heavy');
     await picker('Left Arm').selectOptions('Heavy Laser');
     await picker('Right Arm').selectOptions('Heavy Cannon');
-    await expect.poll(() => cardField('ra-weapon')).toBe('HC');
+    await expect.poll(() => cardField('ra-weapon')).toBe('Hv Cannon');
     expect(issues().query()).toBeNull();
 
     await picker('Class').selectOptions('Light');
