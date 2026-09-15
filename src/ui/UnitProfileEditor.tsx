@@ -65,6 +65,15 @@ export function UnitProfileEditor({
             </span>
           )}
         </div>
+        {/* Worked out from the Class's Frame, the upgrades and the mounts; never typed in. */}
+        <div className={styles.stats}>
+          {statOutputs.map(({ label, value }) => (
+            <div key={label} className={styles.stat}>
+              <span aria-hidden="true">{label}</span>
+              <output aria-label={label}>{value}</output>
+            </div>
+          ))}
+        </div>
         <label className={styles.field}>
           <span>Class</span>
           <select
@@ -86,15 +95,6 @@ export function UnitProfileEditor({
               range={mechUpgradeRanges[key]}
               onChange={(value) => update({ [key]: value })}
             />
-          ))}
-        </div>
-        {/* Worked out from the Class's Frame, the upgrades and the mounts; never typed in. */}
-        <div className={styles.stats}>
-          {statOutputs.map(({ label, value }) => (
-            <div key={label} className={styles.stat}>
-              <span aria-hidden="true">{label}</span>
-              <output aria-label={label}>{value}</output>
-            </div>
           ))}
         </div>
         <fieldset className={styles.hardpoints}>
