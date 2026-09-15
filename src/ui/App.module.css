@@ -1,19 +1,35 @@
 .page {
-  max-width: 60rem;
+  max-width: 72rem;
   margin: 0 auto;
   padding: 1.5rem 1rem;
 }
 
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #555;
 }
 
-.header h1 {
+.columns {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.empty {
   margin: 0;
-  font-size: 1.5rem;
+  color: #555;
+}
+
+@media (width < 44rem) {
+  .title {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #555;
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+  }
 }
