@@ -232,5 +232,8 @@ Don't build against the current guesses for these:
 - **Dp:** how a Damage Profile is stored and drawn, including multiplier boxes. It replaces the
   hand-drawn grids.
 - **Vehicle Hull Options:** Turret, Static Weapon Mount and Cargo Bay, and how the Vehicle card shows them.
-- **Weapon eligibility by Class:** which Weapons each Class may mount.
-- **Bp formulas and per-Class Bp limits.** Until then, Bp is typed in.
+- **Weapon eligibility by Class for Vehicles and Troops:** which Weapons each Class may mount.
+  Settled for Mechs: a Mech mounts Catalog entries of its Class or lighter, and Support Equipment
+  only on a torso Hardpoint.
+- **Unit construction:** base stats by Class, upgrades, and Bp. Until then, Bp and stats are typed
+  in, and the only Bp Issue is a unit costing less than the total Bp of its mounts.
