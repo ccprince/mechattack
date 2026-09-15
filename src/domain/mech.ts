@@ -1,29 +1,41 @@
-export type MechClass = 'Light' | 'Medium' | 'Heavy';
+import { z } from 'zod';
+
+export const mechClasses = ['Light', 'Medium', 'Heavy'] as const;
+export type MechClass = (typeof mechClasses)[number];
 
 export const hardpoints = ['leftArm', 'rightArm', 'leftTorso', 'rightTorso'] as const;
 export type Hardpoint = (typeof hardpoints)[number];
 
-export interface MechProfile {
-  kind: 'Mech';
-  name: string;
-  class: MechClass;
-  bp: number;
-  mv: number;
-  tp: number;
-  hc: number;
-  /** A multiple of 10, at most 150. */
-  armor: number;
-  notes: string;
-  /** Catalog name (Weapon or Support Equipment) per Hardpoint, or null when empty. */
-  hardpoints: Record<Hardpoint, string | null>;
-}
+const stat = z.number().int().min(0).max(9);
+/** Catalog name (Weapon or Support Equipment), or null when the Hardpoint is empty (ADR 0001). */
+const mountedName = z.string().nullable();
+
+export const mechProfileSchema = z.object({
+  kind: z.literal('Mech'),
+  /** Stable identity within the Army List; the name can change. */
+  id: z.string().min(1),
+  name: z.string(),
+  class: z.enum(mechClasses),
+  bp: z.number().int().min(1).max(20),
+  mv: stat,
+  tp: stat,
+  hc: stat,
+  armor: z.number().int().min(0).max(150).multipleOf(10),
+  notes: z.string(),
+  hardpoints: z.record(z.enum(hardpoints), mountedName),
+  /** Copies fielded; 0 keeps the Unit Profile on the list without fielding it. */
+  quantity: z.number().int().min(0),
+});
+
+export type MechProfile = z.infer<typeof mechProfileSchema>;
 
 // Invented sample for the first slice; replaced by Army List editing later.
 export const sampleMech: MechProfile = {
   kind: 'Mech',
+  id: 'sample',
   name: 'Ironclad',
   class: 'Heavy',
-  bp: 185,
+  bp: 18,
   mv: 4,
   tp: 2,
   hc: 3,
@@ -35,4 +47,5 @@ export const sampleMech: MechProfile = {
     leftTorso: 'Improved Weapon Targeting System',
     rightTorso: null,
   },
+  quantity: 1,
 };
