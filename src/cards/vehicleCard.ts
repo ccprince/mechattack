@@ -1,0 +1,79 @@
+import vehicleTemplate from '../../cards/vehicle-card.svg?raw';
+import { vehicleStats } from '../domain/frame';
+import type { VehicleProfile } from '../domain/vehicle';
+import { vehicleIssues } from '../domain/vehicleRules';
+import { fitLine, type Measure } from './fitText';
+import { armorCrossOut } from './geometry';
+import { illegalStroke } from './illegalNote';
+import {
+  addCrossOut,
+  addValue,
+  addWarningTriangle,
+  addWrappedValue,
+  parseTemplate,
+} from './svgTemplate';
+import { mountRows, vehicleNotes, vehicleNotesBox } from './vehicleCardContent';
+
+// Box widths below are the field map's box width minus 8 units of padding (docs/cards.md).
+const topArmorRow = 60;
+/** Baselines of the two mount rows' weapon lines; each row's Rv sits 2 lower. */
+const mountRowBaselines = [455, 486];
+const mountRow = { weaponX: 16, rvX: 276, rvDy: 2 };
+const weaponWidth = { unmarked: 212, marked: 196 };
+// Illegal marks (docs/cards.md): the name triangle, and each mount row's marker relative to its row.
+const nameMark = { x: 364, y: 15, width: 12, height: 11 };
+const mountRowMark = { x: 217, dy: -9, width: 11, height: 10 };
+
+export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): SVGSVGElement {
+  const { svg, data } = parseTemplate(vehicleTemplate);
+  const issues = vehicleIssues(profile);
+
+  const crossOut = armorCrossOut(profile.armor, topArmorRow);
+  if (crossOut) addCrossOut(data, crossOut);
+
+  const line = (
+    field: string,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    size = 12,
+    anchor: 'start' | 'middle' = 'start',
+  ) => {
+    const fitted = fitLine(text, maxWidth, size, measure);
+    addValue(data, field, fitted.text, x, y, fitted.fontSize, anchor);
+  };
+
+  const stats = vehicleStats(profile);
+  line('bp', String(stats.bp), 211, 46, 70, 16, 'middle');
+  line('name', profile.name, 258, 44, 116);
+  line('type', profile.class, 258, 90, 116);
+  line('mv', String(stats.mv), 258, 136, 116);
+  line('tp', String(stats.tp), 258, 182, 116);
+  line('armor', String(profile.armor), 258, 228, 116);
+
+  // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
+  if (issues.length > 0) addWarningTriangle(data, 'illegal', nameMark);
+  const { x: notesX, fontSize, lineHeight } = vehicleNotesBox;
+  for (const { field, lines, y } of vehicleNotes(profile, issues, measure)) {
+    const text = addWrappedValue(data, field, lines, notesX, y, fontSize, lineHeight);
+    if (field === 'illegal') {
+      text.style.stroke = '#1a1a1a';
+      text.style.strokeWidth = `${illegalStroke}px`;
+    }
+  }
+
+  for (const [index, row] of mountRows(profile, issues).entries()) {
+    const prefix = `mount${index + 1}`;
+    const y = mountRowBaselines[index]!;
+    if (row.marked) {
+      const { x, dy, width, height } = mountRowMark;
+      addWarningTriangle(data, `${prefix}-illegal`, { x, y: y + dy, width, height });
+    }
+    const maxWidth = weaponWidth[row.marked ? 'marked' : 'unmarked'];
+    line(`${prefix}-weapon`, row.text, mountRow.weaponX, y, maxWidth, 11);
+    if (row.rv) line(`${prefix}-rv`, row.rv, mountRow.rvX, y + mountRow.rvDy, 80, 16, 'middle');
+  }
+
+  return svg;
+}

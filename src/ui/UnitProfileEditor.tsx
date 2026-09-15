@@ -1,6 +1,6 @@
 import { useId, useMemo, type ReactNode } from 'react';
 import type { Measure } from '../cards/fitText';
-import { buildMechCardSvg } from '../cards/mechCard';
+import { buildUnitCardSvg } from '../cards/unitCard';
 import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
@@ -107,26 +107,21 @@ export function UnitProfileEditor({
           </section>
         )}
       </form>
-      {profile.kind === 'Mech' ? (
-        <MechCardPreview profile={profile} measure={measure} />
-      ) : (
-        // Until the Vehicle card template is in (#26).
-        <p>Vehicle cards are not available yet.</p>
-      )}
+      <UnitCardPreview profile={profile} measure={measure} />
     </section>
   );
 }
 
-function MechCardPreview({
+function UnitCardPreview({
   profile,
   measure,
 }: {
-  profile: MechProfile;
+  profile: UnitProfile;
   measure: Measure | undefined;
 }) {
   // Rebuilt on every edit: the card is never patched in place (ADR 0002).
   const card = useMemo(
-    () => (measure ? buildMechCardSvg(profile, measure) : undefined),
+    () => (measure ? buildUnitCardSvg(profile, measure) : undefined),
     [measure, profile],
   );
   return card ? <CardPreview svg={card} label={`${profile.name} record card`} /> : <p>Loading…</p>;

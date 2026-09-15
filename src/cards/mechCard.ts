@@ -5,7 +5,7 @@ import { mechStats } from '../domain/frame';
 import { mechIssues } from '../domain/mechRules';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
-import { illegalNote } from './illegalNote';
+import { illegalNote, illegalStroke } from './illegalNote';
 import {
   addCrossOut,
   addValue,
@@ -28,8 +28,6 @@ const hvOffset = 43;
 const topArmorRow = 150;
 const notes = { x: 258, y: 260, width: 116, fontSize: 10, lineHeight: 14, maxLines: 12 };
 const illegalMaxLines = 2;
-/** Strokes the ILLEGAL line in the `.val` fill color to embolden it: only the 600 weight is bundled. */
-const illegalStroke = 0.6;
 // Illegal marks (docs/cards.md): the name triangle, and each Hardpoint marker relative to its row.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const hardpointMark = { dx: 52, dy: -12, width: 11, height: 10 };

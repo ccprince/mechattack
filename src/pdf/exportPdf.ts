@@ -2,38 +2,31 @@ import { jsPDF } from 'jspdf';
 import { svg2pdf } from 'svg2pdf.js';
 import type { Measure } from '../cards/fitText';
 import { cardFonts } from '../cards/fonts';
-import { buildMechCardSvg } from '../cards/mechCard';
+import { buildUnitCardSvg } from '../cards/unitCard';
 import { slotRect, slotsPerPage, type PrintSize } from '../cards/pageLayout';
 import { fieldedCopies, type ArmyList } from '../domain/armyList';
-import type { MechProfile } from '../domain/mech';
 import type { UnitProfile } from '../domain/unitProfile';
 import { rasterizeTexture } from './texture';
 
 export interface PrintableCard {
-  kind: 'Mech' | 'Vehicle';
+  kind: UnitProfile['kind'];
   svg: SVGSVGElement;
 }
 
 const pointsPerInch = 72;
 
-/**
- * Prints one card per fielded copy of every Mech Unit Profile on the Army List, in list order.
- * Vehicles don't print yet: their card isn't built.
- */
+/** Prints one card per fielded copy of every Unit Profile on the Army List, in list order. */
 export function exportArmyListPdf(
   list: ArmyList,
   size: PrintSize,
   measure: Measure,
 ): Promise<jsPDF> {
   // Copies of a Unit Profile share one card: exportCardsPdf never changes the SVG it's given.
-  const svgs = new Map<MechProfile, SVGSVGElement>();
-  const mechs = fieldedCopies(list).filter(
-    (profile: UnitProfile): profile is MechProfile => profile.kind === 'Mech',
-  );
-  const cards = mechs.map((profile): PrintableCard => {
+  const svgs = new Map<UnitProfile, SVGSVGElement>();
+  const cards = fieldedCopies(list).map((profile): PrintableCard => {
     let svg = svgs.get(profile);
     if (!svg) {
-      svg = buildMechCardSvg(profile, measure);
+      svg = buildUnitCardSvg(profile, measure);
       svgs.set(profile, svg);
     }
     return { kind: profile.kind, svg };

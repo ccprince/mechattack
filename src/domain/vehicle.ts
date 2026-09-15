@@ -15,6 +15,13 @@ export const vehicleMountLabels: Record<VehicleMount, string> = {
   staticMount2: 'Static Mount 2',
 };
 
+/** Each mount's label on the Vehicle card's mount rows, short to leave room for the entry. */
+export const vehicleMountRowLabels: Record<VehicleMount, string> = {
+  turret: 'Turret',
+  staticMount1: 'Static',
+  staticMount2: 'Static',
+};
+
 /** The chosen upgrades' ranges, shared by the schema and the editor. */
 export const vehicleUpgradeRanges = {
   armor: { min: 0, max: 60, step: 10 },

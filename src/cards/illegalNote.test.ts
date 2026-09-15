@@ -1,5 +1,44 @@
 import { describe, expect, it } from 'vitest';
-import { illegalNote } from './illegalNote';
+import { illegalNote, vehicleIllegalNote } from './illegalNote';
+
+describe('vehicleIllegalNote', () => {
+  it('is absent on a Legal card', () => {
+    expect(vehicleIllegalNote([])).toBeUndefined();
+  });
+
+  it('reports more Hull Options than the Frame allows', () => {
+    expect(
+      vehicleIllegalNote([
+        { rule: 'overHullOptions', used: 3, vehicleClass: 'Light', hullOptions: 2 },
+      ]),
+    ).toBe('ILLEGAL: Hull Options over');
+  });
+
+  it('names a mount too heavy for the Class by its row label and short name', () => {
+    expect(
+      vehicleIllegalNote([
+        { rule: 'mountTooHeavy', mount: 'turret', name: 'Heavy Laser', entryClass: 'Heavy' },
+      ]),
+    ).toBe('ILLEGAL: Turret: Hv Laser too heavy');
+  });
+
+  it('names a Static Mount entry missing from the Catalog', () => {
+    expect(
+      vehicleIllegalNote([{ rule: 'notInCatalog', mount: 'staticMount2', name: 'Plasma Lance' }]),
+    ).toBe('ILLEGAL: Static: Plasma Lance not in Catalog');
+  });
+
+  it('reports Bp over the Frame max and a Vehicle costing no Bp', () => {
+    expect(
+      vehicleIllegalNote([{ rule: 'overMaxBp', bp: 7, vehicleClass: 'Light', maxBp: 5 }]),
+    ).toBe('ILLEGAL: Bp over max');
+    expect(vehicleIllegalNote([{ rule: 'noBp' }])).toBe('ILLEGAL: Bp is 0');
+  });
+
+  it('counts several Issues', () => {
+    expect(vehicleIllegalNote([{ rule: 'noBp' }, { rule: 'noBp' }])).toBe('ILLEGAL: 2 issues');
+  });
+});
 
 describe('illegalNote', () => {
   it('is absent on a Legal card', () => {

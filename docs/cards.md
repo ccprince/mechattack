@@ -135,9 +135,28 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 | `mv` | 258, 136 | 254–378 × 104–150 | |
 | `tp` | 258, 182 | 254–378 × 150–196 | |
 | `armor` | 258, 228 | 254–378 × 196–242 | Also drives the armor cross-out |
-| `notes` | 16, 277, 10px | 12–378 × 246–400 | Multi-line: `dy="14"`, ≤ 9 lines |
-| `weapon` | 16, 451, 11px | 12–232 × 418–498 | Turret/cargo bay weapon or equipment; 3 lines fit at `dy="14"`. **Pending the Hull Options session:** a Vehicle can have a Turret, a Static Weapon Mount and a Cargo Bay, so this single box may change. |
-| `rv` | 276, 466 center, 16px | 232–320 × 418–498 | |
+| `illegal` | 16, 277, 10px | 12–378 × 246–400 | Only with Issues: `ILLEGAL: …`, emboldened and wrapped like the Mech's, ≤ 2 lines |
+| `cargo-bays` | 16, 277 + 14 per line above, 10px | 12–378 × 246–400 | Only with Cargo Bays: `Cargo Bay ×N`, one line below `illegal` |
+| `notes` | 16, 277 + 14 per line above, 10px | 12–378 × 246–400 | Multi-line: `dy="14"`. The three fields share 9 lines; `notes` gets what's left |
+| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 11px | 12–232 × 435–466 / 466–498 | Mount row: label and short name, `Turret: Lt Laser` or `Static: Lt MG` |
+| `mount1-rv` / `mount2-rv` | 276, 457 / 488 center, 16px | 232–320 × 435–466 / 466–498 | The row's Rv, blank for Support Equipment with no range |
+
+**Mount rows.** The box under the `WEAPON / EQUIPMENT:` and `RV:` labels holds two rows. Only
+filled mounts print, one per row from the top, in the order Turret, Static Mount slot 1, Static
+Mount slot 2; a Hull Option the Vehicle doesn't take prints nothing. A Legal Vehicle fills at most
+two, so the extra mounts of an illegal Vehicle that fills three are dropped (its `ILLEGAL` line
+still counts their Issues). A name missing from the Catalog has no short name, so its row prints the
+name as stored, with a blank Rv.
+
+**Illegal marks.** As on the Mech, a Legal card has none.
+
+| Mark | Position | Notes |
+|---|---|---|
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
+| `<g data-mark="mount1-illegal">`, `mount2-` | Triangle 217–228 × 446–456 / 477–487 | On each mount row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 196 wide instead of 212 |
+
+One Issue's wording: `Hull Options over`, `Turret: Md Laser too heavy`, `Static: Plasma Lance not in
+Catalog`, `Bp over max` or `Bp is 0`. Both Static Mount slots are labeled `Static`.
 
 Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; columns x = 44–250.
 
@@ -245,7 +264,6 @@ Don't build against the current guesses for these:
 
 - **Dp:** how a Damage Profile is stored and drawn, including multiplier boxes. It replaces the
   hand-drawn grids.
-- **Vehicle Hull Options:** Turret, Static Weapon Mount and Cargo Bay, and how the Vehicle card shows them.
 - **Weapon eligibility by Class for Vehicles and Troops:** which Weapons each Class may mount.
   Settled for Mechs: a Mech mounts Catalog entries of its Class or lighter, and Support Equipment
   only on a torso Hardpoint.
