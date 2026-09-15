@@ -155,7 +155,7 @@ name as stored, with a blank Rv.
 | `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
 | `<g data-mark="mount1-illegal">`, `mount2-` | Triangle 217–228 × 446–456 / 477–487 | On each mount row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 196 wide instead of 212 |
 
-One Issue's wording: `Hull Options over`, `Turret: HL too heavy`, `Static: Plasma Lance not in
+One Issue's wording: `Hull Options over`, `Turret: Md Laser too heavy`, `Static: Plasma Lance not in
 Catalog`, `Bp over max` or `Bp is 0`. Both Static Mount slots are labeled `Static`.
 
 Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; columns x = 44–250.

@@ -56,7 +56,7 @@ function shortVehicleIssue(issue: VehicleIssue): string {
   }
 }
 
-/** The rules report only Catalog entries as too heavy or on an arm, so the lookup falls back just in case. */
+/** The rules name only Catalog entries in the Issues that use a short name, so the lookup falls back just in case. */
 function shortName(name: string): string {
   return findCatalogEntry(name)?.shortName ?? name;
 }
