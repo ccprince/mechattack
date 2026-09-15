@@ -7,7 +7,7 @@ import {
 } from './catalog';
 import { hullOptionsUsed, vehicleFrames, vehicleStats } from './frame';
 import {
-  fittedMounts,
+  takenMounts,
   vehicleMountLabels,
   type VehicleClass,
   type VehicleMount,
@@ -44,7 +44,7 @@ export function eligibleVehicleMounts(vehicleClass: VehicleClass): CatalogEntry[
  */
 export function vehicleIssues(profile: VehicleProfile): VehicleIssue[] {
   const issues: VehicleIssue[] = [];
-  for (const mount of fittedMounts(profile)) {
+  for (const mount of takenMounts(profile)) {
     const name = profile.mounts[mount];
     if (name === null) continue;
     const entry = findCatalogEntry(name);

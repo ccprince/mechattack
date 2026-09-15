@@ -1,7 +1,7 @@
 import type { ArmyList } from './armyList';
 import type { MechProfile } from './mech';
 import type { UnitProfile } from './unitProfile';
-import type { VehicleProfile } from './vehicle';
+import { takenMounts, vehicleMounts, type VehicleProfile } from './vehicle';
 
 export interface ArmyListState {
   list: ArmyList;
@@ -115,7 +115,7 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
 /** Appends a new Unit Profile, named apart from the others, and selects it. */
 function addUnitProfile(
   state: ArmyListState,
-  create: (id: string, name: (base: string) => string) => UnitProfile,
+  create: (id: string, freeName: (base: string) => string) => UnitProfile,
 ): ArmyListState {
   const names = new Set(state.list.unitProfiles.map(({ name }) => name));
   const profile = create(freeId(state.list), (base) =>
@@ -128,8 +128,8 @@ function addUnitProfile(
 }
 
 /**
- * Changes meant for the other kind of Unit Profile are a caller's mistake; the schema rejects what
- * they leave behind when saving. Unticking a Turret or Static Mount empties its mounts.
+ * Changes must suit the Unit Profile's kind: fields meant for the other kind aren't checked here.
+ * Unticking a Turret or Static Mount empties its mounts.
  */
 function applyChanges(profile: UnitProfile, changes: UnitProfileChanges): UnitProfile {
   if (profile.kind === 'Mech') {
@@ -141,17 +141,11 @@ function applyChanges(profile: UnitProfile, changes: UnitProfileChanges): UnitPr
     };
   }
   const vehicleChanges = changes as VehicleChanges;
-  const next = {
-    ...profile,
-    ...vehicleChanges,
-    mounts: { ...profile.mounts, ...vehicleChanges.mounts },
-  };
-  if (!next.turret) next.mounts.turret = null;
-  if (!next.staticMount) {
-    next.mounts.staticMount1 = null;
-    next.mounts.staticMount2 = null;
-  }
-  return next;
+  const next = { ...profile, ...vehicleChanges };
+  const mounts = { ...profile.mounts, ...vehicleChanges.mounts };
+  const taken = takenMounts(next);
+  for (const mount of vehicleMounts) if (!taken.includes(mount)) mounts[mount] = null;
+  return { ...next, mounts };
 }
 
 function hasUnitProfile(list: ArmyList, id: string): boolean {
@@ -170,11 +164,11 @@ function firstFree(candidate: (n: number) => string, taken: ReadonlySet<string>)
   }
 }
 
-function newMech(id: string, name: (base: string) => string): MechProfile {
+function newMech(id: string, freeName: (base: string) => string): MechProfile {
   return {
     kind: 'Mech',
     id,
-    name: name('New Mech'),
+    name: freeName('New Mech'),
     class: 'Light',
     armor: 0,
     heatSinks: 0,
@@ -185,11 +179,11 @@ function newMech(id: string, name: (base: string) => string): MechProfile {
   };
 }
 
-function newVehicle(id: string, name: (base: string) => string): VehicleProfile {
+function newVehicle(id: string, freeName: (base: string) => string): VehicleProfile {
   return {
     kind: 'Vehicle',
     id,
-    name: name('New Vehicle'),
+    name: freeName('New Vehicle'),
     class: 'Light',
     armor: 0,
     engineUpgrades: 0,

@@ -19,9 +19,9 @@ describe('fitLine', () => {
 
   it('truncates with an ellipsis once the minimum size is reached', () => {
     // At 8px each char is 4 wide, so 25 chars fit in 100.
-    const fitted = fitLine('a'.repeat(40), 100, 12, measure);
-    expect(fitted.fontSize).toBe(8);
-    expect(fitted.text).toBe(`${'a'.repeat(24)}…`);
+    const taken = fitLine('a'.repeat(40), 100, 12, measure);
+    expect(taken.fontSize).toBe(8);
+    expect(taken.text).toBe(`${'a'.repeat(24)}…`);
   });
 });
 

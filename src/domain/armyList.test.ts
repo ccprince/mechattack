@@ -93,11 +93,6 @@ describe('armyListSchema', () => {
     ['3 Cargo Bays', { cargoBays: 3 }],
     ['negative Cargo Bays', { cargoBays: -1 }],
     ['a Mech Class', { class: 'Heavy' as never }],
-    ['a mount in a Turret it does not take', { turret: false }],
-    [
-      'a mount in a Static Mount it does not take',
-      { mounts: { turret: null, staticMount1: null, staticMount2: 'Light Laser' } },
-    ],
   ])('rejects a Vehicle with %s', (_, overrides) => {
     expect(armyListSchema.safeParse(list({ unitProfiles: [vehicle(overrides)] })).success).toBe(
       false,

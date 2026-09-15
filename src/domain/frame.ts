@@ -1,6 +1,6 @@
 import { findCatalogEntry } from './catalog';
 import { hardpoints, type MechClass, type MechProfile } from './mech';
-import { fittedMounts, type VehicleClass, type VehicleProfile } from './vehicle';
+import { takenMounts, type VehicleClass, type VehicleProfile } from './vehicle';
 
 /** A Mech Class's starting stats and the most Bp a Mech of that Class may cost. Costs no Bp itself. */
 export interface MechFrame {
@@ -73,7 +73,7 @@ export function mechStats(profile: MechProfile): MechStats {
  */
 export function vehicleStats(profile: VehicleProfile): VehicleStats {
   const frame = vehicleFrames[profile.class];
-  const names = fittedMounts(profile).map((mount) => profile.mounts[mount]);
+  const names = takenMounts(profile).map((mount) => profile.mounts[mount]);
   return {
     bp:
       profile.armor / armorPerBp +
