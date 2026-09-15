@@ -1,11 +1,13 @@
 import troopTemplate from '../../cards/troops-card.svg?raw';
 import { troopStats, type TroopProfile } from '../domain/troop';
 import { troopIssues } from '../domain/troopRules';
+import { dpDrawing } from './dpShape';
 import { fitLine, type Measure } from './fitText';
 import { strengthCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
   addCrossOut,
+  addDp,
   addValue,
   addWarningTriangle,
   addWrappedValue,
@@ -18,6 +20,8 @@ const weaponWidth = { unmarked: 136, marked: 120 };
 // Illegal marks (docs/cards.md): the name triangle, and the Crew Served Weapon row's marker.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const weaponMark = { x: 140, y: 205, width: 11, height: 10 };
+/** The Crew Served Weapon's Dp area, 3×3 cells of 12 (docs/cards.md). */
+const dpArea = { x: 214, y: 182, width: 36, height: 56, cellSize: 12, rollsFontSize: 11 };
 
 export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGSVGElement {
   const { svg, data } = parseTemplate(troopTemplate);
@@ -62,6 +66,7 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
     if (row.marked) addWarningTriangle(data, 'weapon-illegal', weaponMark);
     line('weapon', row.text, 15, 214, weaponWidth[row.marked ? 'marked' : 'unmarked'], 11);
     if (row.rv) line('rv', row.rv, 184.5, 220, 51, 16, 'middle');
+    if (row.dp) addDp(data, 'weapon', dpDrawing(row.dp, dpArea, measure));
   }
 
   return svg;

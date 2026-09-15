@@ -83,9 +83,8 @@ font is 12px unless noted.
 Conventions across all cards:
 - Rv prints as `normal/extended`, like `10/14`, or `min-normal/extended`, like `3-10/14`, in its single box. It stays blank for Support Equipment with no range.
 - Only Mechs track heat, so only the Mech card has Hc and Hv. Hv stays blank when the entry generates none.
-- Each weapon row has a **Dp area** where the entry's Dp is drawn (see [Dp](#dp)). The hand-drawn
-  grids in those areas are placeholders: the app draws the shape itself, so the grid lines come out
-  of the templates.
+- Each weapon row has a **Dp area** where the entry's Dp is drawn (see [Dp](#dp)). The areas hold no
+  artwork but their surrounding box: the app draws the shape itself.
 - The Vehicle and Troop cards keep the label "Type" for the value the app calls Class.
 
 ### Mech (`mech-card.svg`)
@@ -206,30 +205,36 @@ center column, and the whole shape fits the entry's Class: 3×3 Light, 4×4 Medi
 Weapon must have a Dp; Support Equipment must leave the cell blank. The Catalog loader rejects
 anything else, so a typo fails the build.
 
-**Drawing.** Boxes are squares of a fixed size per card, with a gap of 20% of the box between them.
+**Drawing.** Each row's Dp is a `<g data-dp="…">` in `#data`, named for the row (`la`, `mount1`,
+`weapon`), holding one `<rect>` per box and, with Rolls, a `<text data-field="…-rolls">`.
+Boxes are squares of a fixed size per card, with a gap of 20% of the box between them.
 The Impact Box (top row center) is black; every other box is `#888`. Rolls print as `N×` in Roboto
 Slab 600 to the left of the shape, vertically centered on it, at the size of that card's weapon name.
 Shape and text together are centered in the Dp area. Only Machine Guns have Rolls, and their shapes
 are one box wide, so the text always fits.
 
-| Card | Dp area (x1–x2 × y1–y2) | Grid | Box | `N×` size |
+| Card | Dp area (x1–x2 × y1–y2) | Grid | Cell | `N×` size |
 |---|---|---|---|---|
 | Mech | 166–195 / 349–378 × 440–469 (arms), 469–498 (torsos) | 5×5 | 5.8 | 9px |
 | Vehicle | 320–378 × 435–466 (mount 1), 466–498 (mount 2) | 4×4 | 7.75 | 11px |
 | Troops | 214–250 × 182–238 | 3×3 | 12 | 11px |
 
 The box size is the area's smaller side divided by the grid, so a Light Laser is the same size on
-every row of a card rather than stretched to fill its area.
+every row of a card rather than stretched to fill its area. That size is the **cell**: the square
+plus the gap that follows it, which is why the largest shape the grid holds still fits the area
+(five Mech cells are 29, and the shape spans 29 less the trailing gap). The square itself is the
+cell less that gap, 4.83 on a Mech.
 
 An empty mount, a Support Equipment and a name missing from the Catalog all print nothing, like a
 blank Rv. An illegal Unit Profile can mount a Weapon too heavy for its card's grid (a Heavy Laser on
 a Vehicle is 5 rows in a 4×4 area): shrink that row's boxes until the shape fits rather than clipping
 it. The card is already marked illegal.
 
-**Template changes.** Drop the grid lines from all three Dp areas, keeping the surrounding box: the
-Mech's `#minigrid` def and its four `<use>`s, the Vehicle's 6×8 grid path and the Troops' 6×9 grid
-path. The Vehicle's Dp column is one box spanning both mount rows; the two Dp areas line up with the
-mount rows, leaving the 418–435 label strip empty. The areas take no `DP:` label, on any card.
+**Templates.** No Dp area holds artwork but its surrounding box, and none takes a `DP:` label. The
+hand-drawn placeholder grids the areas once held — the Mech's `#minigrid` def and its four `<use>`s,
+the Vehicle's 6×8 grid path and the Troops' 6×9 grid path — came out when the app took over the
+drawing, so those areas are deliberately empty. The Vehicle's Dp column is one box spanning both
+mount rows; the two Dp areas line up with the mount rows, leaving the 418–435 label strip empty.
 
 ## Processing: unit data → PDF
 
@@ -292,8 +297,8 @@ svg2pdf ignores `<filter>`, so the texture has to become an image:
   fonts up by a style key built from `font-weight` (`'normal'` for 400, `'600normal'` for 600). A
   font registered under any other key is silently replaced by Times-Roman. The font still shows as
   embedded, but its width table is empty (`/W []`), which the export test checks for.
-- Verified with svg2pdf 2.8: in-file `<style>` class rules apply, and `<use>` (`#hit-numbers`,
-  `#minigrid`) renders. No inlining is needed.
+- Verified with svg2pdf 2.8: in-file `<style>` class rules apply, and `<use>` (`#hit-numbers`)
+  renders. No inlining is needed.
 
 ## Previewing a template
 

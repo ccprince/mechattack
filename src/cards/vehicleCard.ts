@@ -2,11 +2,13 @@ import vehicleTemplate from '../../cards/vehicle-card.svg?raw';
 import { vehicleStats } from '../domain/frame';
 import type { VehicleProfile } from '../domain/vehicle';
 import { vehicleIssues } from '../domain/vehicleRules';
+import { dpDrawing } from './dpShape';
 import { fitLine, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
   addCrossOut,
+  addDp,
   addValue,
   addWarningTriangle,
   addWrappedValue,
@@ -18,6 +20,11 @@ import { mountRows, vehicleNotes, vehicleNotesBox } from './vehicleCardContent';
 const topArmorRow = 60;
 /** Baselines of the two mount rows' weapon lines; each row's Rv sits 2 lower. */
 const mountRowBaselines = [455, 486];
+/** Each mount row's Dp area, 4×4 cells of 7.75 in the Dp column (docs/cards.md). */
+const dpAreas = [
+  { x: 320, y: 435, width: 58, height: 31, cellSize: 7.75, rollsFontSize: 11 },
+  { x: 320, y: 466, width: 58, height: 32, cellSize: 7.75, rollsFontSize: 11 },
+];
 const mountRow = { weaponX: 16, rvX: 276, rvDy: 2 };
 const weaponWidth = { unmarked: 212, marked: 196 };
 // Illegal marks (docs/cards.md): the name triangle, and each mount row's marker relative to its row.
@@ -73,6 +80,7 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
     const maxWidth = weaponWidth[row.marked ? 'marked' : 'unmarked'];
     line(`${prefix}-weapon`, row.text, mountRow.weaponX, y, maxWidth, 11);
     if (row.rv) line(`${prefix}-rv`, row.rv, mountRow.rvX, y + mountRow.rvDy, 80, 16, 'middle');
+    if (row.dp) addDp(data, prefix, dpDrawing(row.dp, dpAreas[index]!, measure));
   }
 
   return svg;

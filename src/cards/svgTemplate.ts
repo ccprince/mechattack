@@ -1,3 +1,4 @@
+import type { DpDrawing } from './dpShape';
 import type { Rect } from './geometry';
 
 const svgNs = 'http://www.w3.org/2000/svg';
@@ -66,6 +67,37 @@ export function addWrappedValue(
   });
   data.append(el);
   return el;
+}
+
+/** The Impact Box prints black; the rest of a Dp prints gray (docs/cards.md). */
+const dpFill = { impact: '#000', rest: '#888' };
+
+/**
+ * Draws one Dp in its area: a rect per box, plus the `N×` Rolls text when the Weapon has Rolls.
+ * `row` names the group as `data-dp`, like `la` or `mount1`.
+ */
+export function addDp(data: SVGGElement, row: string, { boxes, rolls }: DpDrawing): SVGGElement {
+  const doc = data.ownerDocument;
+  const group = doc.createElementNS(svgNs, 'g');
+  group.setAttribute('data-dp', row);
+
+  for (const { x, y, width, height, impact } of boxes) {
+    const box = doc.createElementNS(svgNs, 'rect');
+    box.setAttribute('x', String(x));
+    box.setAttribute('y', String(y));
+    box.setAttribute('width', String(width));
+    box.setAttribute('height', String(height));
+    box.setAttribute('fill', impact ? dpFill.impact : dpFill.rest);
+    group.append(box);
+  }
+  if (rolls) {
+    const text = createValueText(data, `${row}-rolls`, rolls.x, rolls.y, rolls.fontSize);
+    text.textContent = rolls.text;
+    group.append(text);
+  }
+
+  data.append(group);
+  return group;
 }
 
 /** Grays out `rect` and draws an X corner to corner across it. */

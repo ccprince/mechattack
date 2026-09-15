@@ -24,7 +24,68 @@ function overlaps(a: DOMRect, b: DOMRect): boolean {
   return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
+/** The boxes of one mount row's drawn Dp, in paint order. */
+function dpBoxes(svg: SVGSVGElement, row: string) {
+  return Array.from(svg.querySelectorAll(`[data-dp="${row}"] rect`), (box) => ({
+    x: Number(box.getAttribute('x')),
+    y: Number(box.getAttribute('y')),
+    size: Number(box.getAttribute('width')),
+    fill: box.getAttribute('fill'),
+  }));
+}
+
+function dpRows(svg: SVGSVGElement): string[] {
+  return Array.from(svg.querySelectorAll('[data-dp]'), (group) => group.getAttribute('data-dp')!);
+}
+
 describe('buildVehicleCardSvg', () => {
+  describe('Dp', () => {
+    it('draws the Weapon’s Dp on its mount row, and nothing for Support Equipment', () => {
+      const svg = buildVehicleCardSvg(
+        {
+          ...testVehicle,
+          class: 'Medium',
+          turret: true,
+          staticMount: true,
+          cargoBays: 0,
+          mounts: {
+            turret: 'Light Laser',
+            staticMount1: 'Remote Guided Missile System',
+            staticMount2: null,
+          },
+        },
+        createValueMeasure(),
+      );
+      expect(dpRows(svg)).toEqual(['mount1']);
+      // The Light Laser's 111, black on the Impact Box.
+      const boxes = dpBoxes(svg, 'mount1');
+      expect(boxes).toHaveLength(3);
+      expect(boxes.map((box) => box.fill)).toEqual(['#000', '#888', '#888']);
+      for (const { x, y, size } of boxes) {
+        expect(x).toBeGreaterThanOrEqual(320);
+        expect(x + size).toBeLessThanOrEqual(378);
+        expect(y).toBeGreaterThanOrEqual(435);
+        expect(y + size).toBeLessThanOrEqual(466);
+      }
+    });
+
+    it('shrinks a Weapon too heavy for the 4×4 area rather than clipping it', () => {
+      // A Heavy Laser's 5 rows don't fit a Vehicle's area; only an illegal Vehicle mounts one.
+      const svg = buildVehicleCardSvg(
+        { ...testVehicle, mounts: { ...testVehicle.mounts, turret: 'Heavy Laser' } },
+        createValueMeasure(),
+      );
+      const boxes = dpBoxes(svg, 'mount1');
+      expect(boxes).toHaveLength(5);
+      expect(boxes[0]!.size).toBeLessThan(7.75 / 1.2);
+      expect(marks(svg)).toContain('mount1-illegal');
+      for (const { y, size } of boxes) {
+        expect(y).toBeGreaterThanOrEqual(435);
+        expect(y + size).toBeLessThanOrEqual(466);
+      }
+    });
+  });
+
   it('replaces the sample data with a Legal Vehicle, unmarked', () => {
     const svg = buildVehicleCardSvg(testVehicle, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Hellhound');

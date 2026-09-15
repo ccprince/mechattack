@@ -24,7 +24,71 @@ function overlaps(a: DOMRect, b: DOMRect): boolean {
   return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
+/** The boxes of the Crew Served Weapon's drawn Dp, in paint order. */
+function dpBoxes(svg: SVGSVGElement) {
+  return Array.from(svg.querySelectorAll('[data-dp="weapon"] rect'), (box) => ({
+    x: Number(box.getAttribute('x')),
+    y: Number(box.getAttribute('y')),
+    size: Number(box.getAttribute('width')),
+    fill: box.getAttribute('fill'),
+  }));
+}
+
 describe('buildTroopCardSvg', () => {
+  describe('Dp', () => {
+    it('draws the Crew Served Weapon’s Dp inside its area', () => {
+      const svg = buildTroopCardSvg(testTroop, createValueMeasure());
+      // The Light Missile's 3: one row, black in the center.
+      const boxes = dpBoxes(svg);
+      expect(boxes.map((box) => box.fill)).toEqual(['#888', '#000', '#888']);
+      for (const { x, y, size } of boxes) {
+        expect(x).toBeGreaterThanOrEqual(214);
+        expect(x + size).toBeLessThanOrEqual(250);
+        expect(y).toBeGreaterThanOrEqual(182);
+        expect(y + size).toBeLessThanOrEqual(238);
+      }
+    });
+
+    it('draws nothing for Support Equipment, an empty mount or a name missing from the Catalog', () => {
+      for (const crewServedWeapon of ['Anti-Missile Defense System', null, 'Plasma Lance']) {
+        const svg = buildTroopCardSvg({ ...testTroop, crewServedWeapon }, createValueMeasure());
+        expect(svg.querySelectorAll('[data-dp]')).toHaveLength(0);
+      }
+    });
+
+    it('shrinks a Weapon too heavy for the 3×3 area rather than clipping it', () => {
+      // A Heavy Missile's 51 is 5 boxes wide, past the area's 3; only an illegal Troop mounts one.
+      const svg = buildTroopCardSvg(
+        { ...testTroop, crewServedWeapon: 'Heavy Missile' },
+        createValueMeasure(),
+      );
+      const boxes = dpBoxes(svg);
+      expect(boxes).toHaveLength(6);
+      expect(boxes[0]!.size).toBeLessThan(12 / 1.2);
+      expect(marks(svg)).toContain('weapon-illegal');
+      for (const { x, y, size } of boxes) {
+        expect(x).toBeGreaterThanOrEqual(214);
+        expect(x + size).toBeLessThanOrEqual(250);
+        expect(y).toBeGreaterThanOrEqual(182);
+        expect(y + size).toBeLessThanOrEqual(238);
+      }
+    });
+
+    it('writes Rolls left of the shape', () => {
+      const svg = buildTroopCardSvg(
+        { ...testTroop, crewServedWeapon: 'Light Machine Gun' },
+        createValueMeasure(),
+      );
+      const rolls = field(svg, 'weapon-rolls')!;
+      expect(rolls.textContent).toBe('3×');
+      document.body.append(svg);
+      const text = rolls.getBBox();
+      svg.remove();
+      expect(text.x).toBeGreaterThanOrEqual(214);
+      expect(text.x + text.width).toBeLessThanOrEqual(dpBoxes(svg)[0]!.x);
+    });
+  });
+
   it('replaces the sample data with a Legal Troop, unmarked', () => {
     const svg = buildTroopCardSvg(testTroop, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Rangers');
