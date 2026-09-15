@@ -596,12 +596,20 @@ describe('Vehicles', () => {
     },
   );
 
-  it('shows a placeholder instead of a card preview', async () => {
+  it('previews the card with its mount rows, marked while the Vehicle has Issues', async () => {
     await loadWithNewVehicle();
-    await expect
-      .element(page.getByText('Vehicle cards are not available yet.'))
-      .toBeInTheDocument();
-    expect(page.getByRole('img').query()).toBeNull();
+    await field('Armor').fill('10');
+    await checkbox('Turret').click();
+    await picker('Turret').selectOptions('Light Laser');
+    await expect.poll(() => cardField('mount1-weapon')).toBe('Turret: Lt Laser');
+    await expect.element(page.getByRole('img', { name: 'New Vehicle record card' })).toBeVisible();
+    expect(cardMarks()).toEqual([]);
+
+    await checkbox('Static Mount').click();
+    await picker('Static Mount 2').selectOptions('Light Machine Gun');
+    await expect.poll(() => cardField('mount2-weapon')).toBe('Static: Lt MG');
+    await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Hull Options over');
+    expect(cardMarks()).toEqual(['illegal']);
   });
 });
 
@@ -670,12 +678,13 @@ describe('Download PDF', () => {
         mech({ id: 'a', name: 'Sound' }),
         mech({ id: 'b', name: 'Cheap', hardpoints: heavyLeftArm }),
         mech({ id: 'c', name: 'Flawed', quantity: 2, hardpoints: heavyLeftArm }),
+        vehicle({ id: 'd', name: 'Overloaded', cargoBays: 2, turret: true }),
       ],
     });
 
     await downloadPdf().click();
     expect(confirm).toHaveBeenCalledWith(
-      'Cheap and Flawed have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
+      'Cheap, Flawed and Overloaded have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
     );
     expect(vi.mocked(exportArmyListPdf)).not.toHaveBeenCalled();
 
