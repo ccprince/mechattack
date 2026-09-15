@@ -34,7 +34,8 @@ _Avoid_: Troops (as a kind name), infantry
 
 **Class**:
 A unit's, Weapon's or Support Equipment's weight category, which limits what a unit may mount. A
-Mech may mount only Weapons and Support Equipment of its own Class or lighter. Mech: Light, Medium, Heavy. Vehicle: Ultra-light, Light,
+Mech may mount only Weapons and Support Equipment of its own Class or lighter. A Vehicle may mount
+Light ones, and a Medium Vehicle Medium ones too. Mech: Light, Medium, Heavy. Vehicle: Ultra-light, Light,
 Medium. Troop: Light, Heavy, Jump. (The Vehicle and Troop cards still label it "Type".)
 _Avoid_: Type
 
@@ -44,20 +45,25 @@ Stat abbreviations are written with an initial capital (Bp, not BP).
 
 **Bp** (Build Points):
 What a unit, Weapon or Support Equipment costs. A unit's Bp is its total cost, including what it
-mounts, and counts against the Bp Limit. A Mech's Bp is worked out, never chosen: 1 per 10 Armor,
-2 per Heat Sink, 2 per Engine Upgrade, plus the Bp of its mounts. Its Frame costs nothing.
+mounts, and counts against the Bp Limit. A Mech's or Vehicle's Bp is worked out, never chosen: 1 per
+10 Armor, 2 per Heat Sink, 2 per Engine Upgrade, 1 per Cargo Bay, plus the Bp of its mounts. Its
+Frame, Turret and Static Mount cost nothing.
 
 **Frame**:
-The base a Mech Class gives: starting Mv, Tp and Hc, and the most Bp a Mech of that Class may cost.
-Light: 8 Bp, Mv 5, Tp 5, Hc 4. Medium: 14 Bp, Mv 4, Tp 4, Hc 4. Heavy: 20 Bp, Mv 3, Tp 3, Hc 4.
-A Mech costing more than its Frame allows has an Issue. Comes with the Class; never chosen on its own.
+The base a Mech or Vehicle Class gives: starting Mv and Tp, and the most Bp a unit of that Class may
+cost. A Mech Frame also gives Hc; a Vehicle Frame gives Hull Options instead.
+Mech Light: 8 Bp, Mv 5, Tp 5, Hc 4. Medium: 14 Bp, Mv 4, Tp 4, Hc 4. Heavy: 20 Bp, Mv 3, Tp 3, Hc 4.
+Vehicle Ultra-light: 4 Bp, Mv 5, Tp 5, 1 Hull Option. Light: 5 Bp, Mv 4, Tp 4, 2 Hull Options.
+Medium: 6 Bp, Mv 3, Tp 4, 2 Hull Options.
+A unit costing more than its Frame allows has an Issue. Comes with the Class; never chosen on its own.
 _Avoid_: Chassis
 
 **Heat Sink**:
 A Mech upgrade costing 2 Bp that adds 1 Hc. A Mech may take any number, within its Frame's Bp.
+Vehicles have none.
 
 **Engine Upgrade**:
-A Mech upgrade costing 2 Bp; a Mech takes at most two. The first adds 1 Mv, the second 1 Tp.
+A Mech or Vehicle upgrade costing 2 Bp; a unit takes at most two. The first adds 1 Mv, the second 1 Tp.
 
 **Mv** (Move Value):
 How far a unit moves. Like Tp and Hc, it follows from the unit's Class and upgrades rather than
@@ -73,9 +79,8 @@ A Mech's capacity to manage heat. Only Mechs track heat. Not the same as Hv.
 A Troop unit's starting strength, at most 20. Strength boxes above it are blanked on the card.
 
 **Armor**:
-A Mech or Vehicle's starting armor, always a multiple of 10. A Mech's is 0 to 150 and costs 1 Bp
-per 10. Armor rows
-above it are blanked on the card.
+A Mech or Vehicle's starting armor, always a multiple of 10, costing 1 Bp per 10. A Mech's is 0 to
+150, a Vehicle's 0 to 60. Armor rows above it are blanked on the card.
 
 ### Weapons
 
@@ -98,7 +103,21 @@ One of a Mech's four mounts: Left Arm, Right Arm, Left Torso, Right Torso. Each 
 arc and holds one Weapon, one Support Equipment (torso only) or nothing.
 
 **Hull Option**:
-An optional fitting on a Vehicle, such as a Turret, a Static Weapon Mount or a Cargo Bay.
+An optional fitting on a Vehicle: a Turret, a Static Mount or a Cargo Bay. A Vehicle's Frame sets how
+many Hull Options it may take; a Static Mount counts as two. Taking more is an Issue.
+
+**Turret**:
+A Hull Option holding one Weapon or Support Equipment, or nothing, firing in any direction. A Vehicle
+takes at most one.
+
+**Static Mount**:
+A Hull Option with two slots, each holding one Weapon or Support Equipment, or nothing, firing only
+into the front arc. Counts as
+two Hull Options, so an Ultra-light Vehicle can't take one.
+_Avoid_: Static Weapon Mount
+
+**Cargo Bay**:
+A Hull Option costing 1 Bp. A Vehicle takes at most two. What it carries isn't tracked.
 
 **Crew Served Weapon**:
 The single optional weapon a Troop unit carries.
