@@ -11,10 +11,10 @@ export const savedArmyListKey = 'mechattack.armyList';
 /** A single slot: a later unreadable save replaces the one kept here. */
 export const backupKey = 'mechattack.armyList.backup';
 
-export interface LoadedArmyList {
+export interface SavedArmyList {
   /** The saved Army List, or undefined to start a fresh one. */
   list: ArmyList | undefined;
-  /** Raw text of an unreadable save, kept until the player downloads or discards it. */
+  /** Raw text of an unreadable save, kept until the player discards it. */
   backup: string | undefined;
 }
 
@@ -22,7 +22,7 @@ export interface LoadedArmyList {
  * Reads the saved Army List, checked against `armyListSchema`. An unreadable save moves to the
  * backup key so autosave can't overwrite it. Storage errors never throw: the app starts fresh.
  */
-export function loadArmyList(store: KeyValueStore): LoadedArmyList {
+export function loadArmyList(store: KeyValueStore): SavedArmyList {
   let raw: string | null;
   let backup: string | undefined;
   try {

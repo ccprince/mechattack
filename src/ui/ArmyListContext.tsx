@@ -1,24 +1,24 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useReducer,
-  useState,
-  type Dispatch,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
 import type { ArmyList } from '../domain/armyList';
 import {
   armyListReducer,
   type ArmyListAction,
   type ArmyListState,
 } from '../domain/armyListReducer';
-import { saveArmyList, type KeyValueStore } from '../domain/armyListStorage';
+import type { KeyValueStore } from '../domain/armyListStorage';
+import { useAutosave } from './useAutosave';
 
 const freshList: ArmyList = { version: 1, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
 
 const ArmyListContext = createContext<
-  { state: ArmyListState; dispatch: Dispatch<ArmyListAction>; autosaveFailed: boolean } | undefined
+  | {
+      state: ArmyListState;
+      dispatch: Dispatch<ArmyListAction>;
+      /** Where the Army List autosaves, and its backup lives. */
+      store: KeyValueStore;
+      autosaveFailed: boolean;
+    }
+  | undefined
 >(undefined);
 
 /** Holds the Army List, starting from `savedList` (or a fresh one), and autosaves every change. */
@@ -35,16 +35,11 @@ export function ArmyListProvider({
     list,
     selectedId: list.unitProfiles[0]?.id ?? null,
   }));
-  const [autosaveFailed, setAutosaveFailed] = useState(false);
+  const autosaveFailed = useAutosave(store, state.list);
 
-  useEffect(() => {
-    // Storage is the external system here: its answer is only known once the save is attempted,
-    // and React skips the re-render while the answer stays the same.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAutosaveFailed(!saveArmyList(store, state.list));
-  }, [store, state.list]);
-
-  return <ArmyListContext value={{ state, dispatch, autosaveFailed }}>{children}</ArmyListContext>;
+  return (
+    <ArmyListContext value={{ state, dispatch, store, autosaveFailed }}>{children}</ArmyListContext>
+  );
 }
 
 export function useArmyList() {

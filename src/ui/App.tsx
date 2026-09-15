@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import { buildMechCardSvg } from '../cards/mechCard';
-import type { KeyValueStore, LoadedArmyList } from '../domain/armyListStorage';
+import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import styles from './App.module.css';
 import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
@@ -9,14 +9,14 @@ import { RecoveryBanner } from './RecoveryBanner';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
 
-export function App({ store, loaded }: { store: KeyValueStore; loaded: LoadedArmyList }) {
-  const [backup, setBackup] = useState(loaded.backup);
+export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyList }) {
+  const [backup, setBackup] = useState(saved.backup);
   return (
-    <ArmyListProvider store={store} savedList={loaded.list}>
+    <ArmyListProvider store={store} savedList={saved.list}>
       <ArmyListEditor
         banner={
           backup !== undefined && (
-            <RecoveryBanner store={store} backup={backup} onClose={() => setBackup(undefined)} />
+            <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
           )
         }
       />

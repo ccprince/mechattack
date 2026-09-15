@@ -1,19 +1,14 @@
-import { discardBackup, type KeyValueStore } from '../domain/armyListStorage';
+import { discardBackup } from '../domain/armyListStorage';
+import { useArmyList } from './ArmyListContext';
 import styles from './RecoveryBanner.module.css';
 
 /**
  * Offers the unreadable save kept in the backup key. Stays up, across reloads too, until the player
  * downloads or discards it. Only Discard clears the backup: a download can be blocked or cancelled.
  */
-export function RecoveryBanner({
-  store,
-  backup,
-  onClose,
-}: {
-  store: KeyValueStore;
-  backup: string;
-  onClose: () => void;
-}) {
+export function RecoveryBanner({ backup, onClose }: { backup: string; onClose: () => void }) {
+  const { store } = useArmyList();
+
   function download() {
     downloadJson(backup, 'mech-attack-army-list-backup.json');
     onClose();
