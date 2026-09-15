@@ -24,6 +24,16 @@ each layer imports only from the layers above it:
 Tests: Vitest runs pure logic in Node. Anything that measures text or renders SVG/PDF runs in Vitest
 browser mode (Playwright). Keep geometry in pure functions so most tests stay in Node.
 
+## Git workflow
+
+`main` only moves by merging pull requests; a pre-commit hook in `.githooks/` refuses commits on it
+(`npm install` enables the hook). Start every piece of work on its own branch:
+
+1. `git switch main && git pull --ff-only`
+2. `git switch -c <kebab-case-name>`, e.g. `editor-ui-tests`. Uncommitted changes carry over.
+3. Commit, `git push -u origin HEAD`, then `gh pr create`.
+4. After the merge: `git switch main && git pull --ff-only && git branch -d <name>`.
+
 ## Agent skills
 
 ### Issue tracker

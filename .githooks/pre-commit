@@ -1,0 +1,15 @@
+#!/bin/sh
+# main only moves by merging pull requests. Commit on a branch instead.
+
+branch=$(git symbolic-ref --short -q HEAD)
+
+if [ "$branch" = "main" ]; then
+  cat >&2 <<'EOF'
+Commit refused: you're on main. Move your changes to a branch and commit there:
+
+  git switch -c <branch-name>
+
+Uncommitted changes come with you. Bypass once with --no-verify.
+EOF
+  exit 1
+fi
