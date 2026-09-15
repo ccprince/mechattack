@@ -8,6 +8,7 @@ import {
   type MechClass,
   type MechProfile,
 } from '../domain/mech';
+import { findCatalogEntry } from '../domain/catalog';
 import { describeIssue, eligibleMounts, unitProfileIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
 import { CardPreview } from './CardPreview';
@@ -71,8 +72,9 @@ export function UnitProfileEditor({
           {hardpoints.map((hardpoint) => (
             <HardpointPicker
               key={hardpoint}
-              profile={profile}
+              mechClass={profile.class}
               hardpoint={hardpoint}
+              mounted={profile.hardpoints[hardpoint]}
               onChange={(name) => update({ hardpoints: { [hardpoint]: name } })}
             />
           ))}
@@ -107,24 +109,30 @@ export function UnitProfileEditor({
  * after a Class change, or missing from the Catalog) stays selected and listed until changed.
  */
 function HardpointPicker({
-  profile,
+  mechClass,
   hardpoint,
+  mounted,
   onChange,
 }: {
-  profile: MechProfile;
+  mechClass: MechClass;
   hardpoint: Hardpoint;
+  /** The Catalog name on this Hardpoint, or null when empty. */
+  mounted: string | null;
   onChange: (name: string | null) => void;
 }) {
-  const mounted = profile.hardpoints[hardpoint];
-  const names = eligibleMounts(profile.class, hardpoint).map(({ name }) => name);
-  const kept = mounted !== null && !names.includes(mounted) ? mounted : undefined;
+  const names = eligibleMounts(mechClass, hardpoint).map(({ name }) => name);
+  const ineligibleMount = mounted !== null && !names.includes(mounted) ? mounted : undefined;
 
   return (
     <label className={styles.field}>
       <span>{hardpointLabels[hardpoint]}</span>
       <select value={mounted ?? ''} onChange={(event) => onChange(event.target.value || null)}>
         <option value="">Empty</option>
-        {kept !== undefined && <option value={kept}>{kept} (not allowed)</option>}
+        {ineligibleMount !== undefined && (
+          <option value={ineligibleMount}>
+            {ineligibleMount} ({findCatalogEntry(ineligibleMount) ? 'Issue' : 'not in the Catalog'})
+          </option>
+        )}
         {names.map((name) => (
           <option key={name}>{name}</option>
         ))}

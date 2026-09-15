@@ -23,7 +23,7 @@ export type Issue =
 const armHardpoints: readonly Hardpoint[] = ['leftArm', 'rightArm'];
 
 /** Whether a Catalog entry of `entryClass` is no heavier than a Mech of `mechClass`. */
-function fitsClass(entryClass: CatalogEntry['class'], mechClass: MechClass): boolean {
+function fitsClass(entryClass: CatalogClass, mechClass: MechClass): boolean {
   return catalogClasses.indexOf(entryClass) <= catalogClasses.indexOf(mechClass);
 }
 
@@ -69,14 +69,16 @@ export function unitProfileIssues(profile: MechProfile): Issue[] {
 
 /** An Issue in words, for the editor. */
 export function describeIssue(issue: Issue): string {
+  if (issue.rule === 'bpBelowMounts') {
+    return `Bp ${issue.bp} is less than the ${issue.mountsBp} Bp it mounts`;
+  }
+  const mount = `${hardpointLabels[issue.hardpoint]}: ${issue.name}`;
   switch (issue.rule) {
     case 'mountTooHeavy':
-      return `${hardpointLabels[issue.hardpoint]}: ${issue.name} is ${issue.entryClass}, heavier than the Mech's Class`;
+      return `${mount} is ${issue.entryClass}, heavier than the Mech's Class`;
     case 'supportEquipmentOnArm':
-      return `${hardpointLabels[issue.hardpoint]}: ${issue.name} is Support Equipment, which only fits a torso Hardpoint`;
+      return `${mount} is Support Equipment, which only fits a torso Hardpoint`;
     case 'notInCatalog':
-      return `${hardpointLabels[issue.hardpoint]}: ${issue.name} is not in the Catalog`;
-    case 'bpBelowMounts':
-      return `Bp ${issue.bp} is less than the ${issue.mountsBp} Bp it mounts`;
+      return `${mount} is not in the Catalog`;
   }
 }
