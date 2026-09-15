@@ -11,8 +11,8 @@ import {
   type MechProfile,
 } from '../domain/mech';
 import { findCatalogEntry } from '../domain/catalog';
-import { frames, mechStats } from '../domain/frame';
-import { describeIssue, eligibleMounts, unitProfileIssues } from '../domain/mechRules';
+import { mechFrames, mechStats } from '../domain/frame';
+import { describeMechIssue, eligibleMounts, mechIssues } from '../domain/mechRules';
 import { useArmyList } from './ArmyListContext';
 import { CardPreview } from './CardPreview';
 import { NumberField } from './NumberField';
@@ -36,10 +36,10 @@ export function UnitProfileEditor({
   const update = (changes: UnitProfileChanges) =>
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
 
-  const issues = unitProfileIssues(profile);
+  const issues = mechIssues(profile);
   const stats = mechStats(profile);
   const statOutputs = [
-    { label: 'Bp', value: `${stats.bp} / ${frames[profile.class].maxBp}` },
+    { label: 'Bp', value: `${stats.bp} / ${mechFrames[profile.class].maxBp}` },
     { label: 'Mv', value: stats.mv },
     { label: 'Tp', value: stats.tp },
     { label: 'Hc', value: stats.hc },
@@ -122,7 +122,7 @@ export function UnitProfileEditor({
             <h2>Issues</h2>
             <ul>
               {issues.map((issue) => {
-                const text = describeIssue(issue);
+                const text = describeMechIssue(issue);
                 return <li key={text}>{text}</li>;
               })}
             </ul>

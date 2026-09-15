@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { NumberRange } from './numberRange';
+import { inRange, mountedName, quantityRange } from './profileFields';
 
 export const mechClasses = ['Light', 'Medium', 'Heavy'] as const;
 export type MechClass = (typeof mechClasses)[number];
@@ -21,16 +22,6 @@ export const mechUpgradeRanges = {
   heatSinks: { min: 0, max: 10, step: 1 },
   engineUpgrades: { min: 0, max: 2, step: 1 },
 } as const satisfies Record<string, NumberRange>;
-
-/** Copies fielded. 100 is far more than any game needs, and keeps printing every copy cheap. */
-export const quantityRange: NumberRange = { min: 0, max: 100, step: 1 };
-
-function inRange({ min, max, step }: NumberRange) {
-  return z.number().int().min(min).max(max).multipleOf(step);
-}
-
-/** Catalog name (Weapon or Support Equipment), or null when the Hardpoint is empty (ADR 0001). */
-const mountedName = z.string().nullable();
 
 export const mechProfileSchema = z.object({
   kind: z.literal('Mech'),

@@ -1,5 +1,7 @@
 import type { ArmyList } from './armyList';
 import type { MechProfile } from './mech';
+import type { UnitProfile } from './unitProfile';
+import { takenMounts, vehicleMounts, type VehicleProfile } from './vehicle';
 
 export interface ArmyListState {
   list: ArmyList;
@@ -11,15 +13,25 @@ export type ArmyListAction =
   | { type: 'renameList'; name: string }
   | { type: 'setBpLimit'; bpLimit: number }
   | { type: 'addMech' }
+  | { type: 'addVehicle' }
   | { type: 'updateUnitProfile'; id: string; changes: UnitProfileChanges }
   | { type: 'setQuantity'; id: string; quantity: number }
   | { type: 'duplicateUnitProfile'; id: string }
   | { type: 'deleteUnitProfile'; id: string }
   | { type: 'selectUnitProfile'; id: string | null };
 
-/** Fields to overwrite; Hardpoints merge one by one. Kind and id never change. */
-export type UnitProfileChanges = Partial<Omit<MechProfile, 'kind' | 'id' | 'hardpoints'>> & {
+/**
+ * Fields to overwrite, for a Unit Profile of that kind; Hardpoints and Vehicle mounts merge one by
+ * one. Kind and id never change.
+ */
+export type UnitProfileChanges = MechChanges | VehicleChanges;
+
+type MechChanges = Partial<Omit<MechProfile, 'kind' | 'id' | 'hardpoints'>> & {
   hardpoints?: Partial<MechProfile['hardpoints']>;
+};
+
+type VehicleChanges = Partial<Omit<VehicleProfile, 'kind' | 'id' | 'mounts'>> & {
+  mounts?: Partial<VehicleProfile['mounts']>;
 };
 
 /**
@@ -32,18 +44,10 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
       return { ...state, list: { ...state.list, name: action.name } };
     case 'setBpLimit':
       return { ...state, list: { ...state.list, bpLimit: action.bpLimit } };
-    case 'addMech': {
-      const { unitProfiles } = state.list;
-      const names = new Set(unitProfiles.map(({ name }) => name));
-      const mech = newMech(
-        freeId(state.list),
-        firstFree((n) => (n === 1 ? 'New Mech' : `New Mech ${n}`), names),
-      );
-      return {
-        list: { ...state.list, unitProfiles: [...state.list.unitProfiles, mech] },
-        selectedId: mech.id,
-      };
-    }
+    case 'addMech':
+      return addUnitProfile(state, newMech);
+    case 'addVehicle':
+      return addUnitProfile(state, newVehicle);
     case 'updateUnitProfile': {
       const { id, changes } = action;
       const { unitProfiles } = state.list;
@@ -53,13 +57,7 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
         list: {
           ...state.list,
           unitProfiles: unitProfiles.map((profile) =>
-            profile.id === id
-              ? {
-                  ...profile,
-                  ...changes,
-                  hardpoints: { ...profile.hardpoints, ...changes.hardpoints },
-                }
-              : profile,
+            profile.id === id ? applyChanges(profile, changes) : profile,
           ),
         },
       };
@@ -114,6 +112,42 @@ export function armyListReducer(state: ArmyListState, action: ArmyListAction): A
   }
 }
 
+/** Appends a new Unit Profile, named apart from the others, and selects it. */
+function addUnitProfile(
+  state: ArmyListState,
+  create: (id: string, freeName: (base: string) => string) => UnitProfile,
+): ArmyListState {
+  const names = new Set(state.list.unitProfiles.map(({ name }) => name));
+  const profile = create(freeId(state.list), (base) =>
+    firstFree((n) => (n === 1 ? base : `${base} ${n}`), names),
+  );
+  return {
+    list: { ...state.list, unitProfiles: [...state.list.unitProfiles, profile] },
+    selectedId: profile.id,
+  };
+}
+
+/**
+ * Changes must suit the Unit Profile's kind: fields meant for the other kind aren't checked here.
+ * Unticking a Turret or Static Mount empties its mounts.
+ */
+function applyChanges(profile: UnitProfile, changes: UnitProfileChanges): UnitProfile {
+  if (profile.kind === 'Mech') {
+    const mechChanges = changes as MechChanges;
+    return {
+      ...profile,
+      ...mechChanges,
+      hardpoints: { ...profile.hardpoints, ...mechChanges.hardpoints },
+    };
+  }
+  const vehicleChanges = changes as VehicleChanges;
+  const next = { ...profile, ...vehicleChanges };
+  const mounts = { ...profile.mounts, ...vehicleChanges.mounts };
+  const taken = takenMounts(next);
+  for (const mount of vehicleMounts) if (!taken.includes(mount)) mounts[mount] = null;
+  return { ...next, mounts };
+}
+
 function hasUnitProfile(list: ArmyList, id: string): boolean {
   return list.unitProfiles.some((profile) => profile.id === id);
 }
@@ -130,17 +164,34 @@ function firstFree(candidate: (n: number) => string, taken: ReadonlySet<string>)
   }
 }
 
-function newMech(id: string, name: string): MechProfile {
+function newMech(id: string, freeName: (base: string) => string): MechProfile {
   return {
     kind: 'Mech',
     id,
-    name,
+    name: freeName('New Mech'),
     class: 'Light',
     armor: 0,
     heatSinks: 0,
     engineUpgrades: 0,
     notes: '',
     hardpoints: { leftArm: null, rightArm: null, leftTorso: null, rightTorso: null },
+    quantity: 1,
+  };
+}
+
+function newVehicle(id: string, freeName: (base: string) => string): VehicleProfile {
+  return {
+    kind: 'Vehicle',
+    id,
+    name: freeName('New Vehicle'),
+    class: 'Light',
+    armor: 0,
+    engineUpgrades: 0,
+    turret: false,
+    staticMount: false,
+    cargoBays: 0,
+    notes: '',
+    mounts: { turret: null, staticMount1: null, staticMount2: null },
     quantity: 1,
   };
 }

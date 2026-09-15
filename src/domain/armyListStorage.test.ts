@@ -36,6 +36,18 @@ describe('saveArmyList and loadArmyList', () => {
     expect(loadArmyList(store)).toEqual({ list: ironLegion, backup: undefined });
   });
 
+  it('loads a list of Mechs saved before Vehicles, unchanged', () => {
+    // Saved text, fixed here so it can't follow later changes to the ArmyList type.
+    const raw =
+      '{"version":2,"name":"Iron Legion","bpLimit":40,"unitProfiles":[{"kind":"Mech","id":"u1",' +
+      '"name":"Ironclad","class":"Heavy","armor":110,"heatSinks":1,"engineUpgrades":2,' +
+      '"notes":"Holds the line","hardpoints":{"leftArm":"Heavy Laser","rightArm":null,' +
+      '"leftTorso":null,"rightTorso":null},"quantity":2}]}';
+    const store = fakeStore({ [savedArmyListKey]: raw });
+    expect(loadArmyList(store)).toEqual({ list: JSON.parse(raw), backup: undefined });
+    expect(store.entries[savedArmyListKey]).toBe(raw);
+  });
+
   it('migrates a list saved before the current version', () => {
     const version1 = {
       ...ironLegion,

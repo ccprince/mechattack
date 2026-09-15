@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { armyListReducer } from './armyListReducer';
 import type { MechProfile } from './mech';
-import { describeIssue, eligibleMounts, unitProfileIssues } from './mechRules';
+import { describeMechIssue, eligibleMounts, mechIssues } from './mechRules';
 
 const names = (entries: readonly { name: string }[]) => entries.map(({ name }) => name);
 
@@ -21,10 +21,10 @@ function mech(overrides: Partial<MechProfile> = {}): MechProfile {
   };
 }
 
-describe('unitProfileIssues', () => {
+describe('mechIssues', () => {
   it('finds none on a legal Mech', () => {
     expect(
-      unitProfileIssues(
+      mechIssues(
         mech({
           hardpoints: {
             leftArm: 'Heavy Laser',
@@ -51,10 +51,10 @@ describe('unitProfileIssues', () => {
     const light = armyListReducer(
       { ...state, selectedId: null },
       { type: 'updateUnitProfile', id: heavy.id, changes: { class: 'Light' } },
-    ).list.unitProfiles[0]!;
+    ).list.unitProfiles[0] as MechProfile;
 
     expect(light.hardpoints).toEqual(heavy.hardpoints);
-    expect(unitProfileIssues(light)).toEqual([
+    expect(mechIssues(light)).toEqual([
       { rule: 'mountTooHeavy', hardpoint: 'leftArm', name: 'Heavy Laser', entryClass: 'Heavy' },
       { rule: 'mountTooHeavy', hardpoint: 'leftTorso', name: 'Heavy Missile', entryClass: 'Heavy' },
       {
@@ -69,7 +69,7 @@ describe('unitProfileIssues', () => {
 
   it('flags Support Equipment on an arm', () => {
     expect(
-      unitProfileIssues(
+      mechIssues(
         mech({
           hardpoints: {
             leftArm: 'Anti-Missile Defense System',
@@ -86,7 +86,7 @@ describe('unitProfileIssues', () => {
 
   it('flags a name missing from the Catalog', () => {
     expect(
-      unitProfileIssues(
+      mechIssues(
         mech({
           hardpoints: { leftArm: null, rightArm: 'Autocannon', leftTorso: null, rightTorso: null },
         }),
@@ -105,13 +105,13 @@ describe('unitProfileIssues', () => {
 
     it('accepts a Mech costing exactly its Frame max Bp', () => {
       // 60 Armor + 2 Heat Sinks = 10 Bp, with 10 Bp of mounts.
-      expect(unitProfileIssues(mech({ armor: 60, heatSinks: 2, hardpoints }))).toEqual([
+      expect(mechIssues(mech({ armor: 60, heatSinks: 2, hardpoints }))).toEqual([
         { rule: 'notInCatalog', hardpoint: 'rightTorso', name: 'Autocannon' },
       ]);
     });
 
     it('flags a Mech costing more than its Frame max Bp', () => {
-      expect(unitProfileIssues(mech({ armor: 70, heatSinks: 2, hardpoints }))).toContainEqual({
+      expect(mechIssues(mech({ armor: 70, heatSinks: 2, hardpoints }))).toContainEqual({
         rule: 'overMaxBp',
         bp: 21,
         mechClass: 'Heavy',
@@ -120,18 +120,18 @@ describe('unitProfileIssues', () => {
     });
 
     it('counts a too-heavy mount, which the Mech still carries', () => {
-      const issues = unitProfileIssues(mech({ class: 'Light', armor: 0, hardpoints }));
+      const issues = mechIssues(mech({ class: 'Light', armor: 0, hardpoints }));
       expect(issues).toContainEqual({ rule: 'overMaxBp', bp: 10, mechClass: 'Light', maxBp: 8 });
     });
 
     it('flags a Mech costing no Bp, but not one costing 1', () => {
-      expect(unitProfileIssues(mech({ class: 'Light', armor: 0 }))).toEqual([{ rule: 'noBp' }]);
-      expect(unitProfileIssues(mech({ class: 'Light', armor: 10 }))).toEqual([]);
+      expect(mechIssues(mech({ class: 'Light', armor: 0 }))).toEqual([{ rule: 'noBp' }]);
+      expect(mechIssues(mech({ class: 'Light', armor: 10 }))).toEqual([]);
     });
   });
 
   it('reports Issues on a Unit Profile that is not fielded', () => {
-    expect(unitProfileIssues(mech({ quantity: 0, armor: 0 }))).toEqual([{ rule: 'noBp' }]);
+    expect(mechIssues(mech({ quantity: 0, armor: 0 }))).toEqual([{ rule: 'noBp' }]);
   });
 });
 
@@ -178,7 +178,7 @@ describe('eligibleMounts', () => {
   });
 });
 
-describe('describeIssue', () => {
+describe('describeMechIssue', () => {
   it.each([
     [
       { rule: 'mountTooHeavy', hardpoint: 'leftArm', name: 'Heavy Laser', entryClass: 'Heavy' },
@@ -198,6 +198,6 @@ describe('describeIssue', () => {
     ],
     [{ rule: 'noBp' }, 'Bp is 0; a Mech must cost at least 1'],
   ] as const)('describes %o', (issue, text) => {
-    expect(describeIssue(issue)).toBe(text);
+    expect(describeMechIssue(issue)).toBe(text);
   });
 });

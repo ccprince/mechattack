@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { armyListSchema, bpTotal, isOverBpLimit } from './armyList';
 import { armyListReducer, type ArmyListState } from './armyListReducer';
+import { unitProfileIssues } from './unitProfile';
 
 function state(overrides: Partial<ArmyListState['list']> = {}): ArmyListState {
   return {
@@ -85,6 +86,169 @@ describe('armyListReducer', () => {
     });
   });
 
+  describe('addVehicle', () => {
+    it('adds a default New Vehicle and selects it', () => {
+      const next = armyListReducer(state(), { type: 'addVehicle' });
+      expect(next.list.unitProfiles).toEqual([
+        {
+          kind: 'Vehicle',
+          id: expect.any(String),
+          name: 'New Vehicle',
+          class: 'Light',
+          armor: 0,
+          engineUpgrades: 0,
+          turret: false,
+          staticMount: false,
+          cargoBays: 0,
+          notes: '',
+          mounts: { turret: null, staticMount1: null, staticMount2: null },
+          quantity: 1,
+        },
+      ]);
+      expect(next.selectedId).toBe(next.list.unitProfiles[0]?.id);
+      expect(armyListSchema.safeParse(next.list).success).toBe(true);
+    });
+
+    it('suffixes the name so it stays unique, apart from Mech names, with ids unique across both', () => {
+      const next = (['addVehicle', 'addMech', 'addVehicle'] as const).reduce(
+        (current, type) => armyListReducer(current, { type }),
+        state(),
+      );
+      expect(next.list.unitProfiles.map(({ name }) => name)).toEqual([
+        'New Vehicle',
+        'New Mech',
+        'New Vehicle 2',
+      ]);
+      expect(armyListSchema.safeParse(next.list).success).toBe(true);
+    });
+  });
+
+  describe('updateUnitProfile on a Vehicle', () => {
+    const oneVehicle = () => armyListReducer(state(), { type: 'addVehicle' });
+
+    it('changes the given fields and mounts one at a time', () => {
+      let current = oneVehicle();
+      const id = current.selectedId!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { name: 'Hauler', class: 'Medium', armor: 30, staticMount: true, cargoBays: 1 },
+      });
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { mounts: { staticMount1: 'Medium Laser' } },
+      });
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { mounts: { staticMount2: 'Light Missile' } },
+      });
+      expect(current.list.unitProfiles[0]).toMatchObject({
+        name: 'Hauler',
+        class: 'Medium',
+        armor: 30,
+        staticMount: true,
+        cargoBays: 1,
+        mounts: { turret: null, staticMount1: 'Medium Laser', staticMount2: 'Light Missile' },
+      });
+    });
+
+    it('clears what the Turret or Static Mount held when it is unticked', () => {
+      let current = oneVehicle();
+      const id = current.selectedId!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: {
+          turret: true,
+          staticMount: true,
+          mounts: {
+            turret: 'Light Laser',
+            staticMount1: 'Light Cannon',
+            staticMount2: 'Light Missile',
+          },
+        },
+      });
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { staticMount: false },
+      });
+      expect(current.list.unitProfiles[0]).toMatchObject({
+        turret: true,
+        staticMount: false,
+        mounts: { turret: 'Light Laser', staticMount1: null, staticMount2: null },
+      });
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { turret: false },
+      });
+      expect(current.list.unitProfiles[0]).toMatchObject({
+        turret: false,
+        mounts: { turret: null, staticMount1: null, staticMount2: null },
+      });
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+    });
+
+    it('keeps every Hull Option and mount when a Class change leaves an Issue', () => {
+      let current = oneVehicle();
+      const id = current.selectedId!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: {
+          class: 'Medium',
+          staticMount: true,
+          mounts: { staticMount1: 'Medium Laser', staticMount2: null },
+        },
+      });
+      const medium = current.list.unitProfiles[0]!;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id,
+        changes: { class: 'Ultra-light' },
+      });
+      const ultraLight = current.list.unitProfiles[0]!;
+      expect(ultraLight).toEqual({ ...medium, class: 'Ultra-light' });
+      expect(unitProfileIssues(ultraLight)).toEqual([
+        {
+          rule: 'mountTooHeavy',
+          mount: 'staticMount1',
+          name: 'Medium Laser',
+          entryClass: 'Medium',
+        },
+        { rule: 'overHullOptions', used: 2, vehicleClass: 'Ultra-light', hullOptions: 1 },
+      ]);
+    });
+
+    it('sets the quantity, duplicates and deletes a Vehicle as it would a Mech', () => {
+      let current = armyListReducer(oneVehicle(), { type: 'addMech' });
+      const [vehicle, mech] = current.list.unitProfiles;
+      current = armyListReducer(current, {
+        type: 'updateUnitProfile',
+        id: vehicle!.id,
+        changes: { armor: 20, turret: true, mounts: { turret: 'Light Laser' } },
+      });
+      current = armyListReducer(current, { type: 'setQuantity', id: vehicle!.id, quantity: 3 });
+      expect(bpTotal(current.list)).toBe(3 * (2 + 1));
+
+      current = armyListReducer(current, { type: 'duplicateUnitProfile', id: vehicle!.id });
+      const [original, copy] = current.list.unitProfiles;
+      expect(copy).toEqual({
+        ...original,
+        id: expect.any(String),
+        name: 'New Vehicle (copy)',
+        quantity: 0,
+      });
+      expect(armyListSchema.safeParse(current.list).success).toBe(true);
+
+      current = armyListReducer(current, { type: 'deleteUnitProfile', id: vehicle!.id });
+      expect(current.list.unitProfiles).toEqual([copy, mech]);
+    });
+  });
+
   describe('updateUnitProfile', () => {
     const twoMechs = () =>
       armyListReducer(armyListReducer(state(), { type: 'addMech' }), { type: 'addMech' });
@@ -123,11 +287,13 @@ describe('armyListReducer', () => {
         id,
         changes: { hardpoints: { rightTorso: 'Improved Weapon Targeting System' } },
       });
-      expect(current.list.unitProfiles[0]?.hardpoints).toEqual({
-        leftArm: 'Heavy Laser',
-        rightArm: null,
-        leftTorso: null,
-        rightTorso: 'Improved Weapon Targeting System',
+      expect(current.list.unitProfiles[0]).toMatchObject({
+        hardpoints: {
+          leftArm: 'Heavy Laser',
+          rightArm: null,
+          leftTorso: null,
+          rightTorso: 'Improved Weapon Targeting System',
+        },
       });
     });
 

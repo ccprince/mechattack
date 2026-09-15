@@ -1,18 +1,18 @@
 import { findCatalogEntry } from '../domain/catalog';
 import { hardpointLabels } from '../domain/mech';
-import type { Issue } from '../domain/mechRules';
+import type { MechIssue } from '../domain/mechRules';
 
 /**
  * The `ILLEGAL:` line that heads Notes on a card with Issues, or undefined on a Legal card. Kept
  * short to leave room for the notes: the Hardpoint markers already show where each Issue is.
  */
-export function illegalNote(issues: readonly Issue[]): string | undefined {
+export function illegalNote(issues: readonly MechIssue[]): string | undefined {
   const [issue] = issues;
   if (!issue) return undefined;
   return `ILLEGAL: ${issues.length > 1 ? `${issues.length} issues` : shortIssue(issue)}`;
 }
 
-function shortIssue(issue: Issue): string {
+function shortIssue(issue: MechIssue): string {
   switch (issue.rule) {
     case 'mountTooHeavy':
       return `${shortName(issue.name)} too heavy`;

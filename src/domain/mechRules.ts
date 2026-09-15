@@ -5,7 +5,7 @@ import {
   type CatalogClass,
   type CatalogEntry,
 } from './catalog';
-import { frames, mechStats } from './frame';
+import { mechFrames, mechStats } from './frame';
 import {
   hardpointLabels,
   hardpoints,
@@ -14,8 +14,8 @@ import {
   type MechProfile,
 } from './mech';
 
-/** One broken build rule on a Unit Profile. */
-export type Issue =
+/** One broken build rule on a Mech Unit Profile. */
+export type MechIssue =
   | { rule: 'mountTooHeavy'; hardpoint: Hardpoint; name: string; entryClass: CatalogClass }
   | { rule: 'supportEquipmentOnArm'; hardpoint: Hardpoint; name: string }
   | { rule: 'notInCatalog'; hardpoint: Hardpoint; name: string }
@@ -45,8 +45,8 @@ function fitsHardpoint(entry: CatalogEntry, hardpoint: Hardpoint): boolean {
  * The Issues on a Mech Unit Profile, whatever its quantity. Changing Class never removes a mount,
  * so a mount that no longer fits is reported here rather than dropped.
  */
-export function unitProfileIssues(profile: MechProfile): Issue[] {
-  const issues: Issue[] = [];
+export function mechIssues(profile: MechProfile): MechIssue[] {
+  const issues: MechIssue[] = [];
   for (const hardpoint of hardpoints) {
     const name = profile.hardpoints[hardpoint];
     if (name === null) continue;
@@ -63,14 +63,14 @@ export function unitProfileIssues(profile: MechProfile): Issue[] {
     }
   }
   const { bp } = mechStats(profile);
-  const { maxBp } = frames[profile.class];
+  const { maxBp } = mechFrames[profile.class];
   if (bp > maxBp) issues.push({ rule: 'overMaxBp', bp, mechClass: profile.class, maxBp });
   if (bp === 0) issues.push({ rule: 'noBp' });
   return issues;
 }
 
-/** An Issue in words, for the editor. */
-export function describeIssue(issue: Issue): string {
+/** A Mech Issue in words, for the editor. */
+export function describeMechIssue(issue: MechIssue): string {
   if (issue.rule === 'overMaxBp') {
     return `Bp ${issue.bp} is more than a ${issue.mechClass} Mech's max Bp of ${issue.maxBp}`;
   }
