@@ -43,8 +43,8 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
   if (crossOut) addCrossOut(data, crossOut);
 
   const line = (field: string, text: string, x: number, y: number, maxWidth: number, size = 12) => {
-    const taken = fitLine(text, maxWidth, size, measure);
-    addValue(data, field, taken.text, x, y, taken.fontSize);
+    const fitted = fitLine(text, maxWidth, size, measure);
+    addValue(data, field, fitted.text, x, y, fitted.fontSize);
   };
   const centered = (
     field: string,
@@ -54,8 +54,8 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     maxWidth: number,
     size: number,
   ) => {
-    const taken = fitLine(text, maxWidth, size, measure);
-    addValue(data, field, taken.text, x, y, taken.fontSize, 'middle');
+    const fitted = fitLine(text, maxWidth, size, measure);
+    addValue(data, field, fitted.text, x, y, fitted.fontSize, 'middle');
   };
   const wrapInNotesBox = (
     field: string,

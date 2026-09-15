@@ -51,14 +51,14 @@ export function wrapLines(
   }
   while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
 
-  const taken = lines
+  const fitted = lines
     .slice(0, maxLines)
     .map((line) => truncate(line, maxWidth, fontSize, measure));
-  const last = taken.length - 1;
-  if (lines.length > maxLines && !taken[last]?.endsWith(ellipsis)) {
-    taken[last] = truncate(`${taken[last]}${ellipsis}`, maxWidth, fontSize, measure, true);
+  const last = fitted.length - 1;
+  if (lines.length > maxLines && !fitted[last]?.endsWith(ellipsis)) {
+    fitted[last] = truncate(`${fitted[last]}${ellipsis}`, maxWidth, fontSize, measure, true);
   }
-  return taken;
+  return fitted;
 }
 
 function truncate(
