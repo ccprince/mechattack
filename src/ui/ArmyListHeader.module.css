@@ -49,7 +49,7 @@
   color: #a31515;
 }
 
-.print {
+.printControls {
   display: flex;
   gap: 0.5rem;
   align-items: end;

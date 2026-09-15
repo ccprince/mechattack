@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Measure } from '../cards/fitText';
-import type { PrintSize } from '../cards/pageLayout';
-import { bpLimitRange, bpTotal, fieldedCopies, isOverBpLimit } from '../domain/armyList';
+import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
+import { bpLimitRange, bpTotal, hasFieldedCopies, isOverBpLimit } from '../domain/armyList';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
 import { NumberField } from './NumberField';
@@ -20,7 +20,7 @@ export function ArmyListHeader({
   const [printing, setPrinting] = useState(false);
   const total = bpTotal(list);
   const over = isOverBpLimit(list);
-  const canPrint = measure !== undefined && fieldedCopies(list).length > 0;
+  const canPrint = measure !== undefined && hasFieldedCopies(list);
 
   async function downloadPdf() {
     if (!measure) return;
@@ -64,15 +64,18 @@ export function ArmyListHeader({
           </p>
         )}
       </div>
-      <div className={styles.print}>
+      <div className={styles.printControls}>
         <label className={styles.printSize}>
           <span>Print size</span>
           <select
             value={printSize}
             onChange={(event) => setPrintSize(event.target.value as PrintSize)}
           >
-            <option value="large">Large</option>
-            <option value="sleeve">Sleeve</option>
+            {printSizes.map((size) => (
+              <option key={size} value={size}>
+                {printSizeLabels[size]}
+              </option>
+            ))}
           </select>
         </label>
         <button type="button" onClick={downloadPdf} disabled={!canPrint || printing}>

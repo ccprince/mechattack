@@ -3,6 +3,7 @@ import {
   armyListSchema,
   bpTotal,
   fieldedCopies,
+  hasFieldedCopies,
   hasNameClash,
   isOverBpLimit,
   type ArmyList,
@@ -111,6 +112,20 @@ describe('fieldedCopies', () => {
 
   it('is empty when nothing is fielded', () => {
     expect(fieldedCopies(list({ unitProfiles: [mech({ quantity: 0 })] }))).toEqual([]);
+  });
+});
+
+describe('hasFieldedCopies', () => {
+  it('is true once any Unit Profile has a quantity above 0', () => {
+    const reserve = mech({ id: 'u1', quantity: 0 });
+    expect(hasFieldedCopies(list())).toBe(false);
+    expect(hasFieldedCopies(list({ unitProfiles: [reserve] }))).toBe(false);
+    expect(hasFieldedCopies(list({ unitProfiles: [reserve, mech({ id: 'u2' })] }))).toBe(true);
+  });
+
+  it('stays cheap for a huge quantity', () => {
+    const horde = mech({ quantity: Number.MAX_SAFE_INTEGER });
+    expect(hasFieldedCopies(list({ unitProfiles: [horde] }))).toBe(true);
   });
 });
 

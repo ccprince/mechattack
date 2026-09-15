@@ -1,6 +1,9 @@
 import type { Rect } from './geometry';
 
-export type PrintSize = 'large' | 'sleeve';
+export const printSizes = ['large', 'sleeve'] as const;
+export type PrintSize = (typeof printSizes)[number];
+
+export const printSizeLabels: Record<PrintSize, string> = { large: 'Large', sleeve: 'Sleeve' };
 
 /** US Letter, portrait, in inches. */
 export const page = { width: 8.5, height: 11 };
