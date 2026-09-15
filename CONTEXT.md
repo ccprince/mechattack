@@ -23,7 +23,7 @@ _Avoid_: Unit template, datasheet
 
 **Legal**:
 A Unit Profile is Legal when it breaks no build rule, such as mounting something heavier than its
-Class, naming something missing from the Catalog, or costing more Bp than its Frame allows or no Bp at all. Each broken
+Class, naming something missing from the Catalog, or costing more Bp than its Frame or Troop Class allows or no Bp at all. Each broken
 rule is an **Issue**. A printed card is taken as Legal at the table, so an illegal card is printed
 marked as such. Exceeding the Bp Limit is a problem with the Army List, not an Issue.
 _Avoid_: Valid, invalid (for build rules)
@@ -36,7 +36,8 @@ _Avoid_: Troops (as a kind name), infantry
 A unit's, Weapon's or Support Equipment's weight category, which limits what a unit may mount. A
 Mech may mount only Weapons and Support Equipment of its own Class or lighter. A Vehicle may mount
 Light ones, and a Medium Vehicle Medium ones too. Mech: Light, Medium, Heavy. Vehicle: Ultra-light, Light,
-Medium. Troop: Light, Heavy, Jump. (The Vehicle and Troop cards still label it "Type".)
+Medium. Troop: Light Infantry, Heavy Infantry, Jump Infantry. A Troop may mount only Light ones, whatever
+its Class. (The Vehicle and Troop cards still label it "Type".)
 _Avoid_: Type
 
 ### Unit stats
@@ -47,7 +48,8 @@ Stat abbreviations are written with an initial capital (Bp, not BP).
 What a unit, Weapon or Support Equipment costs. A unit's Bp is its total cost, including what it
 mounts, and counts against the Bp Limit. A Mech's or Vehicle's Bp is worked out, never chosen: 1 per
 10 Armor, 2 per Heat Sink, 2 per Engine Upgrade, 1 per Cargo Bay, plus the Bp of its mounts. Its
-Frame, Turret and Static Mount cost nothing.
+Frame, Turret and Static Mount cost nothing. A Troop's Bp is also worked out: its Class's Base Bp plus
+its Crew Served Weapon's Bp.
 
 **Frame**:
 The base a Mech or Vehicle Class gives: starting Mv and Tp, and the most Bp a unit of that Class may
@@ -56,7 +58,16 @@ Mech Light: 8 Bp, Mv 5, Tp 5, Hc 4. Medium: 14 Bp, Mv 4, Tp 4, Hc 4. Heavy: 20 B
 Vehicle Ultra-light: 4 Bp, Mv 5, Tp 5, 1 Hull Option. Light: 5 Bp, Mv 4, Tp 4, 2 Hull Options.
 Medium: 6 Bp, Mv 3, Tp 4, 2 Hull Options.
 A unit costing more than its Frame allows has an Issue. Comes with the Class; never chosen on its own.
+Troops have no Frame; see Troop Class.
 _Avoid_: Chassis
+
+**Troop Class**:
+A Troop's Class, which alone sets its Base Bp, max Bp, Mv, Tp and Sv; nothing a Troop takes changes
+them. Unlike a Frame, it costs Bp: its **Base Bp**.
+Light Infantry: Base Bp 2, max Bp 4, Mv 3, Tp 4, Sv 5. Heavy Infantry: Base Bp 3, max Bp 5, Mv 3,
+Tp 4, Sv 10. Jump Infantry: Base Bp 5, max Bp 6, Mv 4, Tp 4, Sv 10.
+A Troop costing more than its max Bp has an Issue.
+_Avoid_: Troop Frame, Troop type
 
 **Heat Sink**:
 A Mech upgrade costing 2 Bp that adds 1 Hc. A Mech may take any number, within its Frame's Bp.
@@ -76,7 +87,8 @@ How hard a unit is to hit; higher is harder.
 A Mech's capacity to manage heat. Only Mechs track heat. Not the same as Hv.
 
 **Sv** (Strength Value):
-A Troop unit's starting strength, at most 20. Strength boxes above it are blanked on the card.
+A Troop's starting strength, set by its Class and never changed: 5 for Light Infantry, 10 for Heavy
+and Jump Infantry. Troops have Sv instead of Armor. Strength boxes above it are blanked on the card.
 
 **Armor**:
 A Mech or Vehicle's starting armor, always a multiple of 10, costing 1 Bp per 10. A Mech's is 0 to
@@ -120,7 +132,12 @@ _Avoid_: Static Weapon Mount
 A Hull Option costing 1 Bp. A Vehicle takes at most two. What it carries isn't tracked.
 
 **Crew Served Weapon**:
-The single optional weapon a Troop unit carries.
+A Troop's single mount, holding one Light Weapon or Light Support Equipment, or nothing. The rules
+call it a weapon even when it holds Support Equipment.
+
+**Standard Equipment**:
+What a Troop has because of its Class, costing nothing and outside the Catalog: Individual Weapons
+on every Troop, plus Jump Packs on Jump Infantry. Never chosen.
 
 **Dp** (Damage Profile):
 The pattern of boxes a weapon's hit fills, some marked with a multiplier. Fits a 5×5 area for
