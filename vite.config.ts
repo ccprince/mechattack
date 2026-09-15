@@ -6,6 +6,8 @@ export default defineConfig({
   // Relative asset paths, so the build works under any GitHub Pages path or custom domain.
   base: './',
   plugins: [react()],
+  // Prebundled up front: found mid-run, Vite re-optimizes and browser tests load two copies of React.
+  optimizeDeps: { include: ['react', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client'] },
   test: {
     projects: [
       {

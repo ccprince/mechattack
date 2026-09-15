@@ -6,23 +6,8 @@ import {
   loadArmyList,
   saveArmyList,
   savedArmyListKey,
-  type KeyValueStore,
 } from './armyListStorage';
-
-function fakeStore(entries: Record<string, string> = {}): KeyValueStore & {
-  entries: Record<string, string>;
-} {
-  return {
-    entries,
-    getItem: (key) => entries[key] ?? null,
-    setItem: (key, value) => {
-      entries[key] = value;
-    },
-    removeItem: (key) => {
-      delete entries[key];
-    },
-  };
-}
+import { fakeStore, unavailableStore as unavailable } from './testStores';
 
 const ironLegion: ArmyList = {
   version: 1,
@@ -83,11 +68,6 @@ describe('saveArmyList and loadArmyList', () => {
 });
 
 describe('when storage fails', () => {
-  const disabled = () => {
-    throw new DOMException('Storage is disabled', 'SecurityError');
-  };
-  const unavailable: KeyValueStore = { getItem: disabled, setItem: disabled, removeItem: disabled };
-
   it('loads a fresh Army List', () => {
     expect(loadArmyList(unavailable)).toEqual({ list: undefined, backup: undefined });
   });
