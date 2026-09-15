@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
-import { buildMechCardSvg } from '../cards/mechCard';
 import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import styles from './App.module.css';
 import { ArmyListHeader } from './ArmyListHeader';
@@ -43,11 +42,6 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
   }, []);
 
   const measure = useMemo(() => (fontsLoaded ? createValueMeasure() : undefined), [fontsLoaded]);
-  // Rebuilt on every edit: the card is never patched in place (ADR 0002). Vehicles have no card yet.
-  const card = useMemo(
-    () => (measure && selected?.kind === 'Mech' ? buildMechCardSvg(selected, measure) : undefined),
-    [measure, selected],
-  );
 
   return (
     <main className={styles.page}>
@@ -61,7 +55,7 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
       <div className={styles.columns}>
         <UnitProfileList />
         {selected ? (
-          <UnitProfileEditor key={selected.id} profile={selected} card={card} />
+          <UnitProfileEditor key={selected.id} profile={selected} measure={measure} />
         ) : (
           <p className={styles.empty}>Add a Mech or Vehicle to start building the Army List.</p>
         )}

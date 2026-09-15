@@ -1,4 +1,6 @@
-import { useId } from 'react';
+import { useId, useMemo, type ReactNode } from 'react';
+import type { Measure } from '../cards/fitText';
+import { buildMechCardSvg } from '../cards/mechCard';
 import { hasNameClash } from '../domain/armyList';
 import type { UnitProfileChanges } from '../domain/armyListReducer';
 import {
@@ -17,8 +19,9 @@ import {
   vehicleFrames,
   vehicleStats,
 } from '../domain/frame';
-import { describeMechIssue, eligibleMounts, mechIssues } from '../domain/mechRules';
-import type { UnitProfile } from '../domain/unitProfile';
+import { eligibleMounts } from '../domain/mechRules';
+import type { NumberRange } from '../domain/numberRange';
+import { describeUnitProfileIssues, type UnitProfile } from '../domain/unitProfile';
 import {
   vehicleClasses,
   vehicleMountLabels,
@@ -27,41 +30,38 @@ import {
   type VehicleMount,
   type VehicleProfile,
 } from '../domain/vehicle';
-import { describeVehicleIssue, eligibleVehicleMounts, vehicleIssues } from '../domain/vehicleRules';
+import { eligibleVehicleMounts } from '../domain/vehicleRules';
 import { useArmyList } from './ArmyListContext';
 import { CardPreview } from './CardPreview';
 import { NumberField } from './NumberField';
 import styles from './UnitProfileEditor.module.css';
 
-type Update = (changes: UnitProfileChanges) => void;
+type UpdateUnitProfile = (changes: UnitProfileChanges) => void;
 
-const mechUpgradeFields = [
-  { key: 'armor', label: 'Armor' },
-  { key: 'heatSinks', label: 'Heat Sinks' },
-  { key: 'engineUpgrades', label: 'Engine Upgrades' },
-] as const;
+const mechUpgradeLabels = {
+  armor: 'Armor',
+  heatSinks: 'Heat Sinks',
+  engineUpgrades: 'Engine Upgrades',
+} as const;
 
-const vehicleUpgradeFields = [
-  { key: 'armor', label: 'Armor' },
-  { key: 'engineUpgrades', label: 'Engine Upgrades' },
-] as const;
+const vehicleUpgradeLabels = {
+  armor: 'Armor',
+  engineUpgrades: 'Engine Upgrades',
+} as const;
 
 export function UnitProfileEditor({
   profile,
-  card,
+  measure,
 }: {
   profile: UnitProfile;
-  /** The profile's card, once the card fonts have loaded. Vehicles have none yet. */
-  card: SVGSVGElement | undefined;
+  /** Measures card text; undefined until the card fonts load. */
+  measure: Measure | undefined;
 }) {
   const { state, dispatch } = useArmyList();
-  const update: Update = (changes) =>
+  const update: UpdateUnitProfile = (changes) =>
     dispatch({ type: 'updateUnitProfile', id: profile.id, changes });
 
-  const issueTexts =
-    profile.kind === 'Mech'
-      ? mechIssues(profile).map(describeMechIssue)
-      : vehicleIssues(profile).map(describeVehicleIssue);
+  const issueTexts = describeUnitProfileIssues(profile);
   const nameClashes = hasNameClash(state.list, profile);
   const clashId = useId();
 
@@ -107,18 +107,32 @@ export function UnitProfileEditor({
           </section>
         )}
       </form>
-      {profile.kind === 'Vehicle' ? (
-        <p>Vehicle cards are not available yet.</p>
-      ) : card ? (
-        <CardPreview svg={card} label={`${profile.name} record card`} />
+      {profile.kind === 'Mech' ? (
+        <MechCardPreview profile={profile} measure={measure} />
       ) : (
-        <p>Loading…</p>
+        // Until the Vehicle card template is in (#26).
+        <p>Vehicle cards are not available yet.</p>
       )}
     </section>
   );
 }
 
-function MechFields({ profile, update }: { profile: MechProfile; update: Update }) {
+function MechCardPreview({
+  profile,
+  measure,
+}: {
+  profile: MechProfile;
+  measure: Measure | undefined;
+}) {
+  // Rebuilt on every edit: the card is never patched in place (ADR 0002).
+  const card = useMemo(
+    () => (measure ? buildMechCardSvg(profile, measure) : undefined),
+    [measure, profile],
+  );
+  return card ? <CardPreview svg={card} label={`${profile.name} record card`} /> : <p>Loading…</p>;
+}
+
+function MechFields({ profile, update }: { profile: MechProfile; update: UpdateUnitProfile }) {
   const stats = mechStats(profile);
   return (
     <>
@@ -135,19 +149,13 @@ function MechFields({ profile, update }: { profile: MechProfile; update: Update 
         value={profile.class}
         onChange={(mechClass: MechClass) => update({ class: mechClass })}
       />
-      <div className={styles.upgrades}>
-        {mechUpgradeFields.map(({ key, label }) => (
-          <NumberField
-            key={key}
-            className={styles.field}
-            label={label}
-            value={profile[key]}
-            range={mechUpgradeRanges[key]}
-            onChange={(value) => update({ [key]: value })}
-          />
-        ))}
-      </div>
-      <fieldset className={styles.mounts}>
+      <UpgradeFields
+        labels={mechUpgradeLabels}
+        values={profile}
+        ranges={mechUpgradeRanges}
+        onChange={(key, value) => update({ [key]: value })}
+      />
+      <fieldset className={styles.hardpoints}>
         <legend>Hardpoints</legend>
         {hardpoints.map((hardpoint) => (
           <MountPicker
@@ -163,10 +171,16 @@ function MechFields({ profile, update }: { profile: MechProfile; update: Update 
   );
 }
 
-function VehicleFields({ profile, update }: { profile: VehicleProfile; update: Update }) {
+function VehicleFields({
+  profile,
+  update,
+}: {
+  profile: VehicleProfile;
+  update: UpdateUnitProfile;
+}) {
   const stats = vehicleStats(profile);
   const frame = vehicleFrames[profile.class];
-  const used = hullOptionsUsed(profile);
+  const usedHullOptions = hullOptionsUsed(profile);
   const eligible = eligibleVehicleMounts(profile.class);
   const mountPicker = (mount: VehicleMount) => (
     <MountPicker
@@ -191,56 +205,38 @@ function VehicleFields({ profile, update }: { profile: VehicleProfile; update: U
         value={profile.class}
         onChange={(vehicleClass: VehicleClass) => update({ class: vehicleClass })}
       />
-      <div className={styles.upgrades}>
-        {vehicleUpgradeFields.map(({ key, label }) => (
-          <NumberField
-            key={key}
-            className={styles.field}
-            label={label}
-            value={profile[key]}
-            range={vehicleUpgradeRanges[key]}
-            onChange={(value) => update({ [key]: value })}
-          />
-        ))}
-      </div>
+      <UpgradeFields
+        labels={vehicleUpgradeLabels}
+        values={profile}
+        ranges={vehicleUpgradeRanges}
+        onChange={(key, value) => update({ [key]: value })}
+      />
       {/* Unticking a Turret or Static Mount empties its mounts (see the reducer). */}
       <fieldset className={styles.hullOptions}>
         <legend>
           Hull Options{' '}
           <output
             aria-label="Hull Options"
-            className={used > frame.hullOptions ? styles.over : undefined}
+            className={usedHullOptions > frame.hullOptions ? styles.over : undefined}
           >
-            {used} / {frame.hullOptions}
+            {usedHullOptions} / {frame.hullOptions}
           </output>
         </legend>
-        <div className={styles.mounts}>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={profile.turret}
-              onChange={(event) => update({ turret: event.target.checked })}
-            />
-            Turret
-          </label>
-          {profile.turret && mountPicker('turret')}
-        </div>
-        <div className={styles.mounts}>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={profile.staticMount}
-              onChange={(event) => update({ staticMount: event.target.checked })}
-            />
-            Static Mount
-          </label>
-          {profile.staticMount && (
-            <>
-              {mountPicker('staticMount1')}
-              {mountPicker('staticMount2')}
-            </>
-          )}
-        </div>
+        <HullOptionCheck
+          label="Turret"
+          checked={profile.turret}
+          onChange={(turret) => update({ turret })}
+        >
+          {mountPicker('turret')}
+        </HullOptionCheck>
+        <HullOptionCheck
+          label="Static Mount"
+          checked={profile.staticMount}
+          onChange={(staticMount) => update({ staticMount })}
+        >
+          {mountPicker('staticMount1')}
+          {mountPicker('staticMount2')}
+        </HullOptionCheck>
         <NumberField
           className={styles.field}
           label="Cargo Bays"
@@ -285,6 +281,62 @@ function ClassPicker<C extends string>({
         ))}
       </select>
     </label>
+  );
+}
+
+/** A number field for each chosen upgrade, in the order `labels` lists them. */
+function UpgradeFields<K extends string>({
+  labels,
+  values,
+  ranges,
+  onChange,
+}: {
+  labels: Record<K, string>;
+  values: NoInfer<Record<K, number>>;
+  ranges: NoInfer<Record<K, NumberRange>>;
+  onChange: (key: K, value: number) => void;
+}) {
+  const keys = Object.keys(labels) as K[];
+  return (
+    <div className={styles.upgrades}>
+      {keys.map((key) => (
+        <NumberField
+          key={key}
+          className={styles.field}
+          label={labels[key]}
+          value={values[key]}
+          range={ranges[key]}
+          onChange={(value) => onChange(key, value)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** A Turret or Static Mount checkbox, revealing its mount pickers while ticked. */
+function HullOptionCheck({
+  label,
+  checked,
+  onChange,
+  children,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.hullOption}>
+      <label className={styles.check}>
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+        />
+        {label}
+      </label>
+      {checked && children}
+    </div>
   );
 }
 

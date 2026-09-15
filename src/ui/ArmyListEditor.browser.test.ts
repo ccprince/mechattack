@@ -566,25 +566,35 @@ describe('Vehicles', () => {
     await expect.element(field('Bp')).toHaveTextContent('1 / 5');
   });
 
-  it('keeps mounts that became too heavy after a Class change, and flags them', async () => {
-    await loadWithNewVehicle();
-    await picker('Class').selectOptions('Medium');
-    await checkbox('Turret').click();
-    await picker('Turret').selectOptions('Medium Laser');
-    await expect.element(field('Bp')).toHaveTextContent('2 / 6');
-    expect(issues().query()).toBeNull();
+  it.each([
+    { hullOption: 'Turret', mounts: ['Turret'] },
+    { hullOption: 'Static Mount', mounts: ['Static Mount 1', 'Static Mount 2'] },
+  ])(
+    'keeps $hullOption mounts that became too heavy after a Class change, and flags them',
+    async ({ hullOption, mounts }) => {
+      await loadWithNewVehicle();
+      await picker('Class').selectOptions('Medium');
+      await checkbox(hullOption).click();
+      for (const mount of mounts) await picker(mount).selectOptions('Medium Laser');
+      await expect.element(field('Bp')).toHaveTextContent(`${2 * mounts.length} / 6`);
+      expect(issues().query()).toBeNull();
 
-    await picker('Class').selectOptions('Light');
-    await expect.element(picker('Turret')).toHaveDisplayValue('Medium Laser (Issue)');
-    await expect
-      .element(
-        issues().getByText(
-          "Turret: Medium Laser is Medium, heavier than the Vehicle's Class may mount",
-        ),
-      )
-      .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
-  });
+      await picker('Class').selectOptions('Light');
+      for (const mount of mounts) {
+        await expect.element(picker(mount)).toHaveDisplayValue('Medium Laser (Issue)');
+        await expect
+          .element(
+            issues().getByText(
+              `${mount}: Medium Laser is Medium, heavier than the Vehicle's Class may mount`,
+            ),
+          )
+          .toBeInTheDocument();
+      }
+      // A Light Vehicle's max Bp is 5, so two Medium Lasers stay within it: only the mount Issues.
+      const count = mounts.length === 1 ? '1 Issue' : `${mounts.length} Issues`;
+      await expect.element(unitProfiles().getByText(count)).toBeInTheDocument();
+    },
+  );
 
   it('shows a placeholder instead of a card preview', async () => {
     await loadWithNewVehicle();
