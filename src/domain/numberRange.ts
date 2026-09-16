@@ -24,3 +24,8 @@ export function clampToRange(text: string, range: NumberRange, current: number):
   const stepped = Math.round(value / range.step) * range.step;
   return Math.min(range.max, Math.max(range.min, stepped));
 }
+
+/** One step up (`1`) or down (`-1`) from `value`, stopping at the ends of the range. */
+export function stepInRange(value: number, range: NumberRange, direction: 1 | -1): number {
+  return Math.min(range.max, Math.max(range.min, value + direction * range.step));
+}

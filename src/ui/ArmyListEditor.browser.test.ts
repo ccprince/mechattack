@@ -82,6 +82,30 @@ describe('header', () => {
     await field('Bp Limit').fill('12');
     await expect.element(page.getByText(/Over the Bp Limit/)).not.toBeInTheDocument();
   });
+
+  // Mobile Chrome draws no spinner on a number input, so the field brings its own buttons.
+  it('steps the Bp Limit with its own buttons, which stop at the ends of the range', async () => {
+    load(fakeStore());
+    const increase = page.getByRole('button', { name: 'Increase Bp Limit' });
+    const decrease = page.getByRole('button', { name: 'Decrease Bp Limit' });
+
+    await increase.click();
+    await expect.element(field('Bp Limit')).toHaveValue(51);
+    await decrease.click();
+    await decrease.click();
+    await expect.element(field('Bp Limit')).toHaveValue(49);
+
+    await field('Bp Limit').fill('0');
+    await expect.element(decrease).toBeDisabled();
+    await expect.element(increase).toBeEnabled();
+  });
+
+  it('steps from a half-typed value, settled into range first', async () => {
+    load(fakeStore());
+    await field('Bp Limit').fill('-3');
+    await page.getByRole('button', { name: 'Increase Bp Limit' }).click();
+    await expect.element(field('Bp Limit')).toHaveValue(1);
+  });
 });
 
 describe('Unit Profile list', () => {

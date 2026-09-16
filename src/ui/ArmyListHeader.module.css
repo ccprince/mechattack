@@ -98,8 +98,8 @@
   }
 }
 
-/* Bp, the limit and print need about 23.5rem side by side. */
-@media (width < 24rem) {
+/* Bp, the limit with its − and + buttons, and print need about 28.5rem side by side. */
+@media (width < 29rem) {
   .printControls {
     grid-column: 1 / -1;
     justify-self: start;

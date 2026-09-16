@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampToRange, parseInRange, type NumberRange } from './numberRange';
+import { clampToRange, parseInRange, stepInRange, type NumberRange } from './numberRange';
 
 const bp: NumberRange = { min: 1, max: 20, step: 1 };
 const armor: NumberRange = { min: 0, max: 150, step: 10 };
@@ -48,5 +48,21 @@ describe('clampToRange', () => {
   it('falls back to the current value when the text is not a number', () => {
     expect(clampToRange('', bp, 3)).toBe(3);
     expect(clampToRange('abc', armor, 50)).toBe(50);
+  });
+});
+
+describe('stepInRange', () => {
+  it('moves one step up or down', () => {
+    expect(stepInRange(7, bp, 1)).toBe(8);
+    expect(stepInRange(7, bp, -1)).toBe(6);
+    expect(stepInRange(50, armor, 1)).toBe(60);
+    expect(stepInRange(50, armor, -1)).toBe(40);
+  });
+
+  it('stops at the ends of the range', () => {
+    expect(stepInRange(20, bp, 1)).toBe(20);
+    expect(stepInRange(1, bp, -1)).toBe(1);
+    expect(stepInRange(150, armor, 1)).toBe(150);
+    expect(stepInRange(0, armor, -1)).toBe(0);
   });
 });
