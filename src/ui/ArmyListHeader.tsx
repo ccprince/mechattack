@@ -71,8 +71,9 @@ export function ArmyListHeader({
       return;
     }
     // Only one Army List is kept, so importing overwrites the one being edited.
-    const question = `Replace ${list.name} with ${imported.name} from ${file.name}? ${list.name} will be lost.`;
-    if (window.confirm(question)) dispatch({ type: 'replaceList', list: imported });
+    if (window.confirm(importQuestion(list.name, imported.name, file.name))) {
+      dispatch({ type: 'replaceList', list: imported });
+    }
   }
 
   return (
@@ -147,4 +148,11 @@ function illegalPrintQuestion(profiles: readonly { name: string }[]): string {
   const subject = names.length > 0 ? `${names.join(', ')} and ${last} have` : `${last} has`;
   const cards = names.length > 0 ? 'their cards print' : 'its card prints';
   return `${subject} Issues, so ${cards} marked ILLEGAL. Download the PDF anyway?`;
+}
+
+/** Asks whether to replace the Army List being edited, naming an unnamed one by where it is. */
+function importQuestion(currentName: string, importedName: string, filename: string): string {
+  const current = currentName.trim() || 'the current Army List';
+  const imported = importedName.trim() || 'the Army List';
+  return `Replace ${current} with ${imported} from ${filename}? This can't be undone.`;
 }

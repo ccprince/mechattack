@@ -979,7 +979,7 @@ describe('Export and Import JSON', () => {
     await importFile(exported);
     await expect.element(listName()).toHaveValue('Iron Legion');
     expect(confirm).toHaveBeenCalledWith(
-      'Replace Steel Hand with Iron Legion from army.json? Steel Hand will be lost.',
+      "Replace Steel Hand with Iron Legion from army.json? This can't be undone.",
     );
     await expect.element(unitProfiles().getByText('Hellhound')).toBeInTheDocument();
     await expect.element(field('Name')).toHaveValue('Ironclad');
@@ -996,6 +996,17 @@ describe('Export and Import JSON', () => {
     // The same file again: the input is cleared after each pick, so choosing it still imports.
     await importFile(JSON.stringify(ironLegion));
     await expect.element(listName()).toHaveValue('Iron Legion');
+  });
+
+  it('names unnamed Army Lists in the confirmation', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList({ ...steelHand, name: '' });
+    await importFile(JSON.stringify({ ...ironLegion, name: ' ' }));
+    await vi.waitFor(() =>
+      expect(confirm).toHaveBeenCalledWith(
+        "Replace the current Army List with the Army List from army.json? This can't be undone.",
+      ),
+    );
   });
 
   it.each([
