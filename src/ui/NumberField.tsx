@@ -11,8 +11,11 @@ export function NumberField({
   range,
   onChange,
   className,
+  labelHidden = false,
 }: {
   label: string;
+  /** Names the field without showing the label, where what's beside it says what it is. */
+  labelHidden?: boolean;
   value: number;
   range: NumberRange;
   onChange: (value: number) => void;
@@ -35,8 +38,9 @@ export function NumberField({
 
   return (
     <label className={className}>
-      <span>{label}</span>
+      {!labelHidden && <span>{label}</span>}
       <input
+        aria-label={labelHidden ? label : undefined}
         type="number"
         inputMode="numeric"
         min={range.min}

@@ -1,5 +1,5 @@
 /*
- * The Unit Profile list's icons, drawn inline rather than pulled from a package: four shapes aren't
+ * The app's icons, drawn inline rather than pulled from a package: a few shapes aren't
  * worth a dependency. Each is a 16 box stroked in `currentColor`, so it follows the ink in both
  * colour schemes, and is hidden from screen readers — the button around it carries the name.
  */
@@ -46,6 +46,15 @@ export function BinIcon() {
     <svg {...iconAttributes}>
       <path d="M2.5 4.5h11M6.5 4.5V3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1.5" />
       <path d="M4 4.5l.6 8a1 1 0 0 0 1 .95h4.8a1 1 0 0 0 1-.95l.6-8" />
+    </svg>
+  );
+}
+
+/** Three bars: the Army Lists menu. */
+export function MenuIcon() {
+  return (
+    <svg {...iconAttributes}>
+      <path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
     </svg>
   );
 }

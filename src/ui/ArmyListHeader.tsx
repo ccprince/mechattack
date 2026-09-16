@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
 import type { Measure } from '../cards/fitText';
 import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
 import {
@@ -8,13 +8,9 @@ import {
   hasFieldedCopies,
   isOverBpLimit,
 } from '../domain/armyList';
-import { addSavedArmyList } from '../domain/armyListStorage';
-import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
-import { downloadJson } from './downloadJson';
 import { NumberField } from './NumberField';
-import { SavedArmyListPicker } from './SavedArmyListPicker';
 
 export function ArmyListHeader({
   measure,
@@ -24,14 +20,13 @@ export function ArmyListHeader({
   measure: Measure | undefined;
   onError: (message: string | undefined) => void;
 }) {
-  const { state, dispatch, switchList } = useArmyList();
+  const { state, dispatch } = useArmyList();
   const { list } = state;
   const [printSize, setPrintSize] = useState<PrintSize>('large');
   const [printing, setPrinting] = useState(false);
   const total = bpTotal(list);
   const over = isOverBpLimit(list);
   const canPrint = measure !== undefined && hasFieldedCopies(list);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   async function downloadPdf() {
     if (!measure) return;
@@ -51,51 +46,25 @@ export function ArmyListHeader({
     }
   }
 
-  function exportJson() {
-    downloadJson(serializeArmyList(list), armyListFilename(list.name));
-  }
-
-  async function importJson(event: ChangeEvent<HTMLInputElement>) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    // Cleared so picking the same file again still fires a change.
-    input.value = '';
-    if (!file) return;
-    onError(undefined);
-    let text;
-    try {
-      text = await file.text();
-    } catch {
-      onError(`Couldn't read ${file.name}, so nothing was imported.`);
-      return;
-    }
-    const imported = parseArmyList(text);
-    if (!imported) {
-      onError(`Couldn't import ${file.name}: it isn't a readable Army List.`);
-      return;
-    }
-    // Added alongside the Open Army List, never over it, so there's nothing to confirm.
-    switchList((store) => addSavedArmyList(store, imported));
-  }
-
   return (
     /* The landmark is the app bar in App.tsx; this is just its contents. */
     <div className={styles.header}>
-      <SavedArmyListPicker />
-      <label className={styles.name}>
-        <span>Army List name</span>
-        <input
-          value={list.name}
-          onChange={(event) => dispatch({ type: 'renameList', name: event.target.value })}
-        />
-      </label>
+      {/* No visible label: a text field atop the Army List reads as its name (ADR 0008). */}
+      <input
+        className={styles.name}
+        aria-label="Army List name"
+        placeholder="Army List name"
+        value={list.name}
+        onChange={(event) => dispatch({ type: 'renameList', name: event.target.value })}
+      />
       <div className={styles.bp}>
-        <span className={over ? styles.over : undefined}>
+        <span className={over ? `${styles.total} ${styles.over}` : styles.total}>
           Bp <output>{total}</output> /
         </span>
         <NumberField
           className={styles.limit}
           label="Bp Limit"
+          labelHidden
           value={list.bpLimit}
           range={bpLimitRange}
           onChange={(bpLimit) => dispatch({ type: 'setBpLimit', bpLimit })}
@@ -105,22 +74,6 @@ export function ArmyListHeader({
             Over the Bp Limit by {total - list.bpLimit}
           </p>
         )}
-      </div>
-      <div className={styles.fileControls}>
-        <button type="button" onClick={exportJson}>
-          Export JSON
-        </button>
-        <button type="button" onClick={() => fileInput.current?.click()}>
-          Import JSON
-        </button>
-        {/* Opened by Import JSON: a bare file input can't be labelled or styled like the buttons. */}
-        <input
-          ref={fileInput}
-          type="file"
-          accept=".json,application/json"
-          hidden
-          onChange={importJson}
-        />
       </div>
       <div className={styles.printControls}>
         <label className={styles.printSize}>

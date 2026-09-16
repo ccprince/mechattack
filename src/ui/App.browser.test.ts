@@ -4,16 +4,20 @@ import type { ArmyList } from '../domain/armyList';
 import { armyListKey, backupKey, singleSlotKey } from '../domain/armyListStorage';
 import { fakeStore, savedStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
-import { importFile, setUpApp, unitProfiles } from './testApp';
+import {
+  importFile,
+  openArmyListText,
+  openSavedArmyList,
+  savedArmyListNames,
+  savedArmyListTexts,
+  setUpApp,
+  unitProfiles,
+} from './testApp';
 
 const load = setUpApp();
 
 const listName = () => page.getByLabelText('Army List name');
 const banner = () => page.getByRole('alert').filter({ hasText: "couldn't be read" });
-
-const savedLists = () => page.getByRole('combobox', { name: 'Saved Army Lists' });
-const optionTexts = () =>
-  Array.from((savedLists().element() as HTMLSelectElement).options, (option) => option.text);
 
 const ironLegion: ArmyList = { version: 2, name: 'Iron Legion', bpLimit: 40, unitProfiles: [] };
 
@@ -112,9 +116,9 @@ describe('recovery banner', () => {
     store.entries[armyListKey('list-2')] = unreadable;
     load(store);
     await expect.element(banner()).not.toBeInTheDocument();
-    await expect.poll(optionTexts).toContain('Unreadable Army List');
+    await expect.poll(savedArmyListNames).toContain('Unreadable Army List');
 
-    await savedLists().selectOptions('list-2');
+    await openSavedArmyList('Unreadable Army List');
     await expect.element(banner()).toBeInTheDocument();
     await expect.element(listName()).toHaveValue('Iron Legion');
     expect(store.entries[backupKey]).toBe(unreadable);
@@ -145,5 +149,12 @@ describe('when storage is unavailable', () => {
     await expect.element(page.getByText(/Couldn't save to this browser/)).toBeInTheDocument();
     await page.getByRole('button', { name: 'Add Mech' }).click();
     await expect.element(unitProfiles().getByText('New Mech')).toBeInTheDocument();
+  });
+
+  it("shows the Army List in the menu as open, with no time, since it isn't saved", async () => {
+    load(unavailableStore);
+    await listName().fill('Iron Legion');
+    await expect.poll(savedArmyListTexts).toEqual(['Iron Legion']);
+    await expect.poll(openArmyListText).toBe('Iron Legion');
   });
 });

@@ -5,13 +5,27 @@
   min-height: 100dvh;
 }
 
-/*
- * The identity strip. Not sticky: it says the app's name once and then gets out of the way, which is
- * what buys the bar below it the height to stay.
- */
-.identity {
+/* The sticky header. Sticky within .shell, so it holds through the whole page rather than its own box. */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: var(--border) solid var(--line);
+  background: var(--surface);
+}
+
+/* A sunken band sets the title and the Army Lists menu apart from the controls below. */
+.titleBand {
+  background: var(--surface-sunken);
+}
+
+/* The same page width as the editor, so the menu button lines up with its right edge. */
+.titleRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
   max-width: 72rem;
-  width: 100%;
   margin: 0 auto;
   padding: var(--space-2) var(--space-4);
 }
@@ -21,15 +35,6 @@
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 400;
-}
-
-/* The app bar. Sticky within .shell, so it holds through the whole page rather than its own box. */
-.bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  border-bottom: var(--border) solid var(--line);
-  background: var(--surface);
 }
 
 .page {

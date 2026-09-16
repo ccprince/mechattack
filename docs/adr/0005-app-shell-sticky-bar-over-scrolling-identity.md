@@ -1,5 +1,7 @@
 # The app shell is a sticky control bar under a scrolling identity strip
 
+Superseded by ADR 0008 (#63): the title row is now sticky too, and holds the Army Lists menu.
+
 The app renders four things in order: an identity strip holding the `h1`, a sticky app bar holding
 `ArmyListHeader`, the `main` editor, and a footer. Only the bar is sticky, and it is the `banner`
 landmark, because it is the part that does work: the Army List name, the Bp total against the Bp Limit,

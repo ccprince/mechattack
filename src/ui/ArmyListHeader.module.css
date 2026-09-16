@@ -1,37 +1,30 @@
-/* The app bar's contents: the same page width as the editor below it, so the two line up. */
+/*
+ * The Army-List-level controls, under the title row (ADR 0008), the same page width as the editor so
+ * the two line up. Desktop: name | Bp / limit | print, with the over-limit warning under Bp.
+ */
 .header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(10rem, 24rem) auto auto minmax(max-content, 1fr);
+  gap: var(--space-2) var(--space-3);
   align-items: end;
-  justify-content: space-between;
   max-width: 72rem;
   margin: 0 auto;
   padding: var(--space-3) var(--space-4);
 }
 
-.name,
-.limit,
-.printSize {
-  display: grid;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-}
-
-.name input {
+.name {
+  width: 100%;
   font-size: var(--text-xl);
   font-weight: 600;
-  width: min(24rem, 100%);
 }
 
+/* Its parts sit in the header's grid, so the warning can take a row of its own. */
 .bp {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: end;
+  display: contents;
 }
 
-.bp > span {
+.total {
+  grid-column: 2;
   font-family: var(--font-value);
   font-size: var(--text-lg);
   font-weight: 600;
@@ -39,8 +32,12 @@
   padding-bottom: 0.15rem;
 }
 
+.limit {
+  grid-column: 3;
+}
+
 .limit input {
-  width: 5rem;
+  width: 3.5rem;
 }
 
 .over {
@@ -48,33 +45,63 @@
 }
 
 .warning {
-  flex-basis: 100%;
+  grid-column: 2 / -1;
+  grid-row: 2;
   margin: 0;
   color: var(--danger);
 }
 
-.fileControls,
 .printControls {
+  grid-column: 4;
+  justify-self: end;
   display: flex;
   gap: var(--space-2);
   align-items: end;
 }
 
-/* The Saved Army Lists picker and what acts on whole lists: a plain row until #63 gathers it into a menu. */
-.listControls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: end;
-  flex-basis: 100%;
+.printControls button {
+  white-space: nowrap;
 }
 
-.picker {
+.printSize {
   display: grid;
   gap: var(--space-1);
   font-size: var(--text-sm);
 }
 
-.picker select {
-  max-width: 100%;
+/* Phone: the name gets its own row; sharing one left it unusable from 362 to about 460px. */
+@media (width < 44rem) {
+  .header {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .name {
+    grid-column: 1 / -1;
+  }
+
+  .total {
+    grid-column: 1;
+  }
+
+  .limit {
+    grid-column: 2;
+  }
+
+  .printControls {
+    grid-column: 3;
+  }
+
+  .warning {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    order: 1;
+  }
+}
+
+/* Bp, the limit and print need about 23.5rem side by side. */
+@media (width < 24rem) {
+  .printControls {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
 }
