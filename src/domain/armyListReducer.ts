@@ -11,7 +11,6 @@ export interface ArmyListState {
 }
 
 export type ArmyListAction =
-  | { type: 'replaceList'; list: ArmyList }
   | { type: 'renameList'; name: string }
   | { type: 'setBpLimit'; bpLimit: number }
   | { type: 'addMech' }
@@ -50,8 +49,6 @@ export function openArmyList(list: ArmyList): ArmyListState {
  */
 export function armyListReducer(state: ArmyListState, action: ArmyListAction): ArmyListState {
   switch (action.type) {
-    case 'replaceList':
-      return openArmyList(action.list);
     case 'renameList':
       return { ...state, list: { ...state.list, name: action.name } };
     case 'setBpLimit':

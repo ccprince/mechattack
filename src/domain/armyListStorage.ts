@@ -60,19 +60,101 @@ export function openSavedArmyList(
   store: KeyValueStore,
   context: StorageContext = browserContext,
 ): SavedArmyList {
+  return open(store, context);
+}
+
+/** Opens the Saved Army List with this id, or as `openSavedArmyList` does if it's gone or unreadable. */
+export function switchSavedArmyList(
+  store: KeyValueStore,
+  id: string,
+  context: StorageContext = browserContext,
+): SavedArmyList {
+  return open(store, context, id);
+}
+
+/** Adds `list` as a new Saved Army List, changed now, and opens it: New, Duplicate and Import. */
+export function addSavedArmyList(
+  store: KeyValueStore,
+  list: ArmyList,
+  context: StorageContext = browserContext,
+): SavedArmyList {
+  let backup: string | undefined;
+  try {
+    backup = store.getItem(backupKey) ?? undefined;
+    return addAndOpen(store, readIndex(store, context), list, context, backup);
+  } catch {
+    return { id: undefined, list, backup };
+  }
+}
+
+/**
+ * Deletes the Saved Army List with this id, then opens the most recently changed one left, or a new one
+ * if it was the last.
+ */
+export function deleteSavedArmyList(
+  store: KeyValueStore,
+  id: string | undefined,
+  context: StorageContext = browserContext,
+): SavedArmyList {
+  if (id !== undefined) {
+    try {
+      const index = readIndex(store, context);
+      writeIndex(store, { ...index, lists: index.lists.filter((entry) => entry.id !== id) });
+      store.removeItem(armyListKey(id));
+    } catch {
+      // Storage is refusing, so whatever opens next comes from what it still holds.
+    }
+  }
+  return open(store, context);
+}
+
+/** A Saved Army List as the picker shows it. */
+export interface SavedArmyListSummary {
+  id: string;
+  /** Undefined when the document can't be read; opening it moves it to the backup key. */
+  name: string | undefined;
+  /** When it last changed, as an ISO 8601 string. */
+  changed: string;
+}
+
+/** Every Saved Army List, most recently changed first. Empty if storage can't be read. */
+export function listSavedArmyLists(
+  store: KeyValueStore,
+  context: StorageContext = browserContext,
+): SavedArmyListSummary[] {
+  try {
+    return readIndex(store, context)
+      .lists.sort((a, b) => b.changed.localeCompare(a.changed))
+      .flatMap(({ id, changed }) => {
+        const raw = store.getItem(armyListKey(id));
+        // A missing document is dropped from the index when next opened; there's nothing to offer.
+        if (raw === null) return [];
+        return [{ id, name: parseArmyList(raw)?.name, changed }];
+      });
+  } catch {
+    return [];
+  }
+}
+
+/** Opens `wantedId` if given, else what the index names as open, migrating the single slot on load. */
+function open(store: KeyValueStore, context: StorageContext, wantedId?: string): SavedArmyList {
   let backup: string | undefined;
   try {
     backup = store.getItem(backupKey) ?? undefined;
     const index = readIndex(store, context);
 
-    // Checked even with an index in place: a tab still open on the version before this one keeps saving
-    // to the single slot, and its edits arrive as one more list.
-    const single = store.getItem(singleSlotKey);
-    const singleList = single === null ? undefined : parseArmyList(single);
-    if (singleList) return addAndOpen(store, index, singleList, context, backup, singleSlotKey);
-    if (single !== null) {
-      backup = single;
-      moveToBackup(store, singleSlotKey, single);
+    if (wantedId === undefined) {
+      // Checked even with an index in place: a tab still open on the version before this one keeps
+      // saving to the single slot, and its edits arrive as one more list.
+      const single = store.getItem(singleSlotKey);
+      const singleList = single === null ? undefined : parseArmyList(single);
+      if (singleList) return addAndOpen(store, index, singleList, context, backup, singleSlotKey);
+      if (single !== null) {
+        backup = single;
+        moveToBackup(store, singleSlotKey, single);
+      }
+    } else {
+      index.openId = wantedId;
     }
 
     for (const entry of byMostRecent(index)) {

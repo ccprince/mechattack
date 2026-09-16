@@ -9,14 +9,22 @@ import { RecoveryBanner } from './RecoveryBanner';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
 
-export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyList }) {
-  const [backup, setBackup] = useState(saved.backup);
+export function App({ store, saved: initial }: { store: KeyValueStore; saved: SavedArmyList }) {
+  const [saved, setSaved] = useState(initial);
+  // Counts switches, so opening a list remounts the editor even when the id stays the same.
+  const [opened, setOpened] = useState(0);
+  const [backup, setBackup] = useState(initial.backup);
+
+  function switchTo(next: SavedArmyList) {
+    // A different backup means the switch found an unreadable list and set it aside.
+    if (next.backup !== undefined && next.backup !== saved.backup) setBackup(next.backup);
+    setSaved(next);
+    setOpened((count) => count + 1);
+  }
+
   return (
-    <ArmyListProvider store={store} saved={saved}>
+    <ArmyListProvider key={opened} store={store} saved={saved} onSwitch={switchTo}>
       <ArmyListEditor
-        // The imported Army List stands in for the fresh one the banner announces. As with its
-        // download, the backup stays until Discard.
-        onImport={() => setBackup(undefined)}
         banner={
           backup !== undefined && (
             <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
@@ -27,7 +35,7 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
   );
 }
 
-function ArmyListEditor({ banner, onImport }: { banner: ReactNode; onImport: () => void }) {
+function ArmyListEditor({ banner }: { banner: ReactNode }) {
   const { autosaveFailed } = useArmyList();
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -57,7 +65,7 @@ function ArmyListEditor({ banner, onImport }: { banner: ReactNode; onImport: () 
         <h1 className={styles.title}>Mech Attack List Builder</h1>
       </div>
       <header className={styles.bar}>
-        <ArmyListHeader measure={measure} onError={setError} onImport={onImport} />
+        <ArmyListHeader measure={measure} onError={setError} />
       </header>
       <main className={styles.page}>
         {banner}

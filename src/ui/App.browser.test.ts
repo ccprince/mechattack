@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
-import { backupKey, singleSlotKey } from '../domain/armyListStorage';
+import { armyListKey, backupKey, singleSlotKey } from '../domain/armyListStorage';
 import { fakeStore, savedStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
 import { importFile, setUpApp, unitProfiles } from './testApp';
@@ -10,6 +10,10 @@ const load = setUpApp();
 
 const listName = () => page.getByLabelText('Army List name');
 const banner = () => page.getByRole('alert').filter({ hasText: "couldn't be read" });
+
+const savedLists = () => page.getByRole('combobox', { name: 'Saved Army Lists' });
+const optionTexts = () =>
+  Array.from((savedLists().element() as HTMLSelectElement).options, (option) => option.text);
 
 const ironLegion: ArmyList = { version: 2, name: 'Iron Legion', bpLimit: 40, unitProfiles: [] };
 
@@ -94,24 +98,26 @@ describe('recovery banner', () => {
     await expect.element(banner()).not.toBeInTheDocument();
   });
 
-  it('closes once an Army List is imported, keeping the backup', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('stays up when an Army List is imported', async () => {
     const store = fakeStore({ [singleSlotKey]: unreadable });
     load(store);
-    await expect.element(banner()).toBeInTheDocument();
-
     await importFile(JSON.stringify(ironLegion));
     await expect.element(listName()).toHaveValue('Iron Legion');
-    await expect.element(banner()).not.toBeInTheDocument();
+    await expect.element(banner()).toBeInTheDocument();
     expect(store.entries[backupKey]).toBe(unreadable);
   });
 
-  it('stays up when an import is declined', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-    load(fakeStore({ [singleSlotKey]: unreadable }));
-    await importFile(JSON.stringify(ironLegion));
-    await vi.waitFor(() => expect(window.confirm).toHaveBeenCalledOnce());
+  it('comes up when a Saved Army List picked turns out unreadable', async () => {
+    const store = savedStore(ironLegion, { ...ironLegion, name: 'Steel Hand' });
+    store.entries[armyListKey('list-2')] = unreadable;
+    load(store);
+    await expect.element(banner()).not.toBeInTheDocument();
+    await expect.poll(optionTexts).toContain('Unreadable Army List');
+
+    await savedLists().selectOptions('list-2');
     await expect.element(banner()).toBeInTheDocument();
+    await expect.element(listName()).toHaveValue('Iron Legion');
+    expect(store.entries[backupKey]).toBe(unreadable);
   });
 
   it('downloads the raw JSON and keeps the backup', async () => {
