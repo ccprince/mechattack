@@ -143,18 +143,18 @@
     <rect class="crossed" x="44" y="90" width="206" height="40"/>
     <path d="M44 90L250 130 M44 130L250 90" stroke="#333" stroke-width="0.8" opacity="0.6"/>
 
-    <text class="val" data-field="bp"    x="211" y="46" text-anchor="middle" font-size="16">95</text>
+    <text class="val" data-field="bp"    x="211" y="46" text-anchor="middle" style="font-size:16px">95</text>
     <text class="val" data-field="name"  x="258" y="44">Hellhound</text>
     <text class="val" data-field="type"  x="258" y="90">Tracked Tank</text>
-    <text class="val" data-field="mv"    x="258" y="136">5</text>
-    <text class="val" data-field="tp"    x="258" y="182">3</text>
+    <text class="val" data-field="mv"    x="316" y="136" text-anchor="middle" style="font-size:24px">5</text>
+    <text class="val" data-field="tp"    x="316" y="182" text-anchor="middle" style="font-size:24px">3</text>
     <text class="val" data-field="armor" x="258" y="228">40</text>
-    <text class="val" data-field="notes" x="16" y="277" font-size="10">
+    <text class="val" data-field="notes" x="16" y="277" style="font-size:11px">
       <tspan x="16">Amphibious</tspan>
       <tspan x="16" dy="14">Smoke launchers (1/game)</tspan>
     </text>
 
-    <text class="val" data-field="weapon" x="16"  y="451" font-size="11">Heavy Autocannon</text>
-    <text class="val" data-field="rv"     x="276" y="466" text-anchor="middle" font-size="16">3</text>
+    <text class="val" data-field="mount1-weapon" x="16"  y="455" style="font-size:14px">Turret: Heavy Autocannon</text>
+    <text class="val" data-field="mount1-rv"     x="276" y="457" text-anchor="middle" style="font-size:16px">3</text>
   </g>
 </svg>

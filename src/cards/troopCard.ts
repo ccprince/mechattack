@@ -2,7 +2,7 @@ import troopTemplate from '../../cards/troops-card.svg?raw';
 import { troopStats, type TroopProfile } from '../domain/troop';
 import { troopIssues } from '../domain/troopRules';
 import { dpDrawing } from './dpShape';
-import { fitLine, type Measure } from './fitText';
+import { fitLine, fitOrWrap, type Measure } from './fitText';
 import { strengthCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
@@ -16,7 +16,16 @@ import {
 import { crewServedWeaponRow, troopNotes, troopNotesBox } from './troopCardContent';
 
 // Box widths below are the field map's box width minus 8 units of padding (docs/cards.md).
-const weaponWidth = { unmarked: 136, marked: 120 };
+// Full names run to the end of the row, where canvas measurement under-reports the rendered width
+// by a few percent, so these keep 8 more padding than the field map's ~8.
+const weaponWidth = { unmarked: 128, marked: 112 };
+/**
+ * A long name wraps to a second line rather than shrinking away. The row has the height to keep the
+ * wrapped pair at full size; it starts `wrapDy` above the single line's baseline.
+ */
+const weaponRow = { x: 15, y: 214, fontSize: 13, lineHeight: 14, maxLines: 2, wrapDy: -4 };
+/** Mv, Tp and Sv print large in the middle of their cell: they're read constantly in play. */
+const statValue = { x: 316, width: 80, fontSize: 24 };
 // Illegal marks (docs/cards.md): the name triangle, and the Crew Served Weapon row's marker.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const weaponMark = { x: 140, y: 205, width: 11, height: 10 };
@@ -46,9 +55,11 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
   line('bp', String(stats.bp), 211, 43, 70, 16, 'middle');
   line('name', profile.name, 258, 44, 116);
   line('type', profile.class, 258, 89.2, 116);
-  line('mv', String(stats.mv), 258, 134.4, 116);
-  line('tp', String(stats.tp), 258, 179.6, 116);
-  line('sv', String(stats.sv), 258, 224.8, 116);
+  const stat = (field: string, value: number, y: number) =>
+    line(field, String(value), statValue.x, y, statValue.width, statValue.fontSize, 'middle');
+  stat('mv', stats.mv, 134.4);
+  stat('tp', stats.tp, 179.6);
+  stat('sv', stats.sv, 224.8);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
   if (issues.length > 0) addWarningTriangle(data, 'illegal', nameMark);
@@ -64,7 +75,23 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
   const row = crewServedWeaponRow(profile, issues);
   if (row) {
     if (row.marked) addWarningTriangle(data, 'weapon-illegal', weaponMark);
-    line('weapon', row.text, 15, 214, weaponWidth[row.marked ? 'marked' : 'unmarked'], 11);
+    const weapon = fitOrWrap(
+      row.text,
+      weaponWidth[row.marked ? 'marked' : 'unmarked'],
+      weaponRow.fontSize,
+      weaponRow.fontSize,
+      weaponRow.maxLines,
+      measure,
+    );
+    addWrappedValue(
+      data,
+      'weapon',
+      weapon.lines,
+      weaponRow.x,
+      weaponRow.y + (weapon.lines.length > 1 ? weaponRow.wrapDy : 0),
+      weapon.fontSize,
+      weaponRow.lineHeight,
+    );
     if (row.rv) line('rv', row.rv, 184.5, 220, 51, 16, 'middle');
     if (row.dp) addDp(data, 'weapon', dpDrawing(row.dp, dpArea, measure));
   }

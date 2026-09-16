@@ -17,9 +17,9 @@ const rows = (profile: VehicleProfile) => mountRows(profile, vehicleIssues(profi
 const notes = (profile: VehicleProfile) => vehicleNotes(profile, vehicleIssues(profile), measure);
 
 describe('mountRows', () => {
-  it('prints the Turret with its label, short name and Rv', () => {
+  it('prints the Turret with its label, full name and Rv', () => {
     expect(rows(testVehicle)).toEqual([
-      { mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', dp: lightLaserDp, marked: false },
+      { mount: 'turret', text: 'Turret: Light Laser', rv: '6/10', dp: lightLaserDp, marked: false },
     ]);
   });
 
@@ -41,7 +41,13 @@ describe('mountRows', () => {
       },
     };
     expect(rows(profile)).toEqual([
-      { mount: 'staticMount2', text: 'Static: RGMS', rv: undefined, dp: undefined, marked: false },
+      {
+        mount: 'staticMount2',
+        text: 'Static: Remote Guided Missile System',
+        rv: undefined,
+        dp: undefined,
+        marked: false,
+      },
     ]);
   });
 
@@ -49,7 +55,7 @@ describe('mountRows', () => {
     expect(
       rows({ ...testVehicle, mounts: { ...testVehicle.mounts, staticMount1: 'Light Laser' } }),
     ).toEqual([
-      { mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', dp: lightLaserDp, marked: false },
+      { mount: 'turret', text: 'Turret: Light Laser', rv: '6/10', dp: lightLaserDp, marked: false },
     ]);
   });
 
@@ -65,8 +71,20 @@ describe('mountRows', () => {
       },
     };
     expect(rows(profile)).toEqual([
-      { mount: 'turret', text: 'Turret: Md Laser', rv: '6/10', dp: mediumLaserDp, marked: true },
-      { mount: 'staticMount1', text: 'Static: Lt MG', rv: '8/12', dp: lightMgDp, marked: false },
+      {
+        mount: 'turret',
+        text: 'Turret: Medium Laser',
+        rv: '6/10',
+        dp: mediumLaserDp,
+        marked: true,
+      },
+      {
+        mount: 'staticMount1',
+        text: 'Static: Light Machine Gun',
+        rv: '8/12',
+        dp: lightMgDp,
+        marked: false,
+      },
     ]);
   });
 

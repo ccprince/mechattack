@@ -24,6 +24,31 @@ export function fitLine(
   return { text: truncate(text, maxWidth, size, measure), fontSize: size };
 }
 
+export interface FittedBlock {
+  lines: string[];
+  fontSize: number;
+}
+
+/**
+ * Fits a value on one line at `fontSize`, or wraps it to at most `maxLines` at the smaller
+ * `wrapFontSize` when it's too wide for one. Use where a row has the height for a second line but
+ * not for a shrunken-to-nothing name. A line too long even wrapped is truncated with "…".
+ */
+export function fitOrWrap(
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  wrapFontSize: number,
+  maxLines: number,
+  measure: Measure,
+): FittedBlock {
+  if (measure(text, fontSize) <= maxWidth) return { lines: [text], fontSize };
+  return {
+    lines: wrapLines(text, maxWidth, wrapFontSize, maxLines, measure),
+    fontSize: wrapFontSize,
+  };
+}
+
 /**
  * Word-wraps `text` to `maxWidth` at a fixed font size. Explicit newlines start a new line. When the
  * text needs more than `maxLines`, the last line ends in "…".

@@ -3,7 +3,7 @@ import { vehicleStats } from '../domain/frame';
 import type { VehicleProfile } from '../domain/vehicle';
 import { vehicleIssues } from '../domain/vehicleRules';
 import { dpDrawing } from './dpShape';
-import { fitLine, type Measure } from './fitText';
+import { fitLine, fitOrWrap, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
@@ -25,8 +25,25 @@ const dpAreas = [
   { x: 320, y: 435, width: 58, height: 31, cellSize: 7.75, rollsFontSize: 11 },
   { x: 320, y: 466, width: 58, height: 32, cellSize: 7.75, rollsFontSize: 11 },
 ];
-const mountRow = { weaponX: 16, rvX: 276, rvDy: 2 };
-const weaponWidth = { unmarked: 212, marked: 196 };
+/**
+ * A long name wraps to a second line rather than shrinking away. The row is only 31 tall, so the
+ * wrapped pair sets smaller and tighter than a single line, and starts `wrapDy` above its baseline.
+ */
+const mountRow = {
+  weaponX: 16,
+  rvX: 276,
+  rvDy: 2,
+  fontSize: 14,
+  wrapFontSize: 11.5,
+  lineHeight: 12.5,
+  maxLines: 2,
+  wrapDy: -6,
+};
+/** Mv and Tp print large in the middle of their cell: they're read constantly in play. */
+const statValue = { x: 316, width: 80, fontSize: 24 };
+// Full names run to the end of the row, where canvas measurement under-reports the rendered width
+// by a few percent, so these keep 8 more padding than the field map's ~8.
+const weaponWidth = { unmarked: 204, marked: 188 };
 // Illegal marks (docs/cards.md): the name triangle, and each mount row's marker relative to its row.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const mountRowMark = { x: 217, dy: -9, width: 11, height: 10 };
@@ -55,8 +72,10 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
   line('bp', String(stats.bp), 211, 46, 70, 16, 'middle');
   line('name', profile.name, 258, 44, 116);
   line('type', profile.class, 258, 90, 116);
-  line('mv', String(stats.mv), 258, 136, 116);
-  line('tp', String(stats.tp), 258, 182, 116);
+  const stat = (field: string, value: number, y: number) =>
+    line(field, String(value), statValue.x, y, statValue.width, statValue.fontSize, 'middle');
+  stat('mv', stats.mv, 136);
+  stat('tp', stats.tp, 182);
   line('armor', String(profile.armor), 258, 228, 116);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
@@ -78,7 +97,23 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
       addWarningTriangle(data, `${prefix}-illegal`, { x, y: y + dy, width, height });
     }
     const maxWidth = weaponWidth[row.marked ? 'marked' : 'unmarked'];
-    line(`${prefix}-weapon`, row.text, mountRow.weaponX, y, maxWidth, 11);
+    const weapon = fitOrWrap(
+      row.text,
+      maxWidth,
+      mountRow.fontSize,
+      mountRow.wrapFontSize,
+      mountRow.maxLines,
+      measure,
+    );
+    addWrappedValue(
+      data,
+      `${prefix}-weapon`,
+      weapon.lines,
+      mountRow.weaponX,
+      y + (weapon.lines.length > 1 ? mountRow.wrapDy : 0),
+      weapon.fontSize,
+      mountRow.lineHeight,
+    );
     if (row.rv) line(`${prefix}-rv`, row.rv, mountRow.rvX, y + mountRow.rvDy, 80, 16, 'middle');
     if (row.dp) addDp(data, prefix, dpDrawing(row.dp, dpAreas[index]!, measure));
   }

@@ -95,7 +95,7 @@ describe('buildVehicleCardSvg', () => {
     expect(field(svg, 'mv')?.textContent).toBe('4');
     expect(field(svg, 'tp')?.textContent).toBe('4');
     expect(field(svg, 'armor')?.textContent).toBe('20');
-    expect(field(svg, 'mount1-weapon')?.textContent).toBe('Turret: Lt Laser');
+    expect(lines(svg, 'mount1-weapon')).toEqual(['Turret: Light Laser']);
     expect(field(svg, 'mount1-rv')?.textContent).toBe('6/10');
     expect(field(svg, 'mount2-weapon')).toBeNull();
     expect(field(svg, 'mount2-rv')).toBeNull();
@@ -129,8 +129,9 @@ describe('buildVehicleCardSvg', () => {
     const svg = buildVehicleCardSvg(illegalVehicle, createValueMeasure());
     expect(marks(svg)).toEqual(['illegal', 'mount1-illegal', 'mount2-illegal']);
     expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: 3 issues');
-    expect(field(svg, 'mount1-weapon')?.textContent).toBe('Turret: Md Laser-TL');
-    expect(field(svg, 'mount2-weapon')?.textContent).toBe('Static: Plasma Lance');
+    // Too long for one line, so it wraps rather than shrinking away.
+    expect(lines(svg, 'mount1-weapon')).toEqual(['Turret: Medium Laser (Twin', 'Linked)']);
+    expect(lines(svg, 'mount2-weapon')).toEqual(['Static: Plasma Lance']);
     expect(field(svg, 'mount2-rv')).toBeNull();
     expect(lines(svg, 'notes')).toHaveLength(8);
   });
