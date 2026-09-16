@@ -8,24 +8,23 @@ import {
   hasFieldedCopies,
   isOverBpLimit,
 } from '../domain/armyList';
+import { addSavedArmyList } from '../domain/armyListStorage';
 import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
 import { downloadJson } from './downloadJson';
 import { NumberField } from './NumberField';
+import { SavedArmyListPicker } from './SavedArmyListPicker';
 
 export function ArmyListHeader({
   measure,
   onError,
-  onImport,
 }: {
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
   onError: (message: string | undefined) => void;
-  /** Called once an imported Army List has replaced the one being edited. */
-  onImport: () => void;
 }) {
-  const { state, dispatch } = useArmyList();
+  const { state, dispatch, switchList } = useArmyList();
   const { list } = state;
   const [printSize, setPrintSize] = useState<PrintSize>('large');
   const [printing, setPrinting] = useState(false);
@@ -75,16 +74,14 @@ export function ArmyListHeader({
       onError(`Couldn't import ${file.name}: it isn't a readable Army List.`);
       return;
     }
-    // Only one Army List is kept, so importing overwrites the one being edited.
-    if (window.confirm(importQuestion(list.name, imported.name, file.name))) {
-      dispatch({ type: 'replaceList', list: imported });
-      onImport();
-    }
+    // Added alongside the Open Army List, never over it, so there's nothing to confirm.
+    switchList((store) => addSavedArmyList(store, imported));
   }
 
   return (
     /* The landmark is the app bar in App.tsx; this is just its contents. */
     <div className={styles.header}>
+      <SavedArmyListPicker />
       <label className={styles.name}>
         <span>Army List name</span>
         <input
@@ -154,11 +151,4 @@ function illegalPrintQuestion(profiles: readonly { name: string }[]): string {
   const subject = names.length > 0 ? `${names.join(', ')} and ${last} have` : `${last} has`;
   const cards = names.length > 0 ? 'their cards print' : 'its card prints';
   return `${subject} Issues, so ${cards} marked ILLEGAL. Download the PDF anyway?`;
-}
-
-/** Asks whether to replace the Army List being edited, naming an unnamed one by where it is. */
-function importQuestion(currentName: string, importedName: string, filename: string): string {
-  const current = currentName.trim() || 'the current Army List';
-  const imported = importedName.trim() || 'the Army List';
-  return `Replace ${current} with ${imported} from ${filename}? This can't be undone.`;
 }

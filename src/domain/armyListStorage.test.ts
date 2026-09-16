@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { newArmyList, type ArmyList } from './armyList';
 import {
+  addSavedArmyList,
   armyListKey,
   backupKey,
+  deleteSavedArmyList,
   discardBackup,
   indexKey,
+  listSavedArmyLists,
   openSavedArmyList,
   saveArmyList,
   singleSlotKey,
+  switchSavedArmyList,
   type StorageContext,
 } from './armyListStorage';
 import { fakeStore, unavailableStore as unavailable } from './testStores';
@@ -188,6 +192,124 @@ describe('saveArmyList and openSavedArmyList', () => {
 
     saveArmyList(store, id, list, context);
     expect(indexOf(store).lists).toEqual([{ id: 'a', changed: jan(1) }]);
+  });
+});
+
+describe('New, Duplicate, switching and Delete', () => {
+  it('adds a list as changed now and opens it, leaving the one open before intact', () => {
+    const store = storeWith('a', [[{ id: 'a', changed: jan(1) }, ironLegion]]);
+    const context = testContext();
+    const copy = { ...ironLegion, name: 'Iron Legion (copy)' };
+    expect(addSavedArmyList(store, copy, context)).toEqual({
+      id: 'new-1',
+      list: copy,
+      backup: undefined,
+    });
+    expect(indexOf(store)).toEqual({
+      version: 1,
+      openId: 'new-1',
+      lists: [
+        { id: 'a', changed: jan(1) },
+        { id: 'new-1', changed: jan(10) },
+      ],
+    });
+    expect(JSON.parse(store.entries[armyListKey('a')]!)).toEqual(ironLegion);
+    expect(openSavedArmyList(store, context).list).toEqual(copy);
+  });
+
+  it('switches to another list, which then reopens on load, without marking either changed', () => {
+    const store = storeWith('a', [
+      [{ id: 'a', changed: jan(1) }, ironLegion],
+      [{ id: 'b', changed: jan(2) }, steelHand],
+    ]);
+    const context = testContext();
+    expect(switchSavedArmyList(store, 'a', context).list).toEqual(ironLegion);
+    expect(switchSavedArmyList(store, 'b', context).list).toEqual(steelHand);
+    expect(openSavedArmyList(store, context)).toEqual({
+      id: 'b',
+      list: steelHand,
+      backup: undefined,
+    });
+    expect(indexOf(store).lists).toEqual([
+      { id: 'a', changed: jan(1) },
+      { id: 'b', changed: jan(2) },
+    ]);
+  });
+
+  it('switching to an unreadable list backs it up and opens the most recent one left', () => {
+    const store = storeWith('a', [
+      [{ id: 'a', changed: jan(1) }, ironLegion],
+      [{ id: 'b', changed: jan(3) }, 'bad'],
+      [{ id: 'c', changed: jan(2) }, steelHand],
+    ]);
+    expect(switchSavedArmyList(store, 'b', testContext())).toEqual({
+      id: 'c',
+      list: steelHand,
+      backup: 'bad',
+    });
+    expect(indexOf(store).lists.map(({ id }) => id)).toEqual(['a', 'c']);
+  });
+
+  it('renames a list by saving it, keeping it in the same place', () => {
+    const store = storeWith('a', [[{ id: 'a', changed: jan(1) }, ironLegion]]);
+    const context = testContext();
+    saveArmyList(store, 'a', { ...ironLegion, name: 'Iron Legion II' }, context);
+    expect(listSavedArmyLists(store, context)).toEqual([
+      { id: 'a', name: 'Iron Legion II', changed: jan(10) },
+    ]);
+  });
+
+  it('deletes a list and opens the most recently changed one left', () => {
+    const store = storeWith('b', [
+      [{ id: 'a', changed: jan(1) }, ironLegion],
+      [{ id: 'b', changed: jan(3) }, steelHand],
+      [
+        { id: 'c', changed: jan(2) },
+        { ...ironLegion, name: 'Third' },
+      ],
+    ]);
+    expect(deleteSavedArmyList(store, 'b', testContext()).id).toBe('c');
+    expect(store.entries[armyListKey('b')]).toBeUndefined();
+    expect(indexOf(store)).toEqual({
+      version: 1,
+      openId: 'c',
+      lists: [
+        { id: 'a', changed: jan(1) },
+        { id: 'c', changed: jan(2) },
+      ],
+    });
+    expect(JSON.parse(store.entries[armyListKey('a')]!)).toEqual(ironLegion);
+  });
+
+  it('opens a new, empty list when the last one is deleted', () => {
+    const store = storeWith('a', [[{ id: 'a', changed: jan(1) }, ironLegion]]);
+    expect(deleteSavedArmyList(store, 'a', testContext())).toEqual({
+      id: 'new-1',
+      list: newArmyList(),
+      backup: undefined,
+    });
+    expect(indexOf(store)).toEqual({
+      version: 1,
+      openId: 'new-1',
+      lists: [{ id: 'new-1', changed: jan(10) }],
+    });
+  });
+
+  it('lists the Saved Army Lists most recently changed first, unreadable ones without a name', () => {
+    const store = storeWith('a', [
+      [{ id: 'a', changed: jan(1) }, ironLegion],
+      [{ id: 'b', changed: jan(3) }, 'bad'],
+      [
+        { id: 'c', changed: jan(2) },
+        { ...ironLegion, name: '' },
+      ],
+      [{ id: 'gone', changed: jan(4) }, null],
+    ]);
+    expect(listSavedArmyLists(store, testContext())).toEqual([
+      { id: 'b', name: undefined, changed: jan(3) },
+      { id: 'c', name: '', changed: jan(2) },
+      { id: 'a', name: 'Iron Legion', changed: jan(1) },
+    ]);
   });
 });
 
@@ -453,5 +575,19 @@ describe('when storage fails', () => {
       backup: undefined,
     });
     expect(saveArmyList(store, 'a', steelHand)).toBe(false);
+  });
+
+  it('lists nothing, adds and deletes without throwing, when storage is unavailable', () => {
+    expect(listSavedArmyLists(unavailable, testContext())).toEqual([]);
+    expect(addSavedArmyList(unavailable, ironLegion, testContext())).toEqual({
+      id: undefined,
+      list: ironLegion,
+      backup: undefined,
+    });
+    expect(deleteSavedArmyList(unavailable, undefined, testContext())).toEqual({
+      id: undefined,
+      list: newArmyList(),
+      backup: undefined,
+    });
   });
 });

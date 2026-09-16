@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { armyListSchema, bpTotal, isOverBpLimit } from './armyList';
-import { armyListReducer, type ArmyListState } from './armyListReducer';
+import { armyListReducer, openArmyList, type ArmyListState } from './armyListReducer';
 import { unitProfileIssues } from './unitProfile';
 
 function state(overrides: Partial<ArmyListState['list']> = {}): ArmyListState {
@@ -21,18 +21,14 @@ describe('armyListReducer', () => {
     expect(next.list.bpLimit).toBe(60);
   });
 
-  describe('replaceList', () => {
-    it('replaces the Army List and opens its first Unit Profile', () => {
-      const before = armyListReducer(state(), { type: 'addMech' });
-      const imported = armyListReducer(state({ name: 'Steel Hand' }), { type: 'addTroop' }).list;
-      const next = armyListReducer(before, { type: 'replaceList', list: imported });
-      expect(next).toEqual({ list: imported, selectedId: imported.unitProfiles[0]?.id });
+  describe('openArmyList', () => {
+    it('opens the first Unit Profile', () => {
+      const list = armyListReducer(state({ name: 'Steel Hand' }), { type: 'addTroop' }).list;
+      expect(openArmyList(list)).toEqual({ list, selectedId: list.unitProfiles[0]?.id });
     });
 
-    it('clears the selection when the new Army List is empty', () => {
-      const before = armyListReducer(state(), { type: 'addMech' });
-      const next = armyListReducer(before, { type: 'replaceList', list: state().list });
-      expect(next.selectedId).toBeNull();
+    it('selects nothing when the Army List is empty', () => {
+      expect(openArmyList(state().list).selectedId).toBeNull();
     });
   });
 
