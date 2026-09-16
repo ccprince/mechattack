@@ -4,6 +4,7 @@ import type { MechProfile } from '../domain/mech';
 import { testMech } from './testMech';
 import { createValueMeasure, loadCardFonts } from './fonts';
 import { buildMechCardSvg } from './mechCard';
+import { slotRect } from './pageLayout';
 
 beforeAll(loadCardFonts);
 
@@ -68,7 +69,7 @@ describe('buildMechCardSvg', () => {
         expect(x).toBeGreaterThanOrEqual(349);
         expect(x + size).toBeLessThanOrEqual(378);
         expect(y).toBeGreaterThanOrEqual(440);
-        expect(y + size).toBeLessThanOrEqual(469);
+        expect(y + size).toBeLessThanOrEqual(487);
       }
     });
 
@@ -88,6 +89,22 @@ describe('buildMechCardSvg', () => {
       expect(text.x + text.width).toBeLessThanOrEqual(boxes[0]!.x);
       expect(boxes[0]!.x + boxes[0]!.size).toBeLessThanOrEqual(378);
     });
+  });
+
+  it('is drawn at a sleeve’s 5:7 ratio', () => {
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
+    expect(svg.getAttribute('viewBox')).toBe('0 0 390 546');
+  });
+
+  it('prints a Hardpoint’s short name, Rv and Hv on one line in the lower part of its row', () => {
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
+    // The right arm row spans 440–487 and the right torso 487–534 (docs/cards.md).
+    for (const name of ['ra-weapon', 'ra-rv', 'ra-hv']) {
+      expect(field(svg, name)?.getAttribute('y')).toBe('474');
+    }
+    for (const name of ['lt-weapon', 'lt-rv']) {
+      expect(field(svg, name)?.getAttribute('y')).toBe('521');
+    }
   });
 
   it('replaces the sample data with the Unit Profile', () => {
@@ -198,8 +215,8 @@ describe('buildMechCardSvg', () => {
     });
 
     it.each([
-      { size: 'large', scale: 1 },
-      { size: 'sleeve', scale: 2.5 / 3.9 },
+      { size: 'large', scale: slotRect('large', 0).width / 3.9 },
+      { size: 'sleeve', scale: slotRect('sleeve', 0).width / 3.9 },
     ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
       // A mark on every Hardpoint, beside the longest short name, under a name that fills its box.
       const crowdedMech: MechProfile = {
@@ -215,7 +232,7 @@ describe('buildMechCardSvg', () => {
       };
       const svg = buildMechCardSvg(crowdedMech, createValueMeasure());
       svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${5.1 * scale}in`);
+      svg.setAttribute('height', `${5.46 * scale}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({ element: svg, path: `../../test-output/illegal-card-${size}.png` });

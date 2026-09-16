@@ -43,7 +43,7 @@ describe('exportCardsPdf', () => {
 });
 
 describe('exportArmyListPdf', () => {
-  // 11 fielded copies: 3 Large pages (4-up) or 2 Sleeve pages (9-up).
+  // 11 fielded copies: 3 Large pages (4-up) or 2 Sleeve pages (6-up).
   const list: ArmyList = {
     version: 2,
     name: 'Iron Legion',
@@ -170,8 +170,8 @@ describe('illegal marks', () => {
     // Positions from the field map in docs/cards.md: beside the name, Left Arm, Right Torso.
     expect(triangles).toEqual([
       { x: 364, y: 15, width: 12, height: 11 },
-      { x: 67, y: 455, width: 11, height: 10 },
-      { x: 250, y: 484, width: 11, height: 10 },
+      { x: 67, y: 465, width: 11, height: 10 },
+      { x: 250, y: 512, width: 11, height: 10 },
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: 2 issues', stroked: true });
   });
@@ -195,7 +195,7 @@ describe('illegal marks', () => {
     // Positions from the field map in docs/cards.md: beside the name, the second mount row.
     expect(triangles).toEqual([
       { x: 364, y: 15, width: 12, height: 11 },
-      { x: 217, y: 477, width: 11, height: 10 },
+      { x: 217, y: 505, width: 11, height: 10 },
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: 2 issues', stroked: true });
     expect(texts).toContainEqual({ text: 'Static: Plasma Lance', stroked: false });

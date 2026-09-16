@@ -9,13 +9,26 @@ export const printSizeLabels: Record<PrintSize, string> = { large: 'Large', slee
 /** US Letter, portrait, in inches. */
 export const page = { width: 8.5, height: 11 };
 
-const nativeSlot = { width: 3.9, height: 5.1 };
-/** A Troop card's height; two plus the half-slot gap fill a slot. */
+/** The page edge most home printers can't print. */
+const printableMargin = 0.25;
+
+/** A Mech or Vehicle template's size, at a sleeve's 5:7 ratio (ADR 0009). */
+const nativeSlot = { width: 3.9, height: 5.46 };
+/** A Troop card's height; two fill a slot, with the rest of its height between them. */
 const nativeHalfSlotHeight = 2.5;
 
+const largeGutter = 0.2;
+
 const grids = {
-  large: { scale: 1, columns: 2, rows: 2, gutter: 0.2 },
-  sleeve: { scale: 2.5 / 3.9, columns: 3, rows: 3, gutter: 0.15 },
+  // As big as fits two rows inside the printable margins.
+  large: {
+    scale: (page.height - 2 * printableMargin - largeGutter) / 2 / nativeSlot.height,
+    columns: 2,
+    rows: 2,
+    gutter: largeGutter,
+  },
+  // A standard 2.5" × 3.5" card sleeve.
+  sleeve: { scale: 2.5 / nativeSlot.width, columns: 3, rows: 2, gutter: 0.25 },
 } as const;
 
 function slotsPerPage(size: PrintSize): number {

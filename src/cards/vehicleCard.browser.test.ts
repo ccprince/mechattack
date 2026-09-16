@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
+import { catalog } from '../domain/catalog';
 import type { VehicleProfile } from '../domain/vehicle';
 import { createValueMeasure, loadCardFonts } from './fonts';
+import { slotRect } from './pageLayout';
 import { testVehicle } from './testVehicle';
 import { buildVehicleCardSvg } from './vehicleCard';
 
@@ -65,23 +67,24 @@ describe('buildVehicleCardSvg', () => {
         expect(x).toBeGreaterThanOrEqual(320);
         expect(x + size).toBeLessThanOrEqual(378);
         expect(y).toBeGreaterThanOrEqual(435);
-        expect(y + size).toBeLessThanOrEqual(466);
+        expect(y + size).toBeLessThanOrEqual(484);
       }
     });
 
-    it('shrinks a Weapon too heavy for the 4×4 area rather than clipping it', () => {
-      // A Heavy Laser's 5 rows don't fit a Vehicle's area; only an illegal Vehicle mounts one.
+    it('keeps a Weapon too heavy for the 4×4 grid inside its mount row', () => {
+      // A Heavy Laser is 5 rows; only an illegal Vehicle mounts one.
       const svg = buildVehicleCardSvg(
         { ...testVehicle, mounts: { ...testVehicle.mounts, turret: 'Heavy Laser' } },
         createValueMeasure(),
       );
       const boxes = dpBoxes(svg, 'mount1');
       expect(boxes).toHaveLength(5);
-      expect(boxes[0]!.size).toBeLessThan(7.75 / 1.2);
+      // The mount row is tall enough for 5 rows, so it keeps the card's box size.
+      expect(boxes[0]!.size).toBeCloseTo(7.75 / 1.2);
       expect(marks(svg)).toContain('mount1-illegal');
       for (const { y, size } of boxes) {
         expect(y).toBeGreaterThanOrEqual(435);
-        expect(y + size).toBeLessThanOrEqual(466);
+        expect(y + size).toBeLessThanOrEqual(484);
       }
     });
   });
@@ -104,6 +107,7 @@ describe('buildVehicleCardSvg', () => {
     expect(field(svg, 'illegal')).toBeNull();
     expect(marks(svg)).toEqual([]);
     expect(svg.querySelector('style')?.textContent).not.toContain('@import');
+    expect(svg.getAttribute('viewBox')).toBe('0 0 390 546');
 
     // Armor 20 crosses out rows 60…30.
     const crossed = svg.querySelector('#data rect.crossed');
@@ -129,11 +133,32 @@ describe('buildVehicleCardSvg', () => {
     const svg = buildVehicleCardSvg(illegalVehicle, createValueMeasure());
     expect(marks(svg)).toEqual(['illegal', 'mount1-illegal', 'mount2-illegal']);
     expect(lines(svg, 'illegal').join(' ')).toBe('ILLEGAL: 3 issues');
-    // Too long for one line, so it wraps rather than shrinking away.
-    expect(lines(svg, 'mount1-weapon')).toEqual(['Turret: Medium Laser (Twin', 'Linked)']);
+    // Too long for one line, so it wraps at full size rather than shrinking away.
+    expect(lines(svg, 'mount1-weapon')).toHaveLength(2);
+    expect(lines(svg, 'mount1-weapon').join(' ')).toBe('Turret: Medium Laser (Twin Linked)');
+    expect(field(svg, 'mount1-weapon')?.style.fontSize).toBe('14px');
     expect(lines(svg, 'mount2-weapon')).toEqual(['Static: Plasma Lance']);
     expect(field(svg, 'mount2-rv')).toBeNull();
     expect(lines(svg, 'notes')).toHaveLength(8);
+  });
+
+  it('prints every Catalog name a Vehicle may mount in full on its mount row', () => {
+    const measure = createValueMeasure();
+    // A Medium Vehicle may mount Light and Medium entries, so its rows are unmarked.
+    for (const entry of catalog.filter((entry) => entry.class !== 'Heavy')) {
+      const svg = buildVehicleCardSvg(
+        {
+          ...testVehicle,
+          class: 'Medium',
+          turret: false,
+          staticMount: true,
+          cargoBays: 0,
+          mounts: { turret: null, staticMount1: entry.name, staticMount2: null },
+        },
+        measure,
+      );
+      expect(lines(svg, 'mount1-weapon').join(' ')).toBe(`Static: ${entry.name}`);
+    }
   });
 
   // Legal with both Static Mount slots filled: 6 of the Medium Frame's 6 Bp.
@@ -152,8 +177,8 @@ describe('buildVehicleCardSvg', () => {
   };
 
   it.each([
-    { size: 'large', scale: 1 },
-    { size: 'sleeve', scale: 2.5 / 3.9 },
+    { size: 'large', scale: slotRect('large', 0).width / 3.9 },
+    { size: 'sleeve', scale: slotRect('sleeve', 0).width / 3.9 },
   ])('keeps text and marks inside their boxes at $size size', async ({ size, scale }) => {
     for (const [legality, profile] of [
       ['legal', legalStaticMount],
@@ -161,7 +186,7 @@ describe('buildVehicleCardSvg', () => {
     ] as const) {
       const svg = buildVehicleCardSvg(profile, createValueMeasure());
       svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${5.1 * scale}in`);
+      svg.setAttribute('height', `${5.46 * scale}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({
@@ -188,9 +213,9 @@ describe('buildVehicleCardSvg', () => {
       expect(notesBottom).toBeLessThanOrEqual(card.top + 400 * toViewBox);
       for (const [row, [weapon, rv]] of rows.entries()) {
         if (!weapon) continue;
-        // The rows sit under the labels at y 435, one above the other, and clear of the Rv column.
-        const top = card.top + (435 + row * 31.5) * toViewBox;
-        const bottom = top + 31.5 * toViewBox;
+        // The rows sit under the labels, 435–484 and 484–534, and clear of the Rv column.
+        const top = card.top + [435, 484][row]! * toViewBox;
+        const bottom = card.top + [484, 534][row]! * toViewBox;
         for (const rect of [weapon, rv]) {
           if (!rect) continue;
           expect(rect.top).toBeGreaterThanOrEqual(top);

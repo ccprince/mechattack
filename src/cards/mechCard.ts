@@ -21,14 +21,15 @@ const hardpointFields: Record<
   Hardpoint,
   { prefix: string; labelX: number; rvX: number; y: number; dp: { x: number; y: number } }
 > = {
-  // `y` is the row's shared baseline: the short name, Rv and Hv all sit on it.
-  leftArm: { prefix: 'la', labelX: 15, rvX: 101, y: 464, dp: { x: 166, y: 440 } },
-  rightArm: { prefix: 'ra', labelX: 198, rvX: 284, y: 464, dp: { x: 349, y: 440 } },
-  leftTorso: { prefix: 'lt', labelX: 15, rvX: 101, y: 493, dp: { x: 166, y: 469 } },
-  rightTorso: { prefix: 'rt', labelX: 198, rvX: 284, y: 493, dp: { x: 349, y: 469 } },
+  // `y` is the row's shared baseline: the short name, Rv and Hv all sit on it, centered under the
+  // row's labels.
+  leftArm: { prefix: 'la', labelX: 15, rvX: 101, y: 474, dp: { x: 166, y: 440 } },
+  rightArm: { prefix: 'ra', labelX: 198, rvX: 284, y: 474, dp: { x: 349, y: 440 } },
+  leftTorso: { prefix: 'lt', labelX: 15, rvX: 101, y: 521, dp: { x: 166, y: 487 } },
+  rightTorso: { prefix: 'rt', labelX: 198, rvX: 284, y: 521, dp: { x: 349, y: 487 } },
 };
-/** A Hardpoint's Dp area: 5×5 cells of 5.8 in 29 × 29 (docs/cards.md). */
-const dpArea = { width: 29, height: 29, cellSize: 5.8, rollsFontSize: 9 };
+/** A Hardpoint's Dp area: 5×5 cells of 5.8 in 29 × 47 (docs/cards.md). */
+const dpArea = { width: 29, height: 47, cellSize: 5.8, rollsFontSize: 9 };
 const hvOffset = 43;
 const topArmorRow = 150;
 /** Mv, Tp and Hc print large in the middle of their cell: they're read constantly in play. */

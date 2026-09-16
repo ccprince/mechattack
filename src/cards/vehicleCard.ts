@@ -3,7 +3,7 @@ import { vehicleStats } from '../domain/frame';
 import type { VehicleProfile } from '../domain/vehicle';
 import { vehicleIssues } from '../domain/vehicleRules';
 import { dpDrawing } from './dpShape';
-import { fitLine, fitOrWrap, type Measure } from './fitText';
+import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
@@ -19,25 +19,24 @@ import { mountRows, vehicleNotes, vehicleNotesBox } from './vehicleCardContent';
 // Box widths below are the field map's box width minus 8 units of padding (docs/cards.md).
 const topArmorRow = 60;
 /** Baselines of the two mount rows' weapon lines; each row's Rv sits 2 lower. */
-const mountRowBaselines = [455, 486];
+const mountRowBaselines = [465, 514];
 /** Each mount row's Dp area, 4×4 cells of 7.75 in the Dp column (docs/cards.md). */
 const dpAreas = [
-  { x: 320, y: 435, width: 58, height: 31, cellSize: 7.75, rollsFontSize: 11 },
-  { x: 320, y: 466, width: 58, height: 32, cellSize: 7.75, rollsFontSize: 11 },
+  { x: 320, y: 435, width: 58, height: 49, cellSize: 7.75, rollsFontSize: 11 },
+  { x: 320, y: 484, width: 58, height: 50, cellSize: 7.75, rollsFontSize: 11 },
 ];
 /**
- * A long name wraps to a second line rather than shrinking away. The row is only 31 tall, so the
- * wrapped pair sets smaller and tighter than a single line, and starts `wrapDy` above its baseline.
+ * A long name wraps to a second line at the same size rather than shrinking away. The wrapped pair
+ * starts `wrapDy` above the row's baseline, so it stays centered in the row.
  */
 const mountRow = {
   weaponX: 16,
   rvX: 276,
   rvDy: 2,
   fontSize: 14,
-  wrapFontSize: 11.5,
-  lineHeight: 12.5,
+  lineHeight: 15,
   maxLines: 2,
-  wrapDy: -6,
+  wrapDy: -7.5,
 };
 /** Mv and Tp print large in the middle of their cell: they're read constantly in play. */
 const statValue = { x: 316, width: 80, fontSize: 24 };
@@ -97,21 +96,14 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
       addWarningTriangle(data, `${prefix}-illegal`, { x, y: y + dy, width, height });
     }
     const maxWidth = weaponWidth[row.marked ? 'marked' : 'unmarked'];
-    const weapon = fitOrWrap(
-      row.text,
-      maxWidth,
-      mountRow.fontSize,
-      mountRow.wrapFontSize,
-      mountRow.maxLines,
-      measure,
-    );
+    const weapon = wrapLines(row.text, maxWidth, mountRow.fontSize, mountRow.maxLines, measure);
     addWrappedValue(
       data,
       `${prefix}-weapon`,
-      weapon.lines,
+      weapon,
       mountRow.weaponX,
-      y + (weapon.lines.length > 1 ? mountRow.wrapDy : 0),
-      weapon.fontSize,
+      y + (weapon.length > 1 ? mountRow.wrapDy : 0),
+      mountRow.fontSize,
       mountRow.lineHeight,
     );
     if (row.rv) line(`${prefix}-rv`, row.rv, mountRow.rvX, y + mountRow.rvDy, 80, 16, 'middle');

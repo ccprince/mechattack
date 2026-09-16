@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import type { TroopProfile } from '../domain/troop';
 import { createValueMeasure, loadCardFonts } from './fonts';
+import { slotRect } from './pageLayout';
 import { testTroop } from './testTroop';
 import { buildTroopCardSvg } from './troopCard';
 
@@ -191,8 +192,8 @@ describe('buildTroopCardSvg', () => {
   });
 
   it.each([
-    { size: 'large', scale: 1 },
-    { size: 'sleeve', scale: 2.5 / 3.9 },
+    { size: 'large', scale: slotRect('large', 0).width / 3.9 },
+    { size: 'sleeve', scale: slotRect('sleeve', 0).width / 3.9 },
   ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
     for (const [legality, profile] of [
       ['legal', legalTroop],

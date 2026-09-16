@@ -24,6 +24,10 @@ _Avoid_: Current list, active list
 The total Bp the players agree an Army List may spend for a game.
 _Avoid_: Points limit, game size
 
+**Print Size**:
+How big printed cards are: Large for readability, or Sleeve to fill a standard 2.5" × 3.5" card
+sleeve. Every card in one print uses the same Print Size.
+
 **Unit Profile**:
 The design of one unit: its name, kind, Class, stats and mounted Weapons. Belongs to one Army List,
 where its name is unique, and the list fields it in some quantity; each copy is a separate card.

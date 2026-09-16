@@ -13,10 +13,11 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
 - **Card art is SVG; the PDF is built with jsPDF + svg2pdf.js.** The same SVG drives the on-screen
   preview and the PDF, so output stays vector and sharp. The templates stay SVG files rather than
   React components (ADR 0002).
-- **Two print sizes from one template.** "Large" (native size, for readability) and "Sleeve"
-  (scaled to fit standard 2.5" × 3.5" card sleeves). The layout is identical; only the scale and
-  page grid change.
-- **One print size per job, mixed unit kinds allowed.** The whole Army List prints by default, and
+- **Two Print Sizes from one template.** "Large" (as big as fits 4-up on Letter, for readability)
+  and "Sleeve" (a standard 2.5" × 3.5" card, to fill a sleeve). The Mech and Vehicle templates are
+  drawn at the sleeve's 5:7 ratio, so the layout is identical; only the scale and page grid change
+  (ADR 0009).
+- **One Print Size per job, mixed unit kinds allowed.** The whole Army List prints by default, and
   checkboxes leave units out. Every page uses the Mech/Vehicle slot grid, and a Troop card fills half
   a slot (see [Page layout](#page-layout)).
 - **Sample data is invented.** The names and numbers in each template's `#data` group don't follow
@@ -26,11 +27,12 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
 
 | File | Native size | viewBox | Large page | Sleeve page |
 |---|---|---|---|---|
-| `cards/mech-card.svg` | 3.9" × 5.1" | 390 × 510 | 4-up (2 × 2) | 9-up (3 × 3) |
-| `cards/vehicle-card.svg` | 3.9" × 5.1" | 390 × 510 | 4-up (2 × 2) | 9-up (3 × 3) |
-| `cards/troops-card.svg` | 3.9" × 2.5" | 390 × 250 | 8-up (2 × 4) | 18-up (3 × 6) |
+| `cards/mech-card.svg` | 3.9" × 5.46" | 390 × 546 | 4-up (2 × 2) | 6-up (3 × 2) |
+| `cards/vehicle-card.svg` | 3.9" × 5.46" | 390 × 546 | 4-up (2 × 2) | 6-up (3 × 2) |
+| `cards/troops-card.svg` | 3.9" × 2.5" | 390 × 250 | 8-up (2 × 4) | 12-up (3 × 4) |
 
-**Coordinates:** 1 viewBox unit = 0.01 inch = 0.72 pt. All positions below are in viewBox units.
+**Coordinates:** 1 viewBox unit = 0.01 inch at native size, which no Print Size uses. All positions
+below are in viewBox units.
 
 ### Page layout
 
@@ -43,11 +45,13 @@ mixed unit kinds share a page. An odd Troop leaves the other half of its slot em
 
 | Size | Slot size | Grid | Gutter (h / v) | Troop half-slot gap | Resulting margins (h / v) |
 |---|---|---|---|---|---|
-| Large | 3.9 × 5.1 | 2 × 2 | 0.2 / 0.2 | 0.1 | 0.25 / 0.3 |
-| Sleeve | 2.5 × 3.27 (scale 0.641) | 3 × 3 | 0.15 / 0.15 | 0.064 | 0.35 / 0.445 |
+| Large | 3.68 × 5.15 (scale 0.943) | 2 × 2 | 0.2 / 0.2 | 0.434 | 0.471 / 0.25 |
+| Sleeve | 2.5 × 3.5 (scale 0.641) | 3 × 2 | 0.25 / 0.25 | 0.295 | 0.25 / 1.875 |
 
-Troop cards are 3.9 × 2.5 (Large) or 2.5 × 1.60 (Sleeve), so two plus the gap equal one slot height.
-Sleeve scale = 2.5 / 3.9. Two sleeve-size Troop cards stacked fit one sleeve, as in the original sheets.
+Large scale fits two rows and the gutter in the page height less the 0.25 margins; Sleeve scale =
+2.5 / 3.9. The Sleeve page keeps space around every card, so it also works uncut as a 6-up sheet.
+Troop cards are 3.68 × 2.36 (Large) or 2.5 × 1.60 (Sleeve), so two plus the gap equal one slot
+height. Two sleeve-size Troop cards stacked fit one sleeve, as in the original sheets.
 At sleeve scale, labels print at ~4 pt and values at ~5.5 pt. That's tiny but matches the original.
 
 ### SVG structure conventions
@@ -107,15 +111,16 @@ Conventions across all cards:
 | `hc` | 316, 182 center, 22px | 254–378 × 156–192 | |
 | `armor` | 258, 222 | 254–378 × 192–228 | Also drives the armor cross-out |
 | `notes` | 258, 260, 11px | 254–378 × 228–422 | Multi-line: `<tspan x="258" dy="14">`, ≤ 12 lines |
-| `la-rv` / `la-hv` | 101 / 144, 464 center, 11px | 80–123 / 123–166 × 440–469 | Left arm |
-| `ra-rv` / `ra-hv` | 284 / 327, 464 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
-| `lt-rv` / `lt-hv` | 101 / 144, 493 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
-| `rt-rv` / `rt-hv` | 284 / 327, 493 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
-| `la-weapon` / `lt-weapon` | 15, 464 / 493, 10px | 12–80 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
-| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 10px | 195–263 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
+| `la-rv` / `la-hv` | 101 / 144, 474 center, 11px | 80–123 / 123–166 × 440–487 | Left arm |
+| `ra-rv` / `ra-hv` | 284 / 327, 474 center, 11px | 263–306 / 306–349 × 440–487 | Right arm |
+| `lt-rv` / `lt-hv` | 101 / 144, 521 center, 11px | 80–123 / 123–166 × 487–534 | Left torso |
+| `rt-rv` / `rt-hv` | 284 / 327, 521 center, 11px | 263–306 / 306–349 × 487–534 | Right torso |
+| `la-weapon` / `lt-weapon` | 15, 474 / 521, 10px | 12–80 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
+| `ra-weapon` / `rt-weapon` | 198, 474 / 521, 10px | 195–263 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
 
 An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out. A Hardpoint row's short name,
-Rv and Hv share one baseline, 464 or 493, so the three line up.
+Rv and Hv share one baseline, 474 or 521, so the three line up. The row's labels sit 11 below its top
+and the baseline is centered in the space under them.
 
 **Illegal marks.** A printed card is taken as Legal at the table, so a Unit Profile with Issues
 prints with three marks. A Legal card has none of them.
@@ -123,7 +128,7 @@ prints with three marks. A Legal card has none of them.
 | Mark | Position | Notes |
 |---|---|---|
 | `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Warning triangle beside the name, in the empty end of the NAME label row |
-| `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 67–78 / 250–261 × 455–465 (arms) or 484–494 (torsos) | On each Hardpoint row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 48 wide instead of 60 |
+| `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 67–78 / 250–261 × 465–475 (arms) or 512–522 (torsos) | On each Hardpoint row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 48 wide instead of 60 |
 | `illegal` data-field | 258, 260, 10px | `ILLEGAL: <Issue>` for one Issue, `ILLEGAL: 2 issues` for several. Emboldened with a 0.6 stroke in the fill color (only weight 600 is bundled), which svg2pdf draws as text render mode 2. Wraps like `notes`, 0.6 narrower, ≤ 2 lines; `notes` starts `dy="14"` below its last line and keeps the remaining lines of the 12 |
 
 A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. The line
@@ -148,14 +153,13 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 | `illegal` | 16, 277, 11px | 12–378 × 246–400 | Only with Issues: `ILLEGAL: …`, emboldened and wrapped like the Mech's, ≤ 2 lines |
 | `cargo-bays` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Only with Cargo Bays: `Cargo Bay ×N`, one line below `illegal` |
 | `notes` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Multi-line: `dy="14"`. The three fields share 9 lines; `notes` gets what's left |
-| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 14px | 12–232 × 435–466 / 466–498 | Mount row: label and full name, `Turret: Light Laser` or `Static: Light Machine Gun`. Wraps: see below |
-| `mount1-rv` / `mount2-rv` | 276, 457 / 488 center, 16px | 232–320 × 435–466 / 466–498 | The row's Rv, blank for Support Equipment with no range |
+| `mount1-weapon` / `mount2-weapon` | 16, 465 / 514, 14px | 12–232 × 435–484 / 484–534 | Mount row: label and full name, `Turret: Light Laser` or `Static: Light Machine Gun`. Wraps: see below |
+| `mount1-rv` / `mount2-rv` | 276, 467 / 516 center, 16px | 232–320 × 435–484 / 484–534 | The row's Rv, blank for Support Equipment with no range |
 
 **Mount rows.** The row is wide enough for the entry's full name, so it prints that rather than the
 short name; only the `ILLEGAL` line is tight enough to need short names. A name too wide for one line
-**wraps** to a second rather than shrinking away: at 11.5px, `dy="12.5"`, ≤ 2 lines, with the first
-baseline 6 above the single-line one (449 / 480). The row is only 31 tall, so the wrapped pair sets
-smaller and tighter than a single line; 14px is for the one-line case alone. The box under the
+**wraps** to a second at the same 14px rather than shrinking away: `dy="15"`, ≤ 2 lines, with the
+first baseline 7.5 above the single-line one (457.5 / 506.5), so the pair stays centered. The box under the
 `WEAPON / EQUIPMENT:` and `RV:` labels holds two rows. Only
 filled mounts print, one per row from the top, in the order Turret, Static Mount slot 1, Static
 Mount slot 2; a Hull Option the Vehicle doesn't take prints nothing. A Legal Vehicle fills at most
@@ -168,7 +172,7 @@ name as stored, with a blank Rv.
 | Mark | Position | Notes |
 |---|---|---|
 | `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
-| `<g data-mark="mount1-illegal">`, `mount2-` | Triangle 217–228 × 446–456 / 477–487 | On each mount row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 196 wide instead of 212 |
+| `<g data-mark="mount1-illegal">`, `mount2-` | Triangle 217–228 × 456–466 / 505–515 | On each mount row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 196 wide instead of 212 |
 
 One Issue's wording: `Hull Options over`, `Turret: Md Laser too heavy`, `Static: Plasma Lance not in
 Catalog`, `Bp over max` or `Bp is 0`. Both Static Mount slots are labeled `Static`.
@@ -233,20 +237,20 @@ are one box wide, so the text always fits.
 
 | Card | Dp area (x1–x2 × y1–y2) | Grid | Cell | `N×` size |
 |---|---|---|---|---|
-| Mech | 166–195 / 349–378 × 440–469 (arms), 469–498 (torsos) | 5×5 | 5.8 | 9px |
-| Vehicle | 320–378 × 435–466 (mount 1), 466–498 (mount 2) | 4×4 | 7.75 | 11px |
+| Mech | 166–195 / 349–378 × 440–487 (arms), 487–534 (torsos) | 5×5 | 5.8 | 9px |
+| Vehicle | 320–378 × 435–484 (mount 1), 484–534 (mount 2) | 4×4 | 7.75 | 11px |
 | Troops | 214–250 × 182–238 | 3×3 | 12 | 11px |
 
-The box size is the area's smaller side divided by the grid, so a Light Laser is the same size on
-every row of a card rather than stretched to fill its area. That size is the **cell**: the square
+The box size is fixed per card rather than stretched to fill its area, so a Light Laser is the same
+size on every row of a card: the Mech's is 29 / 5 and the Vehicle's 31 / 4. That size is the **cell**: the square
 plus the gap that follows it, which is why the largest shape the grid holds still fits the area
 (five Mech cells are 29, and the shape spans 29 less the trailing gap). The square itself is the
 cell less that gap, 4.83 on a Mech.
 
 An empty mount, a Support Equipment and a name missing from the Catalog all print nothing, like a
 blank Rv. An illegal Unit Profile can mount a Weapon too heavy for its card's grid (a Heavy Laser on
-a Vehicle is 5 rows in a 4×4 area): shrink that row's boxes until the shape fits rather than clipping
-it. The card is already marked illegal.
+a Troop is 5 rows in a 3×3 area): shrink that row's boxes until the shape fits rather than clipping
+it. The card is already marked illegal. A Vehicle's mount rows are tall enough for 5 rows unshrunk.
 
 **Templates.** No Dp area holds artwork but its surrounding box, and none takes a `DP:` label. The
 hand-drawn placeholder grids the areas once held — the Mech's `#minigrid` def and its four `<use>`s,
@@ -282,7 +286,7 @@ mount rows; the two Dp areas line up with the mount rows, leaving the 418–435 
 7. **Place on the page:**
    `const doc = new jsPDF({ unit: 'pt', format: 'letter' })`, then for each card draw the texture
    image and then `await svg2pdf(svgEl, doc, { x, y, width, height })`, with position and size in
-   pt (the doc's unit, verified) from the page layout table (scale 1.0 or 0.641). Cards keep list
+   pt (the doc's unit, verified) from the page layout table (scale 0.943 or 0.641). Cards keep list
    order: a Troop takes the bottom half of the slot when the card before it is a Troop in that slot's
    top half, and otherwise the top half of the next slot. Add a page when the grid fills.
 8. **Download** with `doc.save('mech-attack-cards.pdf')`.
@@ -325,11 +329,11 @@ Headless Chromium (from the Playwright cache) screenshots an SVG with web fonts 
 ```sh
 ~/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell \
   --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
-  --window-size=375,490 --virtual-time-budget=8000 \
+  --window-size=375,525 --virtual-time-budget=8000 \
   --screenshot=/path/to/out.png file://$PWD/cards/mech-card.svg
 ```
 
-Use window height 490 for Mech/Vehicle and 240 for Troops. The screenshot is 2× the window size.
+Use window height 525 for Mech/Vehicle and 240 for Troops. The screenshot is 2× the window size.
 
 ## Settled rules
 
