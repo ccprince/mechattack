@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import type { Measure } from '../cards/fitText';
 import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
 import {
@@ -8,8 +8,10 @@ import {
   hasFieldedCopies,
   isOverBpLimit,
 } from '../domain/armyList';
+import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListFile';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
+import { downloadJson } from './downloadJson';
 import { NumberField } from './NumberField';
 
 export function ArmyListHeader({
@@ -27,6 +29,7 @@ export function ArmyListHeader({
   const total = bpTotal(list);
   const over = isOverBpLimit(list);
   const canPrint = measure !== undefined && hasFieldedCopies(list);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   async function downloadPdf() {
     if (!measure) return;
@@ -44,6 +47,32 @@ export function ArmyListHeader({
     } finally {
       setPrinting(false);
     }
+  }
+
+  function exportJson() {
+    downloadJson(serializeArmyList(list), armyListFilename(list.name));
+  }
+
+  async function importJson(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    // Cleared so picking the same file again still fires a change.
+    input.value = '';
+    if (!file) return;
+    onError(undefined);
+    let imported;
+    try {
+      imported = parseArmyList(await file.text());
+    } catch {
+      // The file couldn't be read at all: reported the same as an unreadable document.
+    }
+    if (!imported) {
+      onError(`Couldn't import ${file.name}: it isn't a readable Army List.`);
+      return;
+    }
+    // Only one Army List is kept, so importing overwrites the one being edited.
+    const question = `Replace ${list.name} with ${imported.name} from ${file.name}? ${list.name} will be lost.`;
+    if (window.confirm(question)) dispatch({ type: 'replaceList', list: imported });
   }
 
   return (
@@ -72,6 +101,22 @@ export function ArmyListHeader({
             Over the Bp Limit by {total - list.bpLimit}
           </p>
         )}
+      </div>
+      <div className={styles.fileControls}>
+        <button type="button" onClick={exportJson}>
+          Export JSON
+        </button>
+        <button type="button" onClick={() => fileInput.current?.click()}>
+          Import JSON
+        </button>
+        {/* Opened by Import JSON: a bare file input can't be labelled or styled like the buttons. */}
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onChange={importJson}
+        />
       </div>
       <div className={styles.printControls}>
         <label className={styles.printSize}>

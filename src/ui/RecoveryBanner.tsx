@@ -1,5 +1,6 @@
 import { discardBackup } from '../domain/armyListStorage';
 import { useArmyList } from './ArmyListContext';
+import { downloadJson } from './downloadJson';
 import styles from './RecoveryBanner.module.css';
 
 /**
@@ -32,15 +33,4 @@ export function RecoveryBanner({ backup, onClose }: { backup: string; onClose: (
       </button>
     </div>
   );
-}
-
-/** Saves `text` as-is, so the raw backup comes back byte for byte. */
-function downloadJson(text: string, filename: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  // Revoked after the click has been handled, or some browsers cancel the download.
-  setTimeout(() => URL.revokeObjectURL(url));
 }

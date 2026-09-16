@@ -1,5 +1,5 @@
-import { armyListSchema, type ArmyList } from './armyList';
-import { migrateArmyList } from './migrations';
+import type { ArmyList } from './armyList';
+import { parseArmyList, serializeArmyList } from './armyListFile';
 
 /** The part of the Web Storage API the app uses, so Node tests can pass a fake. */
 export interface KeyValueStore {
@@ -47,7 +47,7 @@ export function loadArmyList(store: KeyValueStore): SavedArmyList {
 /** Saves the Army List as its versioned document; false if storage refused it. */
 export function saveArmyList(store: KeyValueStore, list: ArmyList): boolean {
   try {
-    store.setItem(savedArmyListKey, JSON.stringify(list));
+    store.setItem(savedArmyListKey, serializeArmyList(list));
     return true;
   } catch {
     return false;
@@ -60,15 +60,4 @@ export function discardBackup(store: KeyValueStore): void {
   } catch {
     // Storage is unavailable, so there's nothing to clear.
   }
-}
-
-function parseArmyList(raw: string): ArmyList | undefined {
-  let json: unknown;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    return undefined;
-  }
-  const result = armyListSchema.safeParse(migrateArmyList(json));
-  return result.success ? result.data : undefined;
 }

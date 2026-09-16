@@ -2,6 +2,7 @@ import { createContext, useContext, useReducer, type Dispatch, type ReactNode } 
 import type { ArmyList } from '../domain/armyList';
 import {
   armyListReducer,
+  openArmyList,
   type ArmyListAction,
   type ArmyListState,
 } from '../domain/armyListReducer';
@@ -31,10 +32,7 @@ export function ArmyListProvider({
   savedList: ArmyList | undefined;
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(armyListReducer, savedList, (list = freshList) => ({
-    list,
-    selectedId: list.unitProfiles[0]?.id ?? null,
-  }));
+  const [state, dispatch] = useReducer(armyListReducer, savedList ?? freshList, openArmyList);
   const autosaveFailed = useAutosave(store, state.list);
 
   return (

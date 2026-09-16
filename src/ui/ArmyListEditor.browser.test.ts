@@ -932,6 +932,89 @@ describe('Download PDF', () => {
   });
 });
 
+describe('Export and Import JSON', () => {
+  const ironLegion: ArmyList = {
+    version: 2,
+    name: 'Iron Legion',
+    bpLimit: 40,
+    unitProfiles: [
+      mech({ id: 'a', name: 'Ironclad', quantity: 2 }),
+      vehicle({ id: 'b', name: 'Hellhound' }),
+    ],
+  };
+  const steelHand: ArmyList = {
+    version: 2,
+    name: 'Steel Hand',
+    bpLimit: 60,
+    unitProfiles: [mech({ id: 'a', name: 'Fist' })],
+  };
+  const listName = () => page.getByLabelText('Army List name');
+  /** Picks a file in the input behind Import JSON, which the button would open a picker for. */
+  async function importFile(text: string, name = 'army.json') {
+    const input = await vi.waitFor(() => {
+      const element = document.querySelector('input[type="file"]');
+      if (!element) throw new Error('The app has not rendered yet.');
+      return element;
+    });
+    await page.elementLocator(input).upload(new File([text], name, { type: 'application/json' }));
+  }
+
+  it('exports the saved document, named after the Army List, and imports it back', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL');
+    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(ironLegion) });
+    load(store);
+
+    await page.getByRole('button', { name: 'Export JSON' }).click();
+    expect(click).toHaveBeenCalledOnce();
+    expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('iron-legion.json');
+    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toBe('application/json');
+    const exported = await blob.text();
+    expect(exported).toBe(store.entries[savedArmyListKey]);
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    loadList(steelHand);
+    await expect.element(listName()).toHaveValue('Steel Hand');
+    await importFile(exported);
+    await expect.element(listName()).toHaveValue('Iron Legion');
+    expect(confirm).toHaveBeenCalledWith(
+      'Replace Steel Hand with Iron Legion from army.json? Steel Hand will be lost.',
+    );
+    await expect.element(unitProfiles().getByText('Hellhound')).toBeInTheDocument();
+    await expect.element(field('Name')).toHaveValue('Ironclad');
+  });
+
+  it('replaces the Army List only once confirmed', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList(steelHand);
+    await importFile(JSON.stringify(ironLegion));
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+    await expect.element(listName()).toHaveValue('Steel Hand');
+
+    confirm.mockReturnValue(true);
+    // The same file again: the input is cleared after each pick, so choosing it still imports.
+    await importFile(JSON.stringify(ironLegion));
+    await expect.element(listName()).toHaveValue('Iron Legion');
+  });
+
+  it.each([
+    ['a file that is not JSON', 'not json at all'],
+    ['JSON the schema rejects', JSON.stringify({ ...ironLegion, bpLimit: -5 })],
+  ])('rejects %s, keeping the Army List and showing an error', async (_, text) => {
+    const confirm = vi.spyOn(window, 'confirm');
+    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(steelHand) });
+    load(store);
+    await importFile(text, 'broken.json');
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent("Couldn't import broken.json: it isn't a readable Army List.");
+    await expect.element(listName()).toHaveValue('Steel Hand');
+    expect(confirm).not.toHaveBeenCalled();
+    expect(JSON.parse(store.entries[savedArmyListKey]!)).toEqual(steelHand);
+  });
+});
+
 function mech(profile: Partial<MechProfile> & Pick<MechProfile, 'id' | 'name'>): MechProfile {
   return {
     kind: 'Mech',

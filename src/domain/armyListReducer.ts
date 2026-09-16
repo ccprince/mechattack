@@ -11,6 +11,7 @@ export interface ArmyListState {
 }
 
 export type ArmyListAction =
+  | { type: 'replaceList'; list: ArmyList }
   | { type: 'renameList'; name: string }
   | { type: 'setBpLimit'; bpLimit: number }
   | { type: 'addMech' }
@@ -38,12 +39,19 @@ type VehicleChanges = Partial<Omit<VehicleProfile, 'kind' | 'id' | 'mounts'>> & 
 
 type TroopChanges = Partial<Omit<TroopProfile, 'kind' | 'id'>>;
 
+/** The state for editing `list` from the start: its first Unit Profile open, if it has one. */
+export function openArmyList(list: ArmyList): ArmyListState {
+  return { list, selectedId: list.unitProfiles[0]?.id ?? null };
+}
+
 /**
  * Values are stored as given, not range-checked: the editor parses typed-in values before
  * dispatching, and `armyListSchema` guards saving and loading. Going over the Bp Limit never blocks.
  */
 export function armyListReducer(state: ArmyListState, action: ArmyListAction): ArmyListState {
   switch (action.type) {
+    case 'replaceList':
+      return openArmyList(action.list);
     case 'renameList':
       return { ...state, list: { ...state.list, name: action.name } };
     case 'setBpLimit':

@@ -21,6 +21,21 @@ describe('armyListReducer', () => {
     expect(next.list.bpLimit).toBe(60);
   });
 
+  describe('replaceList', () => {
+    it('replaces the Army List and opens its first Unit Profile', () => {
+      const before = armyListReducer(state(), { type: 'addMech' });
+      const imported = armyListReducer(state({ name: 'Steel Hand' }), { type: 'addTroop' }).list;
+      const next = armyListReducer(before, { type: 'replaceList', list: imported });
+      expect(next).toEqual({ list: imported, selectedId: imported.unitProfiles[0]?.id });
+    });
+
+    it('clears the selection when the new Army List is empty', () => {
+      const before = armyListReducer(state(), { type: 'addMech' });
+      const next = armyListReducer(before, { type: 'replaceList', list: state().list });
+      expect(next.selectedId).toBeNull();
+    });
+  });
+
   describe('addMech', () => {
     it('adds a default New Mech and selects it', () => {
       const next = armyListReducer(state(), { type: 'addMech' });
