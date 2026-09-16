@@ -33,8 +33,9 @@ const ArmyListContext = createContext<
 
 /**
  * Holds the Open Army List, starting from `saved`, and autosaves every change. Switching lists hands the
- * next one to `onSwitch`, which remounts the provider with it. `onChange` hears of every change stored to
- * a Saved Army List, the same ones that mark when it changed (ADR 0007).
+ * next one to `onSwitch`, which remounts the provider with it. `onChange` hears of New, Duplicate, Import
+ * and each edit once storage has taken it: what marks a Saved Army List changed (ADR 0007), give or take
+ * an edit that leaves the stored document as it was.
  */
 export function ArmyListProvider({
   store,

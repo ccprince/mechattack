@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { page } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
 import { savedStore, unavailableStore } from '../domain/testStores';
 import {
@@ -121,6 +121,23 @@ describe('asking the browser to keep Saved Army Lists', () => {
     expect(persist).not.toHaveBeenCalled();
   });
 
+  it('waits for the next edit when a save fails after earlier ones worked', async () => {
+    const store = savedStore(ironLegion);
+    load(store);
+    await expect.element(bpLimit()).toBeInTheDocument();
+    const setItem = vi.spyOn(store, 'setItem').mockImplementation(() => {
+      throw new DOMException('Storage is full', 'QuotaExceededError');
+    });
+
+    await bpLimit().fill('45');
+    await expect.element(page.getByText(/Couldn't save to this browser/)).toBeInTheDocument();
+    expect(persisted).not.toHaveBeenCalled();
+
+    setItem.mockRestore();
+    await bpLimit().fill('46');
+    await expect.poll(() => persist).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     ['navigator.storage is missing', undefined],
     ['persist is missing', { persisted: async () => false }],
@@ -144,46 +161,5 @@ describe('asking the browser to keep Saved Army Lists', () => {
       window.removeEventListener('error', onError);
       window.removeEventListener('unhandledrejection', onError);
     }
-  });
-});
-
-describe('the storage dialog', () => {
-  const dialog = () => page.getByRole('dialog', { name: 'Where your Army Lists are kept' });
-  const openDialog = () => chooseFromMenu('Where are Army Lists kept?');
-  const closeDialog = () => userEvent.keyboard('{Escape}');
-  const agreed = () => dialog().getByText('This browser has agreed', { exact: false });
-  const mayClear = () =>
-    dialog().getByText('Some browsers clear saved data on their own', { exact: false });
-
-  it('says whether this browser has agreed, checking each time it opens', async () => {
-    load(savedStore(ironLegion));
-
-    await openDialog();
-    await expect.element(mayClear()).toBeVisible();
-    await expect.element(agreed()).not.toBeInTheDocument();
-    await closeDialog();
-
-    persisted.mockResolvedValue(true);
-    await openDialog();
-    await expect.element(agreed()).toBeVisible();
-    await expect
-      .element(dialog().getByText("though they're still lost in the cases above", { exact: false }))
-      .toBeVisible();
-    await expect.element(mayClear()).not.toBeInTheDocument();
-    await closeDialog();
-
-    persisted.mockResolvedValue(false);
-    await openDialog();
-    await expect.element(mayClear()).toBeVisible();
-    await expect.element(agreed()).not.toBeInTheDocument();
-  });
-
-  it('keeps the current paragraph when the browser can’t say', async () => {
-    stubStorage(undefined);
-    load(savedStore(ironLegion));
-
-    await openDialog();
-    await expect.element(mayClear()).toBeVisible();
-    await expect.element(agreed()).not.toBeInTheDocument();
   });
 });

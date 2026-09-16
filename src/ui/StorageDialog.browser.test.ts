@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { fakeStore } from '../domain/testStores';
 import { armyListsButton, chooseFromMenu, setUpApp } from './testApp';
@@ -55,5 +55,50 @@ describe('where Army Lists are kept', () => {
     const element = dialog().element();
     expect(element.scrollHeight).toBeGreaterThan(element.clientHeight);
     expect(element.scrollTop).toBe(0);
+  });
+});
+
+describe('whether this browser has agreed to keep them', () => {
+  const agreed = () => dialog().getByText('This browser has agreed', { exact: false });
+  const mayClear = () =>
+    dialog().getByText('Some browsers clear saved data on their own', { exact: false });
+
+  /** Stands in for `navigator.storage`; restored after each test with every other mock. */
+  function stubStorage(storage: Partial<StorageManager> | undefined) {
+    vi.spyOn(navigator, 'storage', 'get').mockReturnValue(storage as StorageManager);
+  }
+
+  it('checks each time the dialog opens', async () => {
+    const persisted = vi.fn(async () => false);
+    stubStorage({ persisted });
+    load(fakeStore());
+
+    await footerButton().click();
+    await expect.element(mayClear()).toBeVisible();
+    await expect.element(agreed()).not.toBeInTheDocument();
+    await closes.Escape();
+
+    persisted.mockResolvedValue(true);
+    await footerButton().click();
+    await expect.element(agreed()).toBeVisible();
+    await expect
+      .element(dialog().getByText("though they're still lost in the cases above", { exact: false }))
+      .toBeVisible();
+    await expect.element(mayClear()).not.toBeInTheDocument();
+    await closes.Escape();
+
+    persisted.mockResolvedValue(false);
+    await footerButton().click();
+    await expect.element(mayClear()).toBeVisible();
+    await expect.element(agreed()).not.toBeInTheDocument();
+  });
+
+  it('keeps the usual wording when the browser can’t say', async () => {
+    stubStorage(undefined);
+    load(fakeStore());
+
+    await footerButton().click();
+    await expect.element(mayClear()).toBeVisible();
+    await expect.element(agreed()).not.toBeInTheDocument();
   });
 });

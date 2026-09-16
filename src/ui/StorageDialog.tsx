@@ -16,6 +16,8 @@ export function StorageDialog({ ref }: { ref: Ref<StorageDialogHandle> }) {
 
   useImperativeHandle(ref, () => ({
     show() {
+      // Unknown until the browser answers, so the dialog never opens on a stale agreement.
+      setPersisted(false);
       void isStoragePersisted().then(setPersisted);
       const element = dialog.current!;
       element.showModal();
