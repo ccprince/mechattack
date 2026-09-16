@@ -13,14 +13,33 @@ export function parseInRange(text: string, range: NumberRange): number | undefin
   return value >= range.min && value <= range.max && value % range.step === 0 ? value : undefined;
 }
 
+/** The typed-in text as a number, or undefined when it isn't one. */
+export function readNumber(text: string): number | undefined {
+  const trimmed = text.trim();
+  const value = trimmed === '' ? NaN : Number(trimmed);
+  return Number.isFinite(value) ? value : undefined;
+}
+
 /**
  * The typed-in value rounded to the step and pulled into range, for when editing ends. Text that
  * isn't a number gives back `current`.
  */
 export function clampToRange(text: string, range: NumberRange, current: number): number {
-  const trimmed = text.trim();
-  const value = trimmed === '' ? NaN : Number(trimmed);
-  if (!Number.isFinite(value)) return current;
-  const stepped = Math.round(value / range.step) * range.step;
-  return Math.min(range.max, Math.max(range.min, stepped));
+  const value = readNumber(text);
+  if (value === undefined) return current;
+  return pullIntoRange(Math.round(value / range.step) * range.step, range);
+}
+
+/**
+ * One step up (`1`) or down (`-1`) from `value`, stopping at the ends of the range. A value off the
+ * step moves to the next step in that direction, so 55 goes up to 60 and down to 50.
+ */
+export function stepInRange(value: number, range: NumberRange, direction: 1 | -1): number {
+  const steps = value / range.step;
+  const next = direction === 1 ? Math.floor(steps) + 1 : Math.ceil(steps) - 1;
+  return pullIntoRange(next * range.step, range);
+}
+
+function pullIntoRange(value: number, range: NumberRange): number {
+  return Math.min(range.max, Math.max(range.min, value));
 }

@@ -82,6 +82,30 @@ describe('header', () => {
     await field('Bp Limit').fill('12');
     await expect.element(page.getByText(/Over the Bp Limit/)).not.toBeInTheDocument();
   });
+
+  // Mobile Chrome draws no spinner on a number input, so the field brings its own buttons.
+  it('steps the Bp Limit with its own buttons, which stop at the ends of the range', async () => {
+    load(fakeStore());
+    const increase = page.getByRole('button', { name: 'Increase Bp Limit' });
+    const decrease = page.getByRole('button', { name: 'Decrease Bp Limit' });
+
+    await increase.click();
+    await expect.element(field('Bp Limit')).toHaveValue(51);
+    await decrease.click();
+    await decrease.click();
+    await expect.element(field('Bp Limit')).toHaveValue(49);
+
+    await field('Bp Limit').fill('0');
+    await expect.element(decrease).toBeDisabled();
+    await expect.element(increase).toBeEnabled();
+  });
+
+  it('steps a half-typed value back into range', async () => {
+    load(fakeStore());
+    await field('Bp Limit').fill('-3');
+    await page.getByRole('button', { name: 'Increase Bp Limit' }).click();
+    await expect.element(field('Bp Limit')).toHaveValue(0);
+  });
 });
 
 describe('Unit Profile list', () => {
@@ -298,6 +322,24 @@ describe('Unit Profile editor', () => {
     await expect.poll(() => cardField('armor')).toBe('110');
     await expect.poll(() => cardField('notes')).toBe('Jump jets');
     await expect.element(page.getByRole('img', { name: 'Ironclad record card' })).toBeVisible();
+  });
+
+  it('steps Armor by 10, from a half-typed value to the next 10 in that direction', async () => {
+    await loadWithNewMech();
+    const increase = page.getByRole('button', { name: 'Increase Armor' });
+    const decrease = page.getByRole('button', { name: 'Decrease Armor' });
+
+    await field('Armor').fill('50');
+    await increase.click();
+    await expect.element(field('Armor')).toHaveValue(60);
+
+    await field('Armor').fill('55');
+    await increase.click();
+    await expect.element(field('Armor')).toHaveValue(60);
+
+    await field('Armor').fill('55');
+    await decrease.click();
+    await expect.element(field('Armor')).toHaveValue(50);
   });
 
   it('works out Bp, Mv, Tp and Hc from the Class and upgrades, showing Bp against its max', async () => {

@@ -128,6 +128,24 @@ button:disabled {
   cursor: default;
 }
 
+/*
+ * A button holding only an icon: square around it, with no text baseline for the SVG to sit on, and
+ * the icon at its own 16 box. `:where` keeps this at a bare element's weight, so a module can still
+ * set the padding.
+ */
+button:where(:has(> svg:only-child)) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  line-height: 0;
+}
+
+button > svg:only-child {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
 /* A checkbox keeps its native look: a border and background would break how browsers draw it. */
 input:not([type='checkbox']),
 select,

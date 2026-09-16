@@ -1,9 +1,18 @@
-import { useState } from 'react';
-import { clampToRange, parseInRange, type NumberRange } from '../domain/numberRange';
+import { useId, useState } from 'react';
+import {
+  clampToRange,
+  parseInRange,
+  readNumber,
+  stepInRange,
+  type NumberRange,
+} from '../domain/numberRange';
+import { MinusIcon, PlusIcon } from './icons';
+import styles from './NumberField.module.css';
 
 /**
  * A typed-in whole number kept in range. Values in range apply as they're typed; anything else is
- * held as a draft and settled into range when the field loses focus.
+ * held as a draft and settled into range when the field loses focus. Its own − and + buttons step
+ * it, since not every browser draws a spinner on a number input (mobile Chrome doesn't).
  */
 export function NumberField({
   label,
@@ -21,7 +30,10 @@ export function NumberField({
   onChange: (value: number) => void;
   className?: string;
 }) {
+  const id = useId();
   const [draft, setDraft] = useState<string>();
+  /** What the buttons step from: the number as typed, even out of range, or else the value. */
+  const typed = (draft === undefined ? undefined : readNumber(draft)) ?? value;
 
   function edit(text: string) {
     setDraft(text);
@@ -36,23 +48,60 @@ export function NumberField({
     setDraft(undefined);
   }
 
+  function step(direction: 1 | -1) {
+    const stepped = stepInRange(typed, range, direction);
+    if (stepped !== value) onChange(stepped);
+    setDraft(undefined);
+  }
+
   return (
-    <label className={className}>
+    // The label names the input by id: the buttons inside it are labelable too, and name themselves.
+    <label className={className} htmlFor={id}>
       {!labelHidden && <span>{label}</span>}
-      <input
-        aria-label={labelHidden ? label : undefined}
-        type="number"
-        inputMode="numeric"
-        min={range.min}
-        max={range.max}
-        step={range.step}
-        value={draft ?? value}
-        onChange={(event) => edit(event.target.value)}
-        onBlur={settle}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') settle();
-        }}
-      />
+      <span className={styles.control}>
+        {/*
+         * Out of the tab order: the input's own arrow keys step it from the keyboard. Pressing one
+         * keeps focus in the input, so a half-typed value isn't settled by the blur before it's
+         * stepped, and a phone's keyboard stays open.
+         */}
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={(event) => event.preventDefault()}
+          aria-label={`Decrease ${label}`}
+          title="Decrease"
+          disabled={typed <= range.min}
+          onClick={() => step(-1)}
+        >
+          <MinusIcon />
+        </button>
+        <input
+          id={id}
+          aria-label={labelHidden ? label : undefined}
+          type="number"
+          inputMode="numeric"
+          min={range.min}
+          max={range.max}
+          step={range.step}
+          value={draft ?? value}
+          onChange={(event) => edit(event.target.value)}
+          onBlur={settle}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') settle();
+          }}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={(event) => event.preventDefault()}
+          aria-label={`Increase ${label}`}
+          title="Increase"
+          disabled={typed >= range.max}
+          onClick={() => step(1)}
+        >
+          <PlusIcon />
+        </button>
+      </span>
     </label>
   );
 }

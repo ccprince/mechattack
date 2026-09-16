@@ -1,0 +1,27 @@
+/*
+ * − input +, on one row: the input takes whatever width the field's grid or width rule leaves, up to
+ * a cap, so a field alone on its row doesn't stretch its buttons apart.
+ */
+.control {
+  display: flex;
+  max-width: 10rem;
+  gap: var(--space-1);
+  align-items: stretch;
+}
+
+.control input {
+  flex: 1;
+  text-align: center;
+  /* The buttons step it, so the browser's own spinner, where it draws one, would only repeat them. */
+  appearance: textfield;
+}
+
+.control input::-webkit-inner-spin-button,
+.control input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.control button {
+  flex-shrink: 0;
+}
