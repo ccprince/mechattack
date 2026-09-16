@@ -15,8 +15,12 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          // tokens.test.ts reads global.css as text; without this Vitest stubs CSS imports away.
-          css: true,
+          /*
+           * Vitest stubs CSS imports in Node, which would leave tokens.test.ts reading an empty
+           * global.css. Only that one file is processed; the pattern goes unanchored because the
+           * import carries a `?inline` query.
+           */
+          css: { include: [/global\.css/] },
           include: ['src/**/*.test.ts'],
           exclude: ['src/**/*.browser.test.ts'],
         },
