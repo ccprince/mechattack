@@ -217,7 +217,7 @@ describe('focus in the Army Lists menu', () => {
   it('closes the menu when Tab leaves it', async () => {
     load(savedStore(ironLegion));
     await openArmyListsMenu();
-    page.getByRole('button', { name: 'Delete Army List…' }).element().focus();
+    page.getByRole('button', { name: 'Where are Army Lists kept?' }).element().focus();
     await userEvent.tab();
     await expect.element(armyListsButton()).toHaveAttribute('aria-expanded', 'false');
   });

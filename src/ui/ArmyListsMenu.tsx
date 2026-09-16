@@ -20,6 +20,7 @@ import { MenuIcon } from './icons';
 export function ArmyListsMenu({
   focusOnMount,
   onError,
+  onExplainStorage,
 }: {
   /**
    * Takes focus when it mounts. Switching lists remounts the editor, which would otherwise drop focus
@@ -27,6 +28,8 @@ export function ArmyListsMenu({
    */
   focusOnMount: boolean;
   onError: (message: string | undefined) => void;
+  /** Opens the dialog saying where Army Lists are kept (#50). */
+  onExplainStorage: () => void;
 }) {
   const { state, store, openId, switchList } = useArmyList();
   const { list } = state;
@@ -204,6 +207,12 @@ export function ArmyListsMenu({
         <hr className={styles.separator} />
         <button type="button" className={styles.danger} onClick={() => choose(remove)}>
           Delete Army List…
+        </button>
+        {/* Not an action on a list, so apart from them. Closing the menu first hands focus back to
+            its button, which is where the dialog returns it. */}
+        <hr className={styles.separator} />
+        <button type="button" className={styles.item} onClick={() => choose(onExplainStorage)}>
+          Where are Army Lists kept?
         </button>
       </div>
       {/* Opened by Import Army List…: a bare file input can't be labelled or styled like the items. */}
