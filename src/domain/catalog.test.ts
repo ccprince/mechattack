@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catalog, findCatalogEntry, formatRv } from './catalog';
+import { catalog, dpGridSize, findCatalogEntry, formatRv, parseDp } from './catalog';
 
 describe('catalog', () => {
   it('holds the 21 Weapons and 4 Support Equipment from the CSV', () => {
@@ -12,7 +12,18 @@ describe('catalog', () => {
     expect(['Light', 'Medium', 'Heavy']).toContain(entry.class);
     expect(Number.isInteger(entry.bp) && entry.bp > 0).toBe(true);
     expect(entry.shortName).not.toBe('');
-    if (entry.kind === 'Weapon') expect(entry.rv).toBeDefined();
+    if (entry.kind === 'Weapon') {
+      expect(entry.rv).toBeDefined();
+      // Every Weapon has a Dp, and it fits its Class's grid.
+      expect(entry.dp.rolls).toBeGreaterThanOrEqual(1);
+      expect(entry.dp.rows.length).toBeLessThanOrEqual(dpGridSize[entry.class]);
+      for (const boxes of entry.dp.rows) {
+        expect(boxes % 2).toBe(1);
+        expect(boxes).toBeLessThanOrEqual(dpGridSize[entry.class]);
+      }
+    } else {
+      expect(entry).not.toHaveProperty('dp');
+    }
     if (entry.rv) {
       expect(entry.rv.normal).toBeGreaterThan(0);
       expect(entry.rv.extended).toBeGreaterThan(entry.rv.normal);
@@ -33,6 +44,7 @@ describe('catalog', () => {
       bp: 2,
       rv: { min: 3, normal: 10, extended: 14 },
       hv: 1,
+      dp: { rolls: 1, rows: [3, 1] },
       shortName: 'Md Missile',
     });
   });
@@ -45,6 +57,7 @@ describe('catalog', () => {
       bp: 3,
       rv: { normal: 6, extended: 10 },
       hv: 2,
+      dp: { rolls: 1, rows: [1, 1, 1, 1, 1] },
       shortName: 'Hv Laser',
     });
     expect(findCatalogEntry('Anti-Missile Defense System')).toEqual({
@@ -59,6 +72,34 @@ describe('catalog', () => {
   it('finds Support Equipment by name, and nothing for an unknown name', () => {
     expect(findCatalogEntry('Improved Weapon Targeting System')?.shortName).toBe('IWTS');
     expect(findCatalogEntry('Autocannon')).toBeUndefined();
+  });
+});
+
+describe('parseDp', () => {
+  it('reads one digit per row, top to bottom', () => {
+    expect(parseDp('331', 5)).toEqual({ rolls: 1, rows: [3, 3, 1] });
+  });
+
+  it('reads a roll count ahead of the shape', () => {
+    expect(parseDp('5x11', 5)).toEqual({ rolls: 5, rows: [1, 1] });
+  });
+
+  it.each([
+    ['', '"" is not a Dp'],
+    ['x11', '"x11" is not a Dp'],
+    ['3 rolls', '"3 rolls" is not a Dp'],
+    ['10', '"10" is not a Dp'],
+    ['0x1', '"0x1" is not a Dp'],
+    ['21', 'a row of 2 boxes is not symmetric'],
+    ['3111', '3×4 Dp is larger than 3×3'],
+    ['55', '5×2 Dp is larger than 3×3'],
+  ])('rejects %s', (cell, problem) => {
+    expect(() => parseDp(cell, 3)).toThrow(problem);
+  });
+
+  it('accepts the largest shape a Class allows', () => {
+    expect(parseDp('111', 3).rows).toHaveLength(3);
+    expect(parseDp('55555', 5).rows).toEqual([5, 5, 5, 5, 5]);
   });
 });
 

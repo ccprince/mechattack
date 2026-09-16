@@ -26,6 +26,20 @@ describe('exportCardsPdf', () => {
     // An embedded font with an empty width table drew no glyphs: svg2pdf fell back to Times-Roman.
     expect(pdf).not.toContain('/W []');
   });
+
+  it('prints each Weapon’s Dp boxes and its Rolls text', async () => {
+    const svg = buildMechCardSvg(
+      { ...testMech, hardpoints: { ...testMech.hardpoints, rightArm: 'Heavy Machine Gun' } },
+      createValueMeasure(),
+    );
+    const doc = await exportCardsPdf([{ kind: 'Mech', svg }], 'large');
+    const pdf = doc.output();
+
+    // The left arm's Heavy Missile (51) draws 5 gray boxes; its Impact Box and the Heavy Machine
+    // Gun's single box are black, and no card artwork is gray-filled.
+    expect(pdf.match(/0\.53 g/g)).toHaveLength(5);
+    expect(readPdf(pdf).texts.map(({ text }) => text)).toContain('5×');
+  });
 });
 
 describe('exportArmyListPdf', () => {

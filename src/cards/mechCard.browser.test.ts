@@ -27,7 +27,69 @@ function marks(svg: SVGSVGElement): string[] {
   return Array.from(svg.querySelectorAll('[data-mark]'), (mark) => mark.getAttribute('data-mark')!);
 }
 
+/** The boxes of one row's drawn Dp, in paint order. */
+function dpBoxes(svg: SVGSVGElement, row: string) {
+  return Array.from(svg.querySelectorAll(`[data-dp="${row}"] rect`), (box) => ({
+    x: Number(box.getAttribute('x')),
+    y: Number(box.getAttribute('y')),
+    size: Number(box.getAttribute('width')),
+    fill: box.getAttribute('fill'),
+  }));
+}
+
+function dpRows(svg: SVGSVGElement): string[] {
+  return Array.from(svg.querySelectorAll('[data-dp]'), (group) => group.getAttribute('data-dp')!);
+}
+
 describe('buildMechCardSvg', () => {
+  describe('Dp', () => {
+    it('draws each Weapon’s Dp, and nothing for Support Equipment or an empty Hardpoint', () => {
+      const svg = buildMechCardSvg(testMech, createValueMeasure());
+      // Left arm Heavy Missile (51), right arm Heavy Laser (11111); the left torso holds IWTS.
+      expect(dpRows(svg)).toEqual(['la', 'ra']);
+      expect(dpBoxes(svg, 'la')).toHaveLength(6);
+      expect(dpBoxes(svg, 'ra')).toHaveLength(5);
+    });
+
+    it('fills the Impact Box black and the rest gray', () => {
+      const svg = buildMechCardSvg(testMech, createValueMeasure());
+      const boxes = dpBoxes(svg, 'la');
+      expect(boxes.filter((box) => box.fill === '#000')).toHaveLength(1);
+      expect(boxes.filter((box) => box.fill === '#888')).toHaveLength(5);
+      // The Impact Box is the center of the top row.
+      expect(boxes[2]!.fill).toBe('#000');
+      expect(boxes[2]!.y).toBe(boxes[0]!.y);
+    });
+
+    it('keeps every box inside the Hardpoint’s Dp area', () => {
+      const svg = buildMechCardSvg(testMech, createValueMeasure());
+      // The right arm's area (docs/cards.md).
+      for (const { x, y, size } of dpBoxes(svg, 'ra')) {
+        expect(x).toBeGreaterThanOrEqual(349);
+        expect(x + size).toBeLessThanOrEqual(378);
+        expect(y).toBeGreaterThanOrEqual(440);
+        expect(y + size).toBeLessThanOrEqual(469);
+      }
+    });
+
+    it('writes Rolls left of the shape, clear of the boxes and inside the area', () => {
+      const svg = buildMechCardSvg(
+        { ...testMech, hardpoints: { ...testMech.hardpoints, rightArm: 'Heavy Machine Gun' } },
+        createValueMeasure(),
+      );
+      const rolls = field(svg, 'ra-rolls')!;
+      expect(rolls.textContent).toBe('5×');
+      document.body.append(svg);
+      const text = rolls.getBBox();
+      svg.remove();
+
+      expect(text.x).toBeGreaterThanOrEqual(349);
+      const boxes = dpBoxes(svg, 'ra');
+      expect(text.x + text.width).toBeLessThanOrEqual(boxes[0]!.x);
+      expect(boxes[0]!.x + boxes[0]!.size).toBeLessThanOrEqual(378);
+    });
+  });
+
   it('replaces the sample data with the Unit Profile', () => {
     const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Ironclad');

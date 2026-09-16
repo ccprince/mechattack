@@ -1,4 +1,4 @@
-import { findCatalogEntry, formatRv } from '../domain/catalog';
+import { findCatalogEntry, formatRv, weaponDp, type Dp } from '../domain/catalog';
 import { standardEquipment, type TroopProfile } from '../domain/troop';
 import type { TroopIssue } from '../domain/troopRules';
 import { wrapLines, type Measure } from './fitText';
@@ -10,6 +10,8 @@ export interface CrewServedWeaponRow {
   text: string;
   /** Blank for Support Equipment with no range, or a name missing from the Catalog. */
   rv: string | undefined;
+  /** Absent for Support Equipment, which has no Dp, or a name missing from the Catalog. */
+  dp: Dp | undefined;
   /** Whether the row gets a warning triangle for an Issue on the Crew Served Weapon. */
   marked: boolean;
 }
@@ -25,6 +27,7 @@ export function crewServedWeaponRow(
   return {
     text: entry?.shortName ?? name,
     rv: entry?.rv && formatRv(entry.rv),
+    dp: weaponDp(entry),
     marked: issues.some((issue) => issue.rule !== 'overMaxBp'),
   };
 }

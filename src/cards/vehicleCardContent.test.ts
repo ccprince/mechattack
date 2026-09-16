@@ -8,13 +8,18 @@ import { mountRows, vehicleNotes } from './vehicleCardContent';
 // Every character is half the font size wide: at 10px, 71 characters fit the 358-wide Notes box.
 const measure: Measure = (text, fontSize) => text.length * fontSize * 0.5;
 
+// Catalog Dp of the entries these rows mount.
+const lightLaserDp = { rolls: 1, rows: [1, 1, 1] };
+const mediumLaserDp = { rolls: 1, rows: [1, 1, 1, 1] };
+const lightMgDp = { rolls: 3, rows: [1] };
+
 const rows = (profile: VehicleProfile) => mountRows(profile, vehicleIssues(profile));
 const notes = (profile: VehicleProfile) => vehicleNotes(profile, vehicleIssues(profile), measure);
 
 describe('mountRows', () => {
   it('prints the Turret with its label, short name and Rv', () => {
     expect(rows(testVehicle)).toEqual([
-      { mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', marked: false },
+      { mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', dp: lightLaserDp, marked: false },
     ]);
   });
 
@@ -36,14 +41,16 @@ describe('mountRows', () => {
       },
     };
     expect(rows(profile)).toEqual([
-      { mount: 'staticMount2', text: 'Static: RGMS', rv: undefined, marked: false },
+      { mount: 'staticMount2', text: 'Static: RGMS', rv: undefined, dp: undefined, marked: false },
     ]);
   });
 
   it('ignores the mount of a Hull Option the Vehicle doesn’t take', () => {
     expect(
       rows({ ...testVehicle, mounts: { ...testVehicle.mounts, staticMount1: 'Light Laser' } }),
-    ).toEqual([{ mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', marked: false }]);
+    ).toEqual([
+      { mount: 'turret', text: 'Turret: Lt Laser', rv: '6/10', dp: lightLaserDp, marked: false },
+    ]);
   });
 
   it('drops the mounts past two on an illegal Vehicle, in Turret then Static order', () => {
@@ -58,8 +65,8 @@ describe('mountRows', () => {
       },
     };
     expect(rows(profile)).toEqual([
-      { mount: 'turret', text: 'Turret: Md Laser', rv: '6/10', marked: true },
-      { mount: 'staticMount1', text: 'Static: Lt MG', rv: '8/12', marked: false },
+      { mount: 'turret', text: 'Turret: Md Laser', rv: '6/10', dp: mediumLaserDp, marked: true },
+      { mount: 'staticMount1', text: 'Static: Lt MG', rv: '8/12', dp: lightMgDp, marked: false },
     ]);
   });
 
@@ -69,7 +76,7 @@ describe('mountRows', () => {
       mounts: { ...testVehicle.mounts, turret: 'Plasma Lance' },
     };
     expect(rows(profile)).toEqual([
-      { mount: 'turret', text: 'Turret: Plasma Lance', rv: undefined, marked: true },
+      { mount: 'turret', text: 'Turret: Plasma Lance', rv: undefined, dp: undefined, marked: true },
     ]);
   });
 });

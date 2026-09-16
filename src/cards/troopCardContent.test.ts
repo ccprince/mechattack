@@ -13,7 +13,12 @@ const notes = (profile: TroopProfile) => troopNotes(profile, troopIssues(profile
 
 describe('crewServedWeaponRow', () => {
   it('prints the short name and Rv', () => {
-    expect(row(testTroop)).toEqual({ text: 'Lt Missile', rv: '3-10/14', marked: false });
+    expect(row(testTroop)).toEqual({
+      text: 'Lt Missile',
+      rv: '3-10/14',
+      dp: { rolls: 1, rows: [3] },
+      marked: false,
+    });
   });
 
   it('prints nothing without a Crew Served Weapon', () => {
@@ -24,13 +29,14 @@ describe('crewServedWeaponRow', () => {
     expect(row({ ...testTroop, crewServedWeapon: 'Anti-Missile Defense System' })).toEqual({
       text: 'AMDS',
       rv: undefined,
+      dp: undefined,
       marked: false,
     });
   });
 
   it('marks a Crew Served Weapon too heavy', () => {
     expect(row({ ...testTroop, class: 'Jump Infantry', crewServedWeapon: 'Medium Laser' })).toEqual(
-      { text: 'Md Laser', rv: '6/10', marked: true },
+      { text: 'Md Laser', rv: '6/10', dp: { rolls: 1, rows: [1, 1, 1, 1] }, marked: true },
     );
   });
 
@@ -38,6 +44,7 @@ describe('crewServedWeaponRow', () => {
     expect(row({ ...testTroop, crewServedWeapon: 'Plasma Lance' })).toEqual({
       text: 'Plasma Lance',
       rv: undefined,
+      dp: undefined,
       marked: true,
     });
   });

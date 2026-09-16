@@ -128,15 +128,11 @@
   <rect class="frame" x="12" y="246" width="366" height="154"/>
 
   <!-- ===== Turret / cargo bay ===== -->
-  <!-- 6x8 tracking grid: x=320..378, y=418..498 -->
+  <!-- Dp column: x=320..378, one area per mount row (the app draws each Weapon's Dp there) -->
   <rect class="box" x="12" y="404" width="366" height="94"/>
   <rect class="bar" x="12" y="404" width="366" height="14"/>
   <text class="hdr" x="195" y="414.5" text-anchor="middle">TURRET / CARGO BAY</text>
   <path d="M232 418V498 M320 418V498" stroke="#000" stroke-width="1.2"/>
-  <path class="gl" stroke-width="0.4" d="
-    M329.67 418V498 M339.33 418V498 M349 418V498 M358.67 418V498 M368.33 418V498
-    M320 428H378 M320 438H378 M320 448H378 M320 458H378
-    M320 468H378 M320 478H378 M320 488H378"/>
   <text class="sm" x="16" y="431" style="font-size:11px">WEAPON / EQUIPMENT:</text>
   <text class="lbl" x="236" y="431">R<tspan font-size="9">V</tspan>:</text>
   <rect class="frame" x="12" y="404" width="366" height="94"/>

@@ -1,4 +1,4 @@
-import { findCatalogEntry, formatRv } from '../domain/catalog';
+import { findCatalogEntry, formatRv, weaponDp, type Dp } from '../domain/catalog';
 import {
   takenMounts,
   vehicleMountRowLabels,
@@ -16,6 +16,8 @@ export interface MountRow {
   text: string;
   /** Blank for Support Equipment with no range, or a name missing from the Catalog. */
   rv: string | undefined;
+  /** Absent for Support Equipment, which has no Dp, or a name missing from the Catalog. */
+  dp: Dp | undefined;
   /** Whether the row gets a warning triangle for an Issue on its mount. */
   marked: boolean;
 }
@@ -37,6 +39,7 @@ export function mountRows(profile: VehicleProfile, issues: readonly VehicleIssue
           mount,
           text: `${vehicleMountRowLabels[mount]}: ${entry?.shortName ?? name}`,
           rv: entry?.rv && formatRv(entry.rv),
+          dp: weaponDp(entry),
           marked: issues.some((issue) => 'mount' in issue && issue.mount === mount),
         },
       ];

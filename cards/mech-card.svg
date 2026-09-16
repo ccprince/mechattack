@@ -38,12 +38,6 @@
                 0 0 0 0 0.13
                 4.5 0 0 0 -1.9"/>
     </filter>
-
-    <!-- 5x5 tracking grid used in the hardpoint boxes (29 x 29) -->
-    <g id="minigrid">
-      <rect class="box" x="0" y="0" width="29" height="29"/>
-      <path class="gl" stroke-width="0.4" d="M5.8 0V29M11.6 0V29M17.4 0V29M23.2 0V29M0 5.8H29M0 11.6H29M0 17.4H29M0 23.2H29"/>
-    </g>
   </defs>
 
   <!-- ===== Background texture + outer frame ===== -->
@@ -149,10 +143,11 @@
   <text class="hdr" x="195" y="436.5" text-anchor="middle">HARDPOINTS</text>
   <path d="M12 469H378 M195 440V498" stroke="#000" stroke-width="1.2"/>
   <path class="gl" stroke-width="0.9" d="M80 440V498 M123 440V498 M263 440V498 M306 440V498"/>
-  <use xlink:href="#minigrid" href="#minigrid" x="166" y="440"/>
-  <use xlink:href="#minigrid" href="#minigrid" x="166" y="469"/>
-  <use xlink:href="#minigrid" href="#minigrid" x="349" y="440"/>
-  <use xlink:href="#minigrid" href="#minigrid" x="349" y="469"/>
+  <!-- Dp areas (29 x 29): the app draws each Weapon's Dp here -->
+  <rect class="box" x="166" y="440" width="29" height="29"/>
+  <rect class="box" x="166" y="469" width="29" height="29"/>
+  <rect class="box" x="349" y="440" width="29" height="29"/>
+  <rect class="box" x="349" y="469" width="29" height="29"/>
 
   <text class="sm" x="15"  y="451" style="font-size:7.5px">LEFT ARM:</text>
   <text class="sm" x="15"  y="480" style="font-size:7.5px">LEFT TORSO:</text>
