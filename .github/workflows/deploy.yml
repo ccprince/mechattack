@@ -3,7 +3,7 @@ name: Test and deploy
 on:
   push:
     branches: [main]
-    # A release tag rebuilds the commit already live, so its footer shows the clean version.
+    # A release tag made by hand rebuilds the commit already live, so its footer shows the clean version.
     tags: ['v*']
   pull_request:
 
@@ -11,7 +11,29 @@ permissions:
   contents: read
 
 jobs:
+  # A merged pull request labelled `release: patch|minor|major` is released before the build, so the
+  # build already carries the new version (ADR 0006). A tag made with this token starts no workflow.
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: .github/scripts/release-label.sh release "$GITHUB_SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   build:
+    needs: release
+    # Runs when release is skipped (pull requests, tags), but not when it failed.
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +60,7 @@ jobs:
   # still goes live; deploying an artifact can't do that, because Pages takes one per source commit
   # (ADR 0006).
   deploy:
-    if: github.event_name == 'push'
+    if: ${{ !failure() && !cancelled() && github.event_name == 'push' }}
     needs: build
     runs-on: ubuntu-latest
     permissions:

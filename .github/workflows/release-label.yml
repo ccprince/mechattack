@@ -1,0 +1,23 @@
+name: Release label
+
+# Gives a pull request the release label of the issues it closes, so the release it will cut shows on
+# the pull request before merge. A release label already on it, `release: none` included, is kept.
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - run: .github/scripts/release-label.sh copy ${{ github.event.pull_request.number }}
+        env:
+          GH_TOKEN: ${{ github.token }}

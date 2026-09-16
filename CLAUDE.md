@@ -35,17 +35,22 @@ browser mode (Playwright). Keep geometry in pure functions so most tests stay in
 4. After the merge: `git switch main && git pull --ff-only && git branch -d <name>`.
 
 Every merge to `main` deploys, so each pull request must be shippable on its own: working and not
-misleading, even if a feature spans several.
+misleading, even if a feature spans several. Only the last of those says "Closes #N"; earlier ones say
+"Part of #N".
 
 ### Releasing
 
-Versions come only from `v*` tags (ADR 0006); there's no `version` in `package.json`.
+Versions come only from `v*` tags (ADR 0006); there's no `version` in `package.json`. A release is cut
+by label, not by hand:
 
-1. `git switch main && git pull --ff-only`
-2. `gh release create vX.Y.Z --target main --generate-notes`, then edit the notes if needed.
-3. The tag push redeploys, and the footer shows `vX.Y.Z`.
+- A ready issue carries one of `release: patch`, `release: minor`, `release: major`, `release: none`.
+- A pull request copies it from the issues it closes. Change or remove it on the pull request;
+  `release: none` keeps it from being copied back.
+- Merging a pull request labelled patch, minor or major creates that release with generated notes,
+  then builds and deploys it.
 
-Before 1.0: minor for a new feature or anything a player must act on, patch for fixes only.
+Before 1.0: minor for a new feature or anything a player must act on, patch for fixes only. To release
+by hand, `gh release create vX.Y.Z --target main --generate-notes`; the tag push redeploys.
 
 ## Agent skills
 
