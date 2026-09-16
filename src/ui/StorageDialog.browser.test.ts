@@ -60,8 +60,7 @@ describe('where Army Lists are kept', () => {
 
 describe('whether this browser has agreed to keep them', () => {
   const agreed = () => dialog().getByText('This browser has agreed', { exact: false });
-  const mayClear = () =>
-    dialog().getByText('Some browsers clear saved data on their own', { exact: false });
+  const mayClear = () => dialog().getByText('clear saved data on their own', { exact: false });
 
   /** Stands in for `navigator.storage`; restored after each test with every other mock. */
   function stubStorage(storage: Partial<StorageManager> | undefined) {
