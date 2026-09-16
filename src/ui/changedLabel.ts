@@ -3,7 +3,7 @@ const hour = 60 * minute;
 const day = 24 * hour;
 
 /**
- * When a Saved Army List last changed, as the picker shows it: relative for the past week, a date
+ * When a Saved Army List last changed, as the Army Lists menu shows it: relative for the past week, a date
  * before that. `locale` is fixed only in tests.
  */
 export function changedLabel(changed: string, now: Date, locale?: string): string {

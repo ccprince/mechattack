@@ -1,0 +1,116 @@
+.button {
+  display: inline-flex;
+  padding: var(--space-2);
+  line-height: 0;
+}
+
+.button svg {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+/* Placed by script under the button; `inset: auto` clears the popover's default centring. */
+.menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: var(--space-1) 0;
+  min-width: 12rem;
+  max-width: calc(100vw - 2 * var(--space-2));
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+}
+
+.menu:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* A long collection scrolls inside the menu, keeping the actions below it in view. */
+.lists {
+  display: flex;
+  flex-direction: column;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.list,
+.item,
+.danger {
+  border: 0;
+  border-radius: 0;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  background: none;
+  color: inherit;
+}
+
+.list:hover,
+.item:hover,
+.danger:hover,
+.list:focus-visible,
+.item:focus-visible,
+.danger:focus-visible {
+  background: var(--hover-wash);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+/* Check, name, when it changed. The check has empty alt text: `aria-current` already says it. */
+.list {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: baseline;
+  max-width: 22rem;
+}
+
+.list::before {
+  content: '';
+}
+
+.list[aria-current]::before {
+  content: '✓' / '';
+}
+
+.list[aria-current] .name {
+  font-weight: 600;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.changed {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.separator {
+  margin: var(--space-1) 0;
+  border: 0;
+  border-top: var(--border) solid var(--line);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

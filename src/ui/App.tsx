@@ -5,6 +5,7 @@ import styles from './App.module.css';
 import { AppFooter } from './AppFooter';
 import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
+import { ArmyListsMenu } from './ArmyListsMenu';
 import { RecoveryBanner } from './RecoveryBanner';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
@@ -25,6 +26,8 @@ export function App({ store, saved: initial }: { store: KeyValueStore; saved: Sa
   return (
     <ArmyListProvider key={opened} store={store} saved={saved} onSwitch={switchTo}>
       <ArmyListEditor
+        // Only the Army Lists menu switches lists, so after a switch focus goes back to it.
+        focusMenu={opened > 0}
         banner={
           backup !== undefined && (
             <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
@@ -35,7 +38,7 @@ export function App({ store, saved: initial }: { store: KeyValueStore; saved: Sa
   );
 }
 
-function ArmyListEditor({ banner }: { banner: ReactNode }) {
+function ArmyListEditor({ banner, focusMenu }: { banner: ReactNode; focusMenu: boolean }) {
   const { autosaveFailed } = useArmyList();
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -58,13 +61,16 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
   return (
     <div className={styles.shell}>
       {/*
-       * The identity scrolls away; only the bar holding the Army-List-level controls is sticky
-       * (ADR 0005). The bar is the banner landmark because it's the part that does work.
+       * The whole header is sticky: the title row with the Army Lists menu, then the Army-List-level
+       * controls (ADR 0008). It's the banner landmark.
        */}
-      <div className={styles.identity}>
-        <h1 className={styles.title}>Mech Attack List Builder</h1>
-      </div>
       <header className={styles.bar}>
+        <div className={styles.titleBand}>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>Mech Attack List Builder</h1>
+            <ArmyListsMenu focusOnMount={focusMenu} onError={setError} />
+          </div>
+        </div>
         <ArmyListHeader measure={measure} onError={setError} />
       </header>
       <main className={styles.page}>

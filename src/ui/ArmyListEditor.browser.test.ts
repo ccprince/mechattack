@@ -10,6 +10,7 @@ import { exportArmyListPdf } from '../pdf/exportPdf';
 import {
   cardField,
   cardMarks,
+  chooseFromMenu,
   importFile,
   openButton,
   profileFlags,
@@ -932,7 +933,7 @@ describe('Download PDF', () => {
   });
 });
 
-describe('Export and Import JSON', () => {
+describe('Export and Import Army List', () => {
   const ironLegion: ArmyList = {
     version: 2,
     name: 'Iron Legion',
@@ -955,7 +956,7 @@ describe('Export and Import JSON', () => {
     const store = savedStore(ironLegion);
     load(store);
 
-    await page.getByRole('button', { name: 'Export JSON' }).click();
+    await chooseFromMenu('Export Army List');
     expect(click).toHaveBeenCalledOnce();
     expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('iron-legion.json');
     const blob = createObjectURL.mock.calls[0]?.[0] as Blob;

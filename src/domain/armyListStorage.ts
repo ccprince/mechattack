@@ -108,7 +108,7 @@ export function deleteSavedArmyList(
   return open(store, context);
 }
 
-/** A Saved Army List as the picker shows it. */
+/** A Saved Army List as the Army Lists menu shows it. */
 export interface SavedArmyListSummary {
   id: string;
   /** Undefined when the document can't be read; opening it moves it to the backup key. */
