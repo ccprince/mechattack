@@ -67,12 +67,15 @@ Every template has the same layers, in paint order:
 
 Label styling conventions:
 - Abbreviations are small caps built from two sizes: `M<tspan font-size="9">V</tspan>:`.
+- Mv, Tp, Sv and Hc print large and centered in their cell, not as a line under the label: they're
+  read constantly in play.
 - Fonts: `Alfa Slab One` for all artwork text, `Roboto Slab` weight 600 for filled-in values
   (`.val`). The templates load both via Google Fonts `@import`, which works only when the SVG is
   opened directly or inlined in the page. It doesn't work inside `<img>`.
 - **Gotcha:** a CSS class rule beats an SVG presentation attribute. On an element that has a class,
   `font-size="5.5"` is ignored; use `style="font-size:5.5px"`. Plain `<tspan>`s have no class, so
-  their attributes work.
+  their attributes work. This catches the sample `#data` too: a `.val` there with a `font-size`
+  attribute previews at 12px, which isn't what the app draws.
 
 ## Field map
 
@@ -94,19 +97,20 @@ Conventions across all cards:
 | `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
 | `name` | 258, 42 | 254–378 × 12–48 | |
 | `class` | 258, 78 | 254–378 × 48–84 | |
-| `mv` | 258, 114 | 254–378 × 84–120 | |
-| `tp` | 258, 150 | 254–378 × 120–156 | |
-| `hc` | 258, 186 | 254–378 × 156–192 | |
+| `mv` | 316, 110 center, 22px | 254–378 × 84–120 | |
+| `tp` | 316, 146 center, 22px | 254–378 × 120–156 | |
+| `hc` | 316, 182 center, 22px | 254–378 × 156–192 | |
 | `armor` | 258, 222 | 254–378 × 192–228 | Also drives the armor cross-out |
-| `notes` | 258, 260, 10px | 254–378 × 228–422 | Multi-line: `<tspan x="258" dy="14">`, ≤ 12 lines |
-| `la-rv` / `la-hv` | 101 / 144, 467 center, 11px | 80–123 / 123–166 × 440–469 | Left arm |
-| `ra-rv` / `ra-hv` | 284 / 327, 467 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
-| `lt-rv` / `lt-hv` | 101 / 144, 496 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
-| `rt-rv` / `rt-hv` | 284 / 327, 496 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
-| `la-weapon` / `lt-weapon` | 15, 464 / 493, 9px | 12–80 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
-| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 9px | 195–263 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
+| `notes` | 258, 260, 11px | 254–378 × 228–422 | Multi-line: `<tspan x="258" dy="14">`, ≤ 12 lines |
+| `la-rv` / `la-hv` | 101 / 144, 464 center, 11px | 80–123 / 123–166 × 440–469 | Left arm |
+| `ra-rv` / `ra-hv` | 284 / 327, 464 center, 11px | 263–306 / 306–349 × 440–469 | Right arm |
+| `lt-rv` / `lt-hv` | 101 / 144, 493 center, 11px | 80–123 / 123–166 × 469–498 | Left torso |
+| `rt-rv` / `rt-hv` | 284 / 327, 493 center, 11px | 263–306 / 306–349 × 469–498 | Right torso |
+| `la-weapon` / `lt-weapon` | 15, 464 / 493, 10px | 12–80 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
+| `ra-weapon` / `rt-weapon` | 198, 464 / 493, 10px | 195–263 × 440–469 / 469–498 | Weapon or Support Equipment short name, under the hardpoint label |
 
-An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out.
+An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out. A Hardpoint row's short name,
+Rv and Hv share one baseline, 464 or 493, so the three line up.
 
 **Illegal marks.** A printed card is taken as Legal at the table, so a Unit Profile with Issues
 prints with three marks. A Legal card has none of them.
@@ -117,7 +121,9 @@ prints with three marks. A Legal card has none of them.
 | `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 67–78 / 250–261 × 455–465 (arms) or 484–494 (torsos) | On each Hardpoint row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 48 wide instead of 60 |
 | `illegal` data-field | 258, 260, 10px | `ILLEGAL: <Issue>` for one Issue, `ILLEGAL: 2 issues` for several. Emboldened with a 0.6 stroke in the fill color (only weight 600 is bundled), which svg2pdf draws as text render mode 2. Wraps like `notes`, 0.6 narrower, ≤ 2 lines; `notes` starts `dy="14"` below its last line and keeps the remaining lines of the 12 |
 
-A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. One Issue's
+A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. The line
+stays 10px while `notes` is 11px, because its wordings are short enough to fit this narrow box on one
+line only at that size. One Issue's
 wording is short to leave room for notes: `HL too heavy`, `ECTS on an arm` (short names),
 `Left Arm not in Catalog` (the name may be long), `Bp over max` or `Bp is 0`.
 
@@ -131,16 +137,18 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 | `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
 | `name` | 258, 44 | 254–378 × 12–58 | |
 | `type` | 258, 90 | 254–378 × 58–104 | |
-| `mv` | 258, 136 | 254–378 × 104–150 | |
-| `tp` | 258, 182 | 254–378 × 150–196 | |
+| `mv` | 316, 136 center, 24px | 254–378 × 104–150 | |
+| `tp` | 316, 182 center, 24px | 254–378 × 150–196 | |
 | `armor` | 258, 228 | 254–378 × 196–242 | Also drives the armor cross-out |
-| `illegal` | 16, 277, 10px | 12–378 × 246–400 | Only with Issues: `ILLEGAL: …`, emboldened and wrapped like the Mech's, ≤ 2 lines |
-| `cargo-bays` | 16, 277 + 14 per line above, 10px | 12–378 × 246–400 | Only with Cargo Bays: `Cargo Bay ×N`, one line below `illegal` |
-| `notes` | 16, 277 + 14 per line above, 10px | 12–378 × 246–400 | Multi-line: `dy="14"`. The three fields share 9 lines; `notes` gets what's left |
-| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 11px | 12–232 × 435–466 / 466–498 | Mount row: label and short name, `Turret: Lt Laser` or `Static: Lt MG` |
+| `illegal` | 16, 277, 11px | 12–378 × 246–400 | Only with Issues: `ILLEGAL: …`, emboldened and wrapped like the Mech's, ≤ 2 lines |
+| `cargo-bays` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Only with Cargo Bays: `Cargo Bay ×N`, one line below `illegal` |
+| `notes` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Multi-line: `dy="14"`. The three fields share 9 lines; `notes` gets what's left |
+| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 14px | 12–232 × 435–466 / 466–498 | Mount row: label and full name, `Turret: Light Laser` or `Static: Light Machine Gun` |
 | `mount1-rv` / `mount2-rv` | 276, 457 / 488 center, 16px | 232–320 × 435–466 / 466–498 | The row's Rv, blank for Support Equipment with no range |
 
-**Mount rows.** The box under the `WEAPON / EQUIPMENT:` and `RV:` labels holds two rows. Only
+**Mount rows.** The row is wide enough for the entry's full name, so it prints that rather than the
+short name; only the `ILLEGAL` line is tight enough to need short names. The box under the
+`WEAPON / EQUIPMENT:` and `RV:` labels holds two rows. Only
 filled mounts print, one per row from the top, in the order Turret, Static Mount slot 1, Static
 Mount slot 2; a Hull Option the Vehicle doesn't take prints nothing. A Legal Vehicle fills at most
 two, so the extra mounts of an illegal Vehicle that fills three are dropped (its `ILLEGAL` line
@@ -166,17 +174,18 @@ Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; col
 | `bp` | 211, 43 center, 16px | 172–250 × 12–50 | |
 | `name` | 258, 44 | 254–378 × 12–57.2 | |
 | `type` | 258, 89.2 | 254–378 × 57.2–102.4 | The Troop Class in full, `Heavy Infantry` |
-| `mv` | 258, 134.4 | 254–378 × 102.4–147.6 | |
-| `tp` | 258, 179.6 | 254–378 × 147.6–192.8 | |
-| `sv` | 258, 224.8 | 254–378 × 192.8–238 | Also drives the strength cross-out |
+| `mv` | 316, 134.4 center, 24px | 254–378 × 102.4–147.6 | |
+| `tp` | 316, 179.6 center, 24px | 254–378 × 147.6–192.8 | |
+| `sv` | 316, 224.8 center, 24px | 254–378 × 192.8–238 | Also drives the strength cross-out |
 | `illegal` | 16, 143, 10px | 12–250 × 113–164 | Only with Issues: `ILLEGAL: …`, emboldened like the Mech's, **1 line** |
 | `standard-equipment` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | One line: `Individual Weapons` or `Individual Weapons, Jump Packs` |
 | `notes` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`. The three fields share **2 lines**; `notes` gets what's left, cut off with "…", and is left out when none are |
-| `weapon` | 15, 214, 11px | 12–155 × 182–238 | The Crew Served Weapon's short name, one line, 136 wide |
+| `weapon` | 15, 214, 13px | 12–155 × 182–238 | The Crew Served Weapon's full name, one line, 136 wide |
 | `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | Blank for Support Equipment with no range |
 
-**Crew Served Weapon.** Only a filled Crew Served Weapon prints `weapon` and `rv`. A name missing
-from the Catalog has no short name, so it prints as stored, with a blank Rv. Standard Equipment isn't
+**Crew Served Weapon.** Only a filled Crew Served Weapon prints `weapon` and `rv`. The row is wide
+enough for the full name, so it prints that; only the `ILLEGAL` line uses short names. A name missing
+from the Catalog prints as stored, with a blank Rv. Standard Equipment isn't
 stored: it follows from the Troop Class.
 
 **Illegal marks.** As on the Mech, a Legal card has none.

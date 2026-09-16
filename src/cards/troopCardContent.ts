@@ -6,7 +6,7 @@ import { illegalStroke, troopIllegalNote } from './illegalNote';
 
 /** What the Troop card's Crew Served Weapon row prints (docs/cards.md). */
 export interface CrewServedWeaponRow {
-  /** The short name, or the name as stored when it's missing from the Catalog. */
+  /** The full name, as stored, which is also what a name missing from the Catalog prints. */
   text: string;
   /** Blank for Support Equipment with no range, or a name missing from the Catalog. */
   rv: string | undefined;
@@ -25,7 +25,8 @@ export function crewServedWeaponRow(
   if (name === null) return undefined;
   const entry = findCatalogEntry(name);
   return {
-    text: entry?.shortName ?? name,
+    // The row is wide enough for the full name; only the ILLEGAL line uses short names.
+    text: entry?.name ?? name,
     rv: entry?.rv && formatRv(entry.rv),
     dp: weaponDp(entry),
     marked: issues.some((issue) => issue.rule !== 'overMaxBp'),

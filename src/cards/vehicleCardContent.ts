@@ -12,7 +12,7 @@ import { illegalStroke, vehicleIllegalNote } from './illegalNote';
 /** What one of the Vehicle card's two mount rows prints (docs/cards.md). */
 export interface MountRow {
   mount: VehicleMount;
-  /** The row label and entry, `Turret: Lt Laser`. */
+  /** The row label and entry, `Turret: Light Laser`. */
   text: string;
   /** Blank for Support Equipment with no range, or a name missing from the Catalog. */
   rv: string | undefined;
@@ -37,7 +37,8 @@ export function mountRows(profile: VehicleProfile, issues: readonly VehicleIssue
       return [
         {
           mount,
-          text: `${vehicleMountRowLabels[mount]}: ${entry?.shortName ?? name}`,
+          // The row is wide enough for the full name; only the ILLEGAL line uses short names.
+          text: `${vehicleMountRowLabels[mount]}: ${entry?.name ?? name}`,
           rv: entry?.rv && formatRv(entry.rv),
           dp: weaponDp(entry),
           marked: issues.some((issue) => 'mount' in issue && issue.mount === mount),
@@ -56,7 +57,7 @@ export interface NotesBlock {
 }
 
 // Box width is the field map's width minus 8 units of padding (docs/cards.md).
-export const vehicleNotesBox = { x: 16, y: 277, width: 358, fontSize: 10, lineHeight: 14 };
+export const vehicleNotesBox = { x: 16, y: 277, width: 358, fontSize: 11, lineHeight: 14 };
 const notesMaxLines = 9;
 const illegalMaxLines = 2;
 

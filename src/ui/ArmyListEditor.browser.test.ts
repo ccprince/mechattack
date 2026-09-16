@@ -601,13 +601,13 @@ describe('Vehicles', () => {
     await field('Armor').fill('10');
     await checkbox('Turret').click();
     await picker('Turret').selectOptions('Light Laser');
-    await expect.poll(() => cardField('mount1-weapon')).toBe('Turret: Lt Laser');
+    await expect.poll(() => cardField('mount1-weapon')).toBe('Turret: Light Laser');
     await expect.element(page.getByRole('img', { name: 'New Vehicle record card' })).toBeVisible();
     expect(cardMarks()).toEqual([]);
 
     await checkbox('Static Mount').click();
     await picker('Static Mount 2').selectOptions('Light Machine Gun');
-    await expect.poll(() => cardField('mount2-weapon')).toBe('Static: Lt MG');
+    await expect.poll(() => cardField('mount2-weapon')).toBe('Static: Light Machine Gun');
     await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Hull Options over');
     expect(cardMarks()).toEqual(['illegal']);
   });
@@ -651,7 +651,7 @@ describe('Troops', () => {
     await field('Notes').fill('Holds the ridge');
     await picker('Crew Served Weapon').selectOptions('Light Missile');
     await expect.element(page.getByRole('img', { name: 'New Troop record card' })).toBeVisible();
-    await expect.poll(() => cardField('weapon')).toBe('Lt Missile');
+    await expect.poll(() => cardField('weapon')).toBe('Light Missile');
     expect(cardField('type')).toBe('Light Infantry');
     expect(cardField('sv')).toBe('5');
     expect(cardField('rv')).toBe('3-10/14');

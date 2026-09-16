@@ -12,9 +12,9 @@ const row = (profile: TroopProfile) => crewServedWeaponRow(profile, troopIssues(
 const notes = (profile: TroopProfile) => troopNotes(profile, troopIssues(profile), measure);
 
 describe('crewServedWeaponRow', () => {
-  it('prints the short name and Rv', () => {
+  it('prints the full name and Rv', () => {
     expect(row(testTroop)).toEqual({
-      text: 'Lt Missile',
+      text: 'Light Missile',
       rv: '3-10/14',
       dp: { rolls: 1, rows: [3] },
       marked: false,
@@ -27,7 +27,7 @@ describe('crewServedWeaponRow', () => {
 
   it('leaves Rv blank for Support Equipment with no range', () => {
     expect(row({ ...testTroop, crewServedWeapon: 'Anti-Missile Defense System' })).toEqual({
-      text: 'AMDS',
+      text: 'Anti-Missile Defense System',
       rv: undefined,
       dp: undefined,
       marked: false,
@@ -36,7 +36,7 @@ describe('crewServedWeaponRow', () => {
 
   it('marks a Crew Served Weapon too heavy', () => {
     expect(row({ ...testTroop, class: 'Jump Infantry', crewServedWeapon: 'Medium Laser' })).toEqual(
-      { text: 'Md Laser', rv: '6/10', dp: { rolls: 1, rows: [1, 1, 1, 1] }, marked: true },
+      { text: 'Medium Laser', rv: '6/10', dp: { rolls: 1, rows: [1, 1, 1, 1] }, marked: true },
     );
   });
 

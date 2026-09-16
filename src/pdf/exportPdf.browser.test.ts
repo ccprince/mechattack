@@ -210,6 +210,7 @@ describe('illegal marks', () => {
       { x: 140, y: 205, width: 11, height: 10 },
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: Md Laser too heavy', stroked: true });
-    expect(texts).toContainEqual({ text: 'Md Laser', stroked: false });
+    // The ILLEGAL line uses the short name; the row itself has room for the full one.
+    expect(texts).toContainEqual({ text: 'Medium Laser', stroked: false });
   });
 });
