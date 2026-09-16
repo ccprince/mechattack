@@ -301,7 +301,7 @@ describe('Unit Profile editor', () => {
 
   it('works out Bp, Mv, Tp and Hc from the Class and upgrades, showing Bp against its max', async () => {
     await loadWithNewMech();
-    await expect.element(field('Bp')).toHaveTextContent('0 / 8');
+    await expect.element(field('Bp')).toHaveTextContent('1 / 8');
     await expect.element(field('Mv')).toHaveTextContent('5');
     await expect.element(field('Tp')).toHaveTextContent('5');
     await expect.element(field('Hc')).toHaveTextContent('4');
@@ -424,6 +424,7 @@ describe('Issues', () => {
 
   it('flags a Mech costing no Bp, until it costs some', async () => {
     await loadWithNewMech();
+    await field('Armor').fill('0');
     await expect
       .element(issues().getByText('Bp is 0; a Mech must cost at least 1'))
       .toBeInTheDocument();
@@ -440,13 +441,13 @@ describe('Issues', () => {
     await field('Heat Sinks').fill('4');
     await expect.element(field('Heat Sinks')).toHaveValue(4);
     await expect
-      .element(issues().getByText("Bp 10 is more than a Light Mech's max Bp of 8"))
+      .element(issues().getByText("Bp 11 is more than a Light Mech's max Bp of 8"))
       .toBeInTheDocument();
     await expect.poll(() => cardField('illegal')).toBe('ILLEGAL: Bp over max');
 
     await picker('Class').selectOptions('Medium');
     await expect.element(issues()).not.toBeInTheDocument();
-    await expect.element(field('Bp')).toHaveTextContent('10 / 14');
+    await expect.element(field('Bp')).toHaveTextContent('11 / 14');
   });
 
   it('flags Support Equipment on an arm and names missing from the Catalog, even at quantity 0', async () => {
@@ -552,7 +553,7 @@ describe('Vehicles', () => {
     await expect.element(picker('Class')).toHaveValue('Light');
     expect(field('Heat Sinks').query()).toBeNull();
     expect(field('Hc').query()).toBeNull();
-    await expect.element(field('Bp')).toHaveTextContent('0 / 5');
+    await expect.element(field('Bp')).toHaveTextContent('1 / 5');
     await expect.element(field('Mv')).toHaveTextContent('4');
     await expect.element(field('Tp')).toHaveTextContent('4');
 
@@ -582,8 +583,8 @@ describe('Vehicles', () => {
     expect(optionTexts('Turret')).not.toContain('Medium Laser');
 
     await picker('Turret').selectOptions('Light Cannon');
-    await expect.element(field('Bp')).toHaveTextContent('2 / 5');
-    await expect.element(profileRow('New Vehicle').getByText('2 Bp')).toBeInTheDocument();
+    await expect.element(field('Bp')).toHaveTextContent('3 / 5');
+    await expect.element(profileRow('New Vehicle').getByText('3 Bp')).toBeInTheDocument();
 
     await picker('Class').selectOptions('Medium');
     await expect.poll(() => optionTexts('Turret')).toContain('Medium Laser');
@@ -591,7 +592,7 @@ describe('Vehicles', () => {
 
     await checkbox('Turret').click();
     await expect.element(picker('Turret')).not.toBeInTheDocument();
-    await expect.element(field('Bp')).toHaveTextContent('0 / 6');
+    await expect.element(field('Bp')).toHaveTextContent('1 / 6');
     await checkbox('Turret').click();
     await expect.element(picker('Turret')).toHaveDisplayValue('Empty');
   });
@@ -602,7 +603,7 @@ describe('Vehicles', () => {
     await expect.element(field('Hull Options')).toHaveTextContent('2 / 2');
     await picker('Static Mount 1').selectOptions('Light Laser');
     await picker('Static Mount 2').selectOptions('Light Missile');
-    await expect.element(field('Bp')).toHaveTextContent('2 / 5');
+    await expect.element(field('Bp')).toHaveTextContent('3 / 5');
     expect(issues().query()).toBeNull();
 
     await checkbox('Turret').click();
@@ -617,7 +618,7 @@ describe('Vehicles', () => {
     await field('Cargo Bays').fill('1');
     await expect.element(field('Hull Options')).toHaveTextContent('2 / 2');
     await expect.element(issues()).not.toBeInTheDocument();
-    await expect.element(field('Bp')).toHaveTextContent('1 / 5');
+    await expect.element(field('Bp')).toHaveTextContent('2 / 5');
   });
 
   it.each([
@@ -630,7 +631,8 @@ describe('Vehicles', () => {
       await picker('Class').selectOptions('Medium');
       await checkbox(hullOption).click();
       for (const mount of mounts) await picker(mount).selectOptions('Medium Laser');
-      await expect.element(field('Bp')).toHaveTextContent(`${2 * mounts.length} / 6`);
+      // Plus the 1 Bp of the default 10 Armor.
+      await expect.element(field('Bp')).toHaveTextContent(`${2 * mounts.length + 1} / 6`);
       expect(issues().query()).toBeNull();
 
       await picker('Class').selectOptions('Light');
