@@ -10,6 +10,16 @@ Builds army lists for the Mech Attack tabletop game and prints record cards for 
 A named set of units a player fields for one game, built against a Bp Limit.
 _Avoid_: Force, roster
 
+**Saved Army Lists**:
+Every Army List this browser keeps. Their names needn't be unique, so the time each was last changed helps
+tell them apart.
+_Avoid_: Library, collection
+
+**Open Army List**:
+The one Saved Army List being edited. The Bp total, Bp Limit and printing all follow it, and a reload
+reopens it. There's always exactly one; deleting the last Saved Army List opens a new, empty one.
+_Avoid_: Current list, active list
+
 **Bp Limit**:
 The total Bp the players agree an Army List may spend for a game.
 _Avoid_: Points limit, game size

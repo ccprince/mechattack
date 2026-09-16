@@ -12,7 +12,7 @@ import { UnitProfileList } from './UnitProfileList';
 export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyList }) {
   const [backup, setBackup] = useState(saved.backup);
   return (
-    <ArmyListProvider store={store} savedList={saved.list}>
+    <ArmyListProvider store={store} saved={saved}>
       <ArmyListEditor
         // The imported Army List stands in for the fresh one the banner announces. As with its
         // download, the backup stays until Discard.

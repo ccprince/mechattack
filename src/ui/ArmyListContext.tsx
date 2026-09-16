@@ -1,15 +1,12 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
-import type { ArmyList } from '../domain/armyList';
 import {
   armyListReducer,
   openArmyList,
   type ArmyListAction,
   type ArmyListState,
 } from '../domain/armyListReducer';
-import type { KeyValueStore } from '../domain/armyListStorage';
+import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import { useAutosave } from './useAutosave';
-
-const freshList: ArmyList = { version: 2, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
 
 const ArmyListContext = createContext<
   | {
@@ -22,18 +19,18 @@ const ArmyListContext = createContext<
   | undefined
 >(undefined);
 
-/** Holds the Army List, starting from `savedList` (or a fresh one), and autosaves every change. */
+/** Holds the Open Army List, starting from `saved`, and autosaves every change. */
 export function ArmyListProvider({
   store,
-  savedList,
+  saved,
   children,
 }: {
   store: KeyValueStore;
-  savedList: ArmyList | undefined;
+  saved: SavedArmyList;
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(armyListReducer, savedList ?? freshList, openArmyList);
-  const autosaveFailed = useAutosave(store, state.list);
+  const [state, dispatch] = useReducer(armyListReducer, saved.list, openArmyList);
+  const autosaveFailed = useAutosave(store, saved.id, state.list);
 
   return (
     <ArmyListContext value={{ state, dispatch, store, autosaveFailed }}>{children}</ArmyListContext>
