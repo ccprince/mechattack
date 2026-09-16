@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   armyListSchema,
+  bpOfCopies,
   bpTotal,
   fieldedWithIssues,
   fieldedCopies,
@@ -193,6 +194,18 @@ describe('bpTotal', () => {
 
   it('is 0 for an empty Army List', () => {
     expect(bpTotal(list())).toBe(0);
+  });
+});
+
+describe('bpOfCopies', () => {
+  it('subtotals part of an Army List, such as one kind of unit', () => {
+    expect(
+      bpOfCopies([vehicle({ id: 'u1', quantity: 2 }), vehicle({ id: 'u2', quantity: 1 })]),
+    ).toBe(15);
+  });
+
+  it('is 0 for no Unit Profiles, as an empty section subtotals', () => {
+    expect(bpOfCopies([])).toBe(0);
   });
 });
 

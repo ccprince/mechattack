@@ -2,12 +2,21 @@ import type { jsPDF } from 'jspdf';
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
+import { quantityRange } from '../domain/profileFields';
 import { savedArmyListKey } from '../domain/armyListStorage';
 import type { MechProfile } from '../domain/mech';
 import { fakeStore } from '../domain/testStores';
 import type { VehicleProfile } from '../domain/vehicle';
 import { exportArmyListPdf } from '../pdf/exportPdf';
-import { cardField, cardMarks, openButton, profileRow, setUpApp, unitProfiles } from './testApp';
+import {
+  cardField,
+  cardMarks,
+  openButton,
+  profileFlags,
+  profileRow,
+  setUpApp,
+  unitProfiles,
+} from './testApp';
 
 // Spied on, still real: the app imports it on demand when printing.
 vi.mock('../pdf/exportPdf', { spy: true });
@@ -93,7 +102,7 @@ describe('Unit Profile list', () => {
       ],
     });
     await expect.element(profileRow('Hauler').getByText('3 Bp')).toBeInTheDocument();
-    await expect.element(profileRow('Hauler').getByLabelText('Qty')).toHaveValue(2);
+    await expect.element(profileRow('Hauler').getByText('×2')).toBeInTheDocument();
     await expect.element(page.getByText('Bp 12 /')).toBeInTheDocument();
 
     await openButton('Hauler').click();
@@ -122,44 +131,99 @@ describe('Unit Profile list', () => {
     await expect.element(field('Name')).toHaveValue('New Mech');
   });
 
+  it('groups Unit Profiles by kind, subtotalling each section, and keeps every Add reachable', async () => {
+    loadList({
+      version: 2,
+      name: 'Iron Legion',
+      bpLimit: 50,
+      unitProfiles: [
+        vehicle({ id: 'b', name: 'Hauler', armor: 20, cargoBays: 1, quantity: 2 }),
+        mech({ id: 'a', name: 'Ironclad', armor: 60, quantity: 1 }),
+      ],
+    });
+    const troops = page.getByRole('region', { name: /^Troops/ });
+
+    // Always Mechs, Vehicles then Troops, whatever order the Army List holds them in, each heading
+    // carrying its section's Bp subtotal: one Ironclad at 6 Bp, two Haulers at 3 Bp, no Troops.
+    await expect
+      .poll(() =>
+        unitProfiles()
+          .getByRole('heading')
+          .elements()
+          .map((heading) => heading.textContent),
+      )
+      .toEqual(['Mechs6 Bp', 'Vehicles6 Bp', 'Troops']);
+
+    // An empty section still says so, and still offers its Add.
+    await expect.element(troops.getByText('None')).toBeInTheDocument();
+    await troops.getByRole('button', { name: 'Add Troop' }).click();
+    await expect.element(openButton('New Troop')).toHaveAttribute('aria-current', 'true');
+    await expect.element(troops.getByText('None')).not.toBeInTheDocument();
+  });
+
   it('follows name and Bp edits, and marks a blank name', async () => {
     await loadWithNewMech();
     await field('Armor').fill('60');
-    await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('New Mech').getByText('6 Bp')).toBeInTheDocument();
     await field('Name').fill('');
     await expect.element(unitProfiles().getByText('Unnamed')).toBeInTheDocument();
   });
 });
 
-describe('quantity, Duplicate and Delete', () => {
-  const twoMechList = (): ArmyList => ({
+describe("the selected Unit Profile's actions", () => {
+  const twoMechList = (quantity = 1): ArmyList => ({
     version: 2,
     name: 'Iron Legion',
     bpLimit: 50,
     unitProfiles: [
-      mech({ id: 'a', name: 'Ironclad', armor: 60, quantity: 1 }),
+      mech({ id: 'a', name: 'Ironclad', armor: 60, quantity }),
       mech({ id: 'b', name: 'Scout', armor: 30, quantity: 1 }),
     ],
   });
 
-  it('updates the Bp total as the quantity steps, from 0 up to 100', async () => {
+  const stepUp = (name: string) => page.getByRole('button', { name: `One more ${name}` });
+  const stepDown = (name: string) => page.getByRole('button', { name: `One fewer ${name}` });
+  /** The stepper's quantity, which the row repeats as `×N` whenever it isn't 1. */
+  const quantityOf = (name: string) => profileRow(name).getByRole('status');
+
+  it('draws them inside the selected row alone', async () => {
+    loadList(twoMechList());
+    await expect.element(quantityOf('Ironclad')).toBeInTheDocument();
+    expect(quantityOf('Scout').query()).toBeNull();
+    expect(profileRow('Scout').getByRole('button', { name: 'Delete Scout' }).query()).toBeNull();
+
+    await openButton('Scout').click();
+    await expect.element(quantityOf('Scout')).toBeInTheDocument();
+    expect(quantityOf('Ironclad').query()).toBeNull();
+  });
+
+  it('steps the quantity, updating the row and the Bp total', async () => {
     loadList(twoMechList());
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+    // A single copy is the usual case, so the row says nothing about it.
+    expect(profileRow('Ironclad').getByText('×1').query()).toBeNull();
 
-    const quantity = profileRow('Ironclad').getByLabelText('Qty');
-    await quantity.fill('3');
-    await expect.element(page.getByText('Bp 21 /')).toBeInTheDocument();
-    await quantity.fill('0');
+    await stepUp('Ironclad').click();
+    await expect.element(quantityOf('Ironclad')).toHaveTextContent('2');
+    await expect.element(profileRow('Ironclad').getByText('×2')).toBeInTheDocument();
+    await expect.element(page.getByText('Bp 15 /')).toBeInTheDocument();
+
+    await stepDown('Ironclad').click();
+    await stepDown('Ironclad').click();
+    await expect.element(profileRow('Ironclad').getByText('×0')).toBeInTheDocument();
     await expect.element(page.getByText('Bp 3 /')).toBeInTheDocument();
+    // A quantity of 0 keeps the Unit Profile on the list without fielding it.
     await expect.element(profileRow('Ironclad')).toBeInTheDocument();
+  });
 
-    await quantity.fill('-2');
-    await field('Name').click();
-    await expect.element(quantity).toHaveValue(0);
+  it('clamps the stepper to the quantity range rather than stepping out of it', async () => {
+    loadList(twoMechList(0));
+    await expect.element(stepDown('Ironclad')).toBeDisabled();
+    await expect.element(stepUp('Ironclad')).toBeEnabled();
 
-    await quantity.fill('150');
-    await field('Name').click();
-    await expect.element(quantity).toHaveValue(100);
+    loadList(twoMechList(quantityRange.max));
+    await expect.element(stepUp('Ironclad')).toBeDisabled();
+    await expect.element(stepDown('Ironclad')).toBeEnabled();
     await expect.element(page.getByText('Bp 603 /')).toBeInTheDocument();
   });
 
@@ -169,15 +233,16 @@ describe('quantity, Duplicate and Delete', () => {
 
     await expect.element(openButton('Ironclad (copy)')).toHaveAttribute('aria-current', 'true');
     await expect.element(field('Name')).toHaveValue('Ironclad (copy)');
-    await expect.element(profileRow('Ironclad (copy)').getByLabelText('Qty')).toHaveValue(0);
+    await expect.element(quantityOf('Ironclad (copy)')).toHaveTextContent('0');
     await expect.element(field('Armor')).toHaveValue(60);
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+    // The copy follows the Unit Profile it came from, ahead of the rest of its section.
     expect(
       unitProfiles()
-        .getByRole('button', { name: /^Delete / })
+        .getByRole('listitem')
         .elements()
-        .map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Delete Ironclad', 'Delete Ironclad (copy)', 'Delete Scout']);
+        .map((row) => row.querySelector('button')?.textContent),
+    ).toEqual(['Ironclad6 Bp', 'Ironclad (copy)×06 Bp', 'Scout3 Bp']);
   });
 
   it('deletes a Unit Profile only once confirmed', async () => {
@@ -197,22 +262,22 @@ describe('quantity, Duplicate and Delete', () => {
     await expect.element(field('Name')).toHaveValue('Scout');
   });
 
-  it('flags both Unit Profiles that share a name, without an Issue', async () => {
+  it('marks both Unit Profiles that share a name, without an Issue', async () => {
     loadList(twoMechList());
-    await expect.element(unitProfiles().getByText('Same name')).not.toBeInTheDocument();
+    expect(profileFlags()).toEqual([]);
 
     await field('Name').fill('Scout');
     expect(unitProfiles().getByRole('listitem').elements()).toHaveLength(2);
-    await expect.poll(() => unitProfiles().getByText('Same name').elements()).toHaveLength(2);
+    await expect
+      .poll(profileFlags)
+      .toEqual(['Same name as another Unit Profile', 'Same name as another Unit Profile']);
     await expect
       .element(page.getByText('Another Unit Profile is also named Scout'))
       .toBeInTheDocument();
-    expect(unitProfiles().getByText(/Issue/).query()).toBeNull();
     expect(issues().query()).toBeNull();
 
     await field('Name').fill('Scout II');
-    await expect.element(unitProfiles().getByText('Same name')).not.toBeInTheDocument();
-    await expect.element(page.getByText(/Another Unit Profile/)).not.toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual([]);
   });
 });
 
@@ -259,7 +324,7 @@ describe('Unit Profile editor', () => {
     await expect.element(field('Bp')).toHaveTextContent('8 / 20');
     await expect.element(field('Mv')).toHaveTextContent('4');
     await expect.element(field('Hc')).toHaveTextContent('6');
-    await expect.element(unitProfiles().getByText('8 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('New Mech').getByText('8 Bp')).toBeInTheDocument();
   });
 
   it('holds an out-of-range value as a draft, then pulls it into range on blur', async () => {
@@ -359,7 +424,7 @@ describe('Issues', () => {
         issues().getByText("Right Arm: Heavy Cannon is Heavy, heavier than the Mech's Class"),
       )
       .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('2 Issues')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['2 Issues']);
   });
 
   it('flags a Mech costing no Bp, until it costs some', async () => {
@@ -367,11 +432,11 @@ describe('Issues', () => {
     await expect
       .element(issues().getByText('Bp is 0; a Mech must cost at least 1'))
       .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['1 Issue']);
 
     await field('Armor').fill('10');
     await expect.element(issues()).not.toBeInTheDocument();
-    await expect.element(unitProfiles().getByText(/Issue/)).not.toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual([]);
   });
 
   it("flags Bp over the Frame's max, and lets the upgrades go past it", async () => {
@@ -426,11 +491,11 @@ describe('Issues', () => {
     await expect
       .element(issues().getByText('Right Arm: Plasma Thrower is not in the Catalog'))
       .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('2 Issues')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['2 Issues']);
 
     // Choosing another entry drops the unlisted one from the picker.
     await picker('Right Arm').selectOptions('Light Laser');
-    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['1 Issue']);
     expect(optionTexts('Right Arm')).not.toContain('Plasma Thrower (not in the Catalog)');
   });
 
@@ -466,8 +531,8 @@ describe('Issues', () => {
       ],
     });
 
-    await expect.element(profileRow('Flawed').getByText('1 Issue')).toBeInTheDocument();
-    expect(profileRow('Sound').getByText(/Issue/).query()).toBeNull();
+    await expect.element(profileRow('Flawed').getByRole('img')).toHaveAccessibleName('1 Issue');
+    expect(profileRow('Sound').getByRole('img').query()).toBeNull();
     // The first Unit Profile is open, and has none to list.
     await expect.element(field('Name')).toHaveValue('Sound');
     expect(issues().query()).toBeNull();
@@ -500,7 +565,7 @@ describe('Vehicles', () => {
     await field('Engine Upgrades').fill('1');
     await expect.element(field('Bp')).toHaveTextContent('5 / 5');
     await expect.element(field('Mv')).toHaveTextContent('5');
-    await expect.element(unitProfiles().getByText('5 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('New Vehicle').getByText('5 Bp')).toBeInTheDocument();
 
     await picker('Class').selectOptions('Ultra-light');
     await expect.element(field('Bp')).toHaveTextContent('5 / 4');
@@ -523,7 +588,7 @@ describe('Vehicles', () => {
 
     await picker('Turret').selectOptions('Light Cannon');
     await expect.element(field('Bp')).toHaveTextContent('2 / 5');
-    await expect.element(unitProfiles().getByText('2 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('New Vehicle').getByText('2 Bp')).toBeInTheDocument();
 
     await picker('Class').selectOptions('Medium');
     await expect.poll(() => optionTexts('Turret')).toContain('Medium Laser');
@@ -551,7 +616,7 @@ describe('Vehicles', () => {
     await expect
       .element(issues().getByText("5 Hull Options is more than a Light Vehicle's 2"))
       .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['1 Issue']);
 
     await checkbox('Static Mount').click();
     await field('Cargo Bays').fill('1');
@@ -586,7 +651,7 @@ describe('Vehicles', () => {
       }
       // A Light Vehicle's max Bp is 5, so two Medium Lasers stay within it: only the mount Issues.
       const count = mounts.length === 1 ? '1 Issue' : `${mounts.length} Issues`;
-      await expect.element(unitProfiles().getByText(count)).toBeInTheDocument();
+      await expect.poll(profileFlags).toEqual([count]);
     },
   );
 
@@ -669,7 +734,7 @@ describe('Troops', () => {
     await loadWithNewTroop();
     await picker('Crew Served Weapon').selectOptions('Light Cannon');
     await expect.element(field('Bp')).toHaveTextContent('4 / 4');
-    await expect.element(unitProfiles().getByText('4 Bp')).toBeInTheDocument();
+    await expect.element(profileRow('New Troop').getByText('4 Bp')).toBeInTheDocument();
     await expect.element(page.getByText('Bp 4 /')).toBeInTheDocument();
 
     await picker('Class').selectOptions('Heavy Infantry');
@@ -724,7 +789,7 @@ describe('Troops', () => {
     await expect
       .element(issues().getByText("Bp 7 is more than a Jump Infantry Troop's max Bp of 6"))
       .toBeInTheDocument();
-    await expect.element(unitProfiles().getByText('1 Issue')).toBeInTheDocument();
+    await expect.poll(profileFlags).toEqual(['1 Issue']);
 
     await picker('Crew Served Weapon').selectOptions('Light Laser');
     await expect.element(issues()).not.toBeInTheDocument();
@@ -750,7 +815,7 @@ describe('Troops', () => {
       ],
     });
     await expect.element(profileRow('Skyborne').getByText('6 Bp')).toBeInTheDocument();
-    await expect.element(profileRow('Skyborne').getByLabelText('Qty')).toHaveValue(2);
+    await expect.element(profileRow('Skyborne').getByText('×2')).toBeInTheDocument();
     await expect.element(page.getByText('Bp 18 /')).toBeInTheDocument();
 
     await openButton('Skyborne').click();
@@ -766,7 +831,7 @@ describe('Download PDF', () => {
 
     await addMech();
     await expect.element(downloadPdf()).toBeEnabled();
-    await field('Qty').fill('0');
+    await page.getByRole('button', { name: 'One fewer New Mech' }).click();
     await expect.element(downloadPdf()).toBeDisabled();
   });
 

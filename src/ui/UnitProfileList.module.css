@@ -1,12 +1,59 @@
 .panel {
   display: grid;
   min-width: 0;
-  gap: var(--space-3);
+  gap: var(--space-4);
+}
+
+.section {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+/* The header does the section's work: it subtotals the Bp and holds the Add for this kind. */
+.sectionHeader {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: 0 var(--space-2) var(--space-1);
+  border-bottom: var(--border) solid var(--line);
+}
+
+.sectionHeading {
+  display: flex;
+  flex: 1;
+  gap: var(--space-2);
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.sectionKind {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sectionBp {
+  flex-shrink: 0;
+  font-family: var(--font-value);
+  font-weight: 400;
+}
+
+.none {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
 }
 
 .list {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -17,33 +64,12 @@
   gap: var(--space-1);
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  align-items: center;
-  padding: 0 var(--space-2);
-  font-size: var(--text-sm);
-}
-
-.quantity {
-  display: flex;
-  flex: 1;
-  gap: var(--space-1);
-  align-items: center;
-}
-
-.quantity input {
-  width: 3.5rem;
-}
-
 /* Selecting a Unit Profile: a full-width row rather than a button's own shape. */
 .item {
   display: flex;
-  flex-wrap: wrap;
   width: 100%;
   gap: var(--space-2);
-  justify-content: space-between;
+  align-items: baseline;
   padding: var(--space-1) var(--space-2);
   text-align: left;
   border-color: transparent;
@@ -71,40 +97,55 @@
   font-weight: 600;
 }
 
+/*
+ * The row's one mark, standing in for every reason this Unit Profile needs looking at; what those
+ * are is in its `aria-label` and tooltip, and spelled out in the editor.
+ */
+.flag {
+  flex-shrink: 0;
+  align-self: center;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: 50%;
+  background: var(--danger);
+}
+
 .itemName {
-  flex: 1 1 6rem;
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.itemQuantity,
 .itemBp {
   flex-shrink: 0;
   font-family: var(--font-value);
   color: var(--ink-muted);
 }
 
-.itemIssues,
-.itemClash {
-  flex-shrink: 0;
-  padding: 0 var(--space-1);
-  border-radius: var(--radius);
-  font-size: var(--text-sm);
-}
-
-.itemIssues {
-  background: var(--danger);
-  color: var(--ink-inverse);
-}
-
-.itemClash {
-  background: var(--warning-badge);
-  color: var(--warning-ink);
-}
-
-.add {
+/* One line, all icons: word buttons wrap at this column's width. */
+.actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  align-items: center;
+  padding: 0 var(--space-2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.quantity {
+  min-width: 1.5rem;
+  text-align: center;
+  font-family: var(--font-value);
+}
+
+/* Square around a 16 box, with no text baseline for the SVG to sit on. */
+.iconButton {
+  display: inline-flex;
+  padding: var(--space-1);
+  line-height: 0;
 }
