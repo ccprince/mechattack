@@ -1,15 +1,14 @@
 import styles from './AppFooter.module.css';
+import { buildLabel, repoUrl } from './buildLabel';
 
-const repoUrl = 'https://github.com/ccprince/mechattack';
-
-/** Identifies the build for a player reporting a problem; 'dev' outside a production build. */
-const build = import.meta.env.VITE_COMMIT_SHA ?? 'dev';
+/** Identifies the build for a player checking what changed or reporting a problem (ADR 0006). */
+const build = buildLabel(import.meta.env.VITE_BUILD);
 
 export function AppFooter() {
   return (
     <footer className={styles.footer}>
       <p className={styles.build}>
-        build <span>{build}</span>
+        build {build.href ? <a href={build.href}>{build.text}</a> : <span>{build.text}</span>}
       </p>
       <p>Army Lists are saved in this browser only.</p>
       <p>

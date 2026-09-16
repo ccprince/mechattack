@@ -24,7 +24,7 @@ own containing block — wrapping the two together would let the bar scroll away
 The footer names the build, links the repo, and says Army Lists are saved in this browser only, which
 is the only place a player is told where their data lives. The build is the short commit SHA, passed in
 as `VITE_COMMIT_SHA` by the `build` script and read through `import.meta.env`; that keeps Node APIs and
-`@types/node` out of a browser-only project's type-checking. Released version numbers are #49; a fuller
+`@types/node` out of a browser-only project's type-checking. The label now comes from release tags (ADR 0006); a fuller
 explanation of browser storage, which the one-line footer can't carry, is #50.
 
 ## Consequences

@@ -34,6 +34,19 @@ browser mode (Playwright). Keep geometry in pure functions so most tests stay in
 3. Commit, `git push -u origin HEAD`, then `gh pr create`.
 4. After the merge: `git switch main && git pull --ff-only && git branch -d <name>`.
 
+Every merge to `main` deploys, so each pull request must be shippable on its own: working and not
+misleading, even if a feature spans several.
+
+### Releasing
+
+Versions come only from `v*` tags (ADR 0006); there's no `version` in `package.json`.
+
+1. `git switch main && git pull --ff-only`
+2. `gh release create vX.Y.Z --target main --generate-notes`, then edit the notes if needed.
+3. The tag push redeploys, and the footer shows `vX.Y.Z`.
+
+Before 1.0: minor for a new feature or anything a player must act on, patch for fixes only.
+
 ## Agent skills
 
 ### Issue tracker
