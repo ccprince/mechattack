@@ -1,36 +1,38 @@
 .header {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: end;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
 
 .name,
 .limit,
 .printSize {
   display: grid;
-  gap: 0.25rem;
-  font-size: 0.8rem;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
 }
 
 .name input {
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   font-weight: 600;
-  min-width: 0;
   width: min(24rem, 100%);
 }
 
 .bp {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: end;
 }
 
 .bp > span {
-  font-size: 1.2rem;
+  font-family: var(--font-value);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  /* An optical nudge onto the inputs' baseline, not spacing from the scale. */
   padding-bottom: 0.15rem;
 }
 
@@ -39,18 +41,17 @@
 }
 
 .over {
-  color: #a31515;
-  font-weight: 600;
+  color: var(--danger);
 }
 
 .warning {
   flex-basis: 100%;
   margin: 0;
-  color: #a31515;
+  color: var(--danger);
 }
 
 .printControls {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: end;
 }

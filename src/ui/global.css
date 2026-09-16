@@ -1,9 +1,123 @@
+/*
+ * Design tokens and element base styles (ADR 0004). Component CSS Modules do layout and reference
+ * these tokens; they don't name their own colours, type sizes or spacing.
+ */
 :root {
-  font-family: system-ui, sans-serif;
-  color: #1a1a1a;
-  background: #eceae6;
+  /* Type. The card fonts are loaded by src/cards/fonts.ts and shared with the printed cards. */
+  --font-ui: system-ui, sans-serif;
+  --font-display: 'Alfa Slab One', Georgia, serif;
+  --font-value: 'Roboto Slab', Georgia, serif;
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.4rem;
+
+  /* Ink and surfaces. The page sits on the sunken surface; panels and controls are raised onto it. */
+  --ink: #1a1a1a;
+  --ink-muted: #555;
+  --surface: #fff;
+  --surface-sunken: #eceae6;
+  --line: #bbb;
+  --line-strong: #888;
+  --accent: #35506e;
+  /* Text on a filled --danger or --accent background. */
+  --ink-inverse: #fff;
+  /* Washed over a surface to show a row is under the pointer. */
+  --hover-wash: rgb(0 0 0 / 5%);
+
+  /* An Issue, or being over a limit. */
+  --danger: #b3261e;
+  --danger-surface: #fbeae9;
+  --danger-ink: #6b1712;
+
+  /* A name clash, or an unreadable save worth keeping. */
+  --warning: #d9a400;
+  --warning-surface: #fff4cc;
+  --warning-badge: #f2d98a;
+  --warning-ink: #6b5200;
+
+  /* Spacing. Every gap, margin and padding in the UI comes from this scale. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --radius: 4px;
+  --border: 1px;
+  --focus-ring: 2px solid var(--accent);
+
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--ink);
+  background: var(--surface-sunken);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+}
+
+/* Controls inherit the page's font rather than the browser's, and shrink inside grid and flex rows. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  min-width: 0;
+}
+
+button {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
+button:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+}
+
+/* A checkbox keeps its native look: a border and background would break how browsers draw it. */
+input:not([type='checkbox']),
+select,
+textarea {
+  padding: var(--space-1);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+textarea {
+  resize: vertical;
+}
+
+fieldset {
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+}
+
+legend {
+  padding: 0 var(--space-1);
+  font-size: var(--text-sm);
+}
+
+/* Extended by #45, which owns the full accessibility pass. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
