@@ -1,11 +1,10 @@
 {
   "name": "mechattack",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && VITE_COMMIT_SHA=$(git rev-parse --short HEAD) vite build",
+    "build": "tsc && VITE_BUILD=$(git describe --tags --long --always --abbrev=7 --match 'v*' 2>/dev/null) vite build",
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
