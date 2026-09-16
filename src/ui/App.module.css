@@ -1,14 +1,43 @@
-.page {
+/* Keeps the footer at the bottom of a short page rather than halfway up it. */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/*
+ * The identity strip. Not sticky: it says the app's name once and then gets out of the way, which is
+ * what buys the bar below it the height to stay.
+ */
+.identity {
   max-width: 72rem;
+  width: 100%;
   margin: 0 auto;
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-2) var(--space-4);
 }
 
 .title {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 400;
+}
+
+/* The app bar. Sticky within .shell, so it holds through the whole page rather than its own box. */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: var(--border) solid var(--line);
+  background: var(--surface);
+}
+
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
 }
 
 .columns {

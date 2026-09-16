@@ -47,7 +47,8 @@ export function ArmyListHeader({
   }
 
   return (
-    <header className={styles.header}>
+    /* The landmark is the app bar in App.tsx; this is just its contents. */
+    <div className={styles.header}>
       <label className={styles.name}>
         <span>Army List name</span>
         <input
@@ -90,7 +91,7 @@ export function ArmyListHeader({
           {printing ? 'Building PDF…' : 'Download PDF'}
         </button>
       </div>
-    </header>
+    </div>
   );
 }
 
