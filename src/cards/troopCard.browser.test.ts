@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import type { TroopProfile } from '../domain/troop';
 import { createValueMeasure, loadCardFonts } from './fonts';
-import { slotRect } from './pageLayout';
+import { printedCardSize, printSizes } from './pageLayout';
 import { testTroop } from './testTroop';
 import { buildTroopCardSvg } from './troopCard';
 
@@ -191,17 +191,15 @@ describe('buildTroopCardSvg', () => {
     }
   });
 
-  it.each([
-    { size: 'large', scale: slotRect('large', 0).width / 3.9 },
-    { size: 'sleeve', scale: slotRect('sleeve', 0).width / 3.9 },
-  ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
+  it.each(printSizes)('keeps every mark legible and clear of the text at %s size', async (size) => {
     for (const [legality, profile] of [
       ['legal', legalTroop],
       ['illegal', crowdedIllegalTroop],
     ] as const) {
       const svg = buildTroopCardSvg(profile, createValueMeasure());
-      svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${2.5 * scale}in`);
+      const printed = printedCardSize('Troop', size);
+      svg.setAttribute('width', `${printed.width}in`);
+      svg.setAttribute('height', `${printed.height}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({

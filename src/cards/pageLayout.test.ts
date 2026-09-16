@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placeCards, slotRect } from './pageLayout';
+import { placeCards, printedCardSize, slotRect } from './pageLayout';
 
 describe('slotRect', () => {
   it('fits the Large 2 × 2 grid to the page height with 0.25" margins and a 0.2" gutter', () => {
@@ -22,6 +22,29 @@ describe('slotRect', () => {
     const last = slotRect('sleeve', 5);
     expect(last.x).toBeCloseTo(5.75);
     expect(last.y).toBeCloseTo(5.625);
+  });
+});
+
+describe('printedCardSize', () => {
+  it('prints Mechs and Vehicles to fill a sleeve at Sleeve size', () => {
+    for (const kind of ['Mech', 'Vehicle'] as const) {
+      const { width, height } = printedCardSize(kind, 'sleeve');
+      expect(width).toBeCloseTo(2.5);
+      expect(height).toBeCloseTo(3.5);
+    }
+  });
+
+  it('prints a Troop at the Mech width and the Troop template’s height', () => {
+    expect(printedCardSize('Troop', 'sleeve').width).toBeCloseTo(2.5);
+    expect(printedCardSize('Troop', 'sleeve').height).toBeCloseTo(1.603, 3);
+    expect(printedCardSize('Troop', 'large').width).toBeCloseTo(3.679, 3);
+    expect(printedCardSize('Troop', 'large').height).toBeCloseTo(2.358, 3);
+  });
+
+  it('prints Large Mechs as big as fit two rows on the page', () => {
+    const { width, height } = printedCardSize('Mech', 'large');
+    expect(width).toBeCloseTo(3.679, 3);
+    expect(height).toBeCloseTo(5.15);
   });
 });
 

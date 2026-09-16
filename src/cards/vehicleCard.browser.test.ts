@@ -3,7 +3,7 @@ import { page } from 'vitest/browser';
 import { catalog } from '../domain/catalog';
 import type { VehicleProfile } from '../domain/vehicle';
 import { createValueMeasure, loadCardFonts } from './fonts';
-import { slotRect } from './pageLayout';
+import { printedCardSize, printSizes } from './pageLayout';
 import { testVehicle } from './testVehicle';
 import { buildVehicleCardSvg } from './vehicleCard';
 
@@ -176,17 +176,15 @@ describe('buildVehicleCardSvg', () => {
     },
   };
 
-  it.each([
-    { size: 'large', scale: slotRect('large', 0).width / 3.9 },
-    { size: 'sleeve', scale: slotRect('sleeve', 0).width / 3.9 },
-  ])('keeps text and marks inside their boxes at $size size', async ({ size, scale }) => {
+  it.each(printSizes)('keeps text and marks inside their boxes at %s size', async (size) => {
     for (const [legality, profile] of [
       ['legal', legalStaticMount],
       ['illegal', illegalVehicle],
     ] as const) {
       const svg = buildVehicleCardSvg(profile, createValueMeasure());
-      svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${5.46 * scale}in`);
+      const printed = printedCardSize('Vehicle', size);
+      svg.setAttribute('width', `${printed.width}in`);
+      svg.setAttribute('height', `${printed.height}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({

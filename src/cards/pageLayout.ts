@@ -12,27 +12,42 @@ export const page = { width: 8.5, height: 11 };
 /** The page edge most home printers can't print. */
 const printableMargin = 0.25;
 
-/** A Mech or Vehicle template's size, at a sleeve's 5:7 ratio (ADR 0009). */
-const nativeSlot = { width: 3.9, height: 5.46 };
-/** A Troop card's height; two fill a slot, with the rest of its height between them. */
-const nativeHalfSlotHeight = 2.5;
+/**
+ * Each kind's template size, in inches at scale 1. A Mech or Vehicle fills a slot, at a sleeve's 5:7
+ * ratio (ADR 0009). Two Troops share a slot, with the rest of its height between them.
+ */
+const templateSizes: Record<UnitProfile['kind'], { width: number; height: number }> = {
+  Mech: { width: 3.9, height: 5.46 },
+  Vehicle: { width: 3.9, height: 5.46 },
+  Troop: { width: 3.9, height: 2.5 },
+};
 
 const largeGutter = 0.2;
 
 const grids = {
   // As big as fits two rows inside the printable margins.
   large: {
-    scale: (page.height - 2 * printableMargin - largeGutter) / 2 / nativeSlot.height,
+    scale: (page.height - 2 * printableMargin - largeGutter) / 2 / templateSizes.Mech.height,
     columns: 2,
     rows: 2,
     gutter: largeGutter,
   },
   // A standard 2.5" × 3.5" card sleeve.
-  sleeve: { scale: 2.5 / nativeSlot.width, columns: 3, rows: 2, gutter: 0.25 },
+  sleeve: { scale: 2.5 / templateSizes.Mech.width, columns: 3, rows: 2, gutter: 0.25 },
 } as const;
 
 function slotsPerPage(size: PrintSize): number {
   return grids[size].columns * grids[size].rows;
+}
+
+/** How big a card of this kind prints at this Print Size, in inches. */
+export function printedCardSize(
+  kind: UnitProfile['kind'],
+  size: PrintSize,
+): { width: number; height: number } {
+  const { width, height } = templateSizes[kind];
+  const { scale } = grids[size];
+  return { width: width * scale, height: height * scale };
 }
 
 /**
@@ -40,9 +55,8 @@ function slotsPerPage(size: PrintSize): number {
  * page. The grid is centered on the page. See docs/cards.md, "Page layout".
  */
 export function slotRect(size: PrintSize, index: number): Rect {
-  const { scale, columns, rows, gutter } = grids[size];
-  const width = nativeSlot.width * scale;
-  const height = nativeSlot.height * scale;
+  const { columns, rows, gutter } = grids[size];
+  const { width, height } = printedCardSize('Mech', size);
   const marginX = (page.width - columns * width - (columns - 1) * gutter) / 2;
   const marginY = (page.height - rows * height - (rows - 1) * gutter) / 2;
   const column = index % columns;
@@ -82,7 +96,7 @@ export function placeCards(
     const page = Math.floor(slot / perPage);
     const rect = slotRect(size, slot % perPage);
     if (!half) return { page, rect };
-    const height = nativeHalfSlotHeight * grids[size].scale;
+    const { height } = printedCardSize('Troop', size);
     return {
       page,
       rect: { ...rect, y: bottom ? rect.y + rect.height - height : rect.y, height },
