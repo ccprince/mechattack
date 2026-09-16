@@ -17,13 +17,19 @@
   --ink-muted: #555;
   --surface: #fff;
   --surface-sunken: #eceae6;
-  --line: #bbb;
-  --line-strong: #888;
+  --line: #858585;
+  --line-strong: #6f6f6f;
   --accent: #35506e;
   /* Text on a filled --danger or --accent background. */
   --ink-inverse: #fff;
   /* Washed over a surface to show a row is under the pointer. */
   --hover-wash: rgb(0 0 0 / 5%);
+
+  /*
+   * The card preview is a proof of what comes out of the printer: the paper it paints behind the card
+   * template is white in either colour scheme, the one token the dark palette leaves alone.
+   */
+  --paper: #fff;
 
   /* An Issue, or being over a limit. */
   --danger: #b3261e;
@@ -31,7 +37,7 @@
   --danger-ink: #6b1712;
 
   /* A name clash, or an unreadable save worth keeping. */
-  --warning: #d9a400;
+  --warning: #9a7700;
   --warning-surface: #fff4cc;
   --warning-badge: #f2d98a;
   --warning-ink: #6b5200;
@@ -48,10 +54,41 @@
   --border: 1px;
   --focus-ring: 2px solid var(--accent);
 
+  /* Form controls, scrollbars and the like follow the page rather than the system theme. */
+  color-scheme: light dark;
+
   font-family: var(--font-ui);
   font-size: var(--text-base);
   color: var(--ink);
   background: var(--surface-sunken);
+}
+
+/*
+ * Dark mode is the same vocabulary at different values (ADR 0004): every module keeps its tokens and
+ * nothing else changes. Ink and surfaces swap roles — the page is the darkest surface and panels are
+ * lifted out of it — so `--ink-inverse`, the text on a filled `--danger`, becomes dark.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e9e6e2;
+    --ink-muted: #b0aba4;
+    --surface: #26262a;
+    --surface-sunken: #17171a;
+    --line: #727279;
+    --line-strong: #93939b;
+    --accent: #8fb8e8;
+    --ink-inverse: #1a1a1a;
+    --hover-wash: rgb(255 255 255 / 8%);
+
+    --danger: #f2837a;
+    --danger-surface: #3a1614;
+    --danger-ink: #ffb4ab;
+
+    --warning: #d9a400;
+    --warning-surface: #3a2e10;
+    --warning-badge: #6b5200;
+    --warning-ink: #f7d98a;
+  }
 }
 
 *,
@@ -116,7 +153,11 @@ legend {
   font-size: var(--text-sm);
 }
 
-/* Extended by #45, which owns the full accessibility pass. */
+/*
+ * One focus treatment for everything keyboard-reachable — rows, buttons, inputs, selects, textareas
+ * and links. It sits outside the element's own border so a control that already draws one (a selected
+ * Unit Profile row, a checked checkbox) still shows the ring.
+ */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;

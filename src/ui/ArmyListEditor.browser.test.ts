@@ -7,7 +7,7 @@ import type { MechProfile } from '../domain/mech';
 import { fakeStore } from '../domain/testStores';
 import type { VehicleProfile } from '../domain/vehicle';
 import { exportArmyListPdf } from '../pdf/exportPdf';
-import { cardField, cardMarks, setUpApp, unitProfiles } from './testApp';
+import { cardField, cardMarks, openButton, profileRow, setUpApp, unitProfiles } from './testApp';
 
 // Spied on, still real: the app imports it on demand when printing.
 vi.mock('../pdf/exportPdf', { spy: true });
@@ -30,12 +30,6 @@ const issues = () => page.getByRole('region', { name: 'Issues' });
 /** Too heavy for the default Light Mech. */
 const heavyLeftArm = { leftArm: 'Heavy Laser', rightArm: null, leftTorso: null, rightTorso: null };
 const downloadPdf = () => page.getByRole('button', { name: 'Download PDF' });
-const profileRow = (name: string) =>
-  unitProfiles()
-    .getByRole('listitem')
-    .filter({ has: page.getByText(name, { exact: true }) });
-/** The row's first button, which opens the Unit Profile in the editor. */
-const openButton = (name: string) => profileRow(name).getByRole('button').first();
 
 /** Read once: poll it (`expect.poll`) to wait for renders. */
 function optionTexts(name: string): string[] {

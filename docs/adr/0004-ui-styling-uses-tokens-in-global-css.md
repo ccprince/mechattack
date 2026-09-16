@@ -25,7 +25,11 @@ doesn't matter — never for body text, labels or controls.
 ## Consequences
 
 - A visual change is made once, in `global.css`, and the whole UI follows.
-- A dark palette, and any later theme, is a set of token overrides; no module needs to change.
+- A dark palette, and any later theme, is a set of token overrides; no module needs to change. The
+  one thing that doesn't follow the scheme is the card preview, a proof of the printed page: it holds
+  its white `--paper`, the token the dark palette leaves alone.
+- Contrast is a token property, so it's checked as one: `src/ui/tokens.test.ts` reads `global.css` and
+  holds every pair the UI stacks to WCAG AA, in both palettes. A new pairing goes in that list.
 - New components must not introduce a literal colour, type size or spacing value. Where one is
   genuinely local to a component — an optical baseline nudge, the card preview's paper shadow — it
   carries a comment saying so.
