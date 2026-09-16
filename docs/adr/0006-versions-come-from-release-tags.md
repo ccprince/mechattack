@@ -27,9 +27,10 @@ unfinished work stays available if one pull request ever can't be shippable alon
 Pushing a `v*` tag also runs the deploy workflow, which rebuilds the commit already live so its footer
 shows the clean version rather than the `+N` it was deployed with. The checkout fetches full history so
 `git describe` can see the tags, and the `github-pages` environment must allow `v*` tags as well as
-`main`. The deploy step gives Pages a build version unique to the run: `deploy-pages` uses the
-commit SHA, and Pages silently keeps the first deploy of a version, so a tag on a commit its merge
-already deployed would otherwise change nothing.
+`main`. The deploy step calls the Pages deployment API
+itself, giving each run a unique build version: `actions/deploy-pages` always sends the commit SHA,
+and Pages keeps the first deploy of a version, so a tag on a commit its merge already deployed would
+otherwise change nothing. Overriding `GITHUB_SHA` for that action was tried and is ignored.
 
 ## Numbering
 
