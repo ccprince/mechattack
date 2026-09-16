@@ -27,7 +27,7 @@ export function App({ store, saved: initial }: { store: KeyValueStore; saved: Sa
     <ArmyListProvider key={opened} store={store} saved={saved} onSwitch={switchTo}>
       <ArmyListEditor
         // Only the Army Lists menu switches lists, so after a switch focus goes back to it.
-        focusMenu={opened > 0}
+        focusMenuOnMount={opened > 0}
         banner={
           backup !== undefined && (
             <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
@@ -38,7 +38,13 @@ export function App({ store, saved: initial }: { store: KeyValueStore; saved: Sa
   );
 }
 
-function ArmyListEditor({ banner, focusMenu }: { banner: ReactNode; focusMenu: boolean }) {
+function ArmyListEditor({
+  banner,
+  focusMenuOnMount,
+}: {
+  banner: ReactNode;
+  focusMenuOnMount: boolean;
+}) {
   const { autosaveFailed } = useArmyList();
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -68,7 +74,7 @@ function ArmyListEditor({ banner, focusMenu }: { banner: ReactNode; focusMenu: b
         <div className={styles.titleBand}>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>Mech Attack List Builder</h1>
-            <ArmyListsMenu focusOnMount={focusMenu} onError={setError} />
+            <ArmyListsMenu focusOnMount={focusMenuOnMount} onError={setError} />
           </div>
         </div>
         <ArmyListHeader measure={measure} onError={setError} />

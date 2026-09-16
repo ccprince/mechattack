@@ -8,7 +8,7 @@ import {
   chooseFromMenu,
   importFile,
   openArmyListsMenu,
-  openInMenu,
+  openArmyListText,
   openSavedArmyList,
   savedArmyListNames,
   savedArmyListTexts,
@@ -78,11 +78,11 @@ describe('Saved Army Lists', () => {
   it('shows when each changed, most recent first, naming a blank name as untitled', async () => {
     load(savedStore(ironLegion, { ...steelHand, name: ' ' }));
     await expect.poll(savedArmyListNames).toEqual(['Iron Legion', 'Untitled Army List']);
-    await expect.poll(openInMenu).toMatch(/^Iron Legion, /);
+    await expect.poll(openArmyListText).toMatch(/^Iron Legion, /);
 
     await openSavedArmyList('Untitled Army List');
     await expect.element(listName()).toHaveValue(' ');
-    await expect.poll(openInMenu).toMatch(/^Untitled Army List, /);
+    await expect.poll(openArmyListText).toMatch(/^Untitled Army List, /);
 
     // The Open Army List's name follows its field, and an edit counts as a change.
     await listName().fill('Steel Hand');
@@ -197,9 +197,18 @@ describe('focus in the Army Lists menu', () => {
     ['Export', () => chooseFromMenu('Export Army List')],
     ['a cancelled Delete', () => chooseFromMenu('Delete Army List…')],
     ['choosing the Open Army List', () => openSavedArmyList('Iron Legion')],
+    [
+      'a cancelled Import',
+      async () => {
+        await chooseFromMenu('Import Army List…');
+        document.querySelector('input[type="file"]')!.dispatchEvent(new Event('cancel'));
+      },
+    ],
   ])('returns to the menu button after %s', async (_, act) => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    // Stands in for the file picker, which a headless browser can't show.
+    vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
     load(savedStore(ironLegion, steelHand));
     await act();
     await expect.poll(focused).toBe(armyListsButton().element());
@@ -211,5 +220,13 @@ describe('focus in the Army Lists menu', () => {
     page.getByRole('button', { name: 'Delete Army List…' }).element().focus();
     await userEvent.tab();
     await expect.element(armyListsButton()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('stays open when something in it that takes no focus is clicked', async () => {
+    load(savedStore(ironLegion));
+    await openArmyListsMenu();
+    page.getByRole('button', { name: 'Export Army List' }).element().focus();
+    await page.getByText('Saved Army Lists', { exact: true }).click();
+    await expect.element(armyListsButton()).toHaveAttribute('aria-expanded', 'true');
   });
 });

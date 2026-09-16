@@ -21,6 +21,7 @@
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
+  /* Local on purpose: the only thing in the UI that floats over the page. */
   box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
 }
 
@@ -35,7 +36,7 @@
   color: var(--ink-muted);
 }
 
-/* A long collection scrolls inside the menu, keeping the actions below it in view. */
+/* Many Saved Army Lists scroll inside the menu, keeping the actions below them in view. */
 .lists {
   display: flex;
   flex-direction: column;

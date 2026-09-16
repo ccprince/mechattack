@@ -6,7 +6,7 @@ import { fakeStore, savedStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
 import {
   importFile,
-  openInMenu,
+  openArmyListText,
   openSavedArmyList,
   savedArmyListNames,
   savedArmyListTexts,
@@ -155,6 +155,6 @@ describe('when storage is unavailable', () => {
     load(unavailableStore);
     await listName().fill('Iron Legion');
     await expect.poll(savedArmyListTexts).toEqual(['Iron Legion']);
-    await expect.poll(openInMenu).toBe('Iron Legion');
+    await expect.poll(openArmyListText).toBe('Iron Legion');
   });
 });

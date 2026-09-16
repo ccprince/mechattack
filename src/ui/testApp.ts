@@ -44,17 +44,15 @@ export async function importFile(text: string, name = 'army.json') {
 
 export const armyListsButton = () => page.getByRole('button', { name: 'Army Lists', exact: true });
 
-/** Opens the Army Lists menu, unless it's open already. */
-export async function openArmyListsMenu() {
+/**
+ * Opens the Army Lists menu, unless it's open already. `afresh` closes it first, since it reads the
+ * Saved Army Lists only as it opens.
+ */
+export async function openArmyListsMenu({ afresh = false } = {}) {
   const button = await vi.waitFor(() => armyListsButton().element());
-  if (button.getAttribute('aria-expanded') !== 'true') await armyListsButton().click();
-}
-
-/** Opens the Army Lists menu afresh, closing it first if open: it reads Saved Army Lists as it opens. */
-async function reopenArmyListsMenu() {
-  const button = await vi.waitFor(() => armyListsButton().element());
-  if (button.getAttribute('aria-expanded') === 'true') await armyListsButton().click();
-  await armyListsButton().click();
+  const open = button.getAttribute('aria-expanded') === 'true';
+  if (open && afresh) await armyListsButton().click();
+  if (!open || afresh) await armyListsButton().click();
 }
 
 /** Chooses an action, such as New Army List, from the Army Lists menu. */
@@ -79,11 +77,12 @@ export async function openSavedArmyList(name: string, nth = 0) {
  * when it changed, as `Iron Legion, just now`. Opens the menu to read them.
  */
 export async function savedArmyListTexts(): Promise<string[]> {
-  await reopenArmyListsMenu();
-  return savedArmyLists()
-    .getByRole('button')
-    .elements()
-    .map((item) => item.textContent);
+  return (await savedArmyListItems()).map((item) => item.textContent);
+}
+
+async function savedArmyListItems(): Promise<HTMLElement[]> {
+  await openArmyListsMenu({ afresh: true });
+  return savedArmyLists().getByRole('button').elements() as HTMLElement[];
 }
 
 /** Each Saved Army List's name in the Army Lists menu, most recently changed first. */
@@ -92,12 +91,9 @@ export async function savedArmyListNames(): Promise<string[]> {
 }
 
 /** The Saved Army List marked as open in the Army Lists menu, as its text. */
-export async function openInMenu(): Promise<string | undefined> {
-  await reopenArmyListsMenu();
-  return savedArmyLists()
-    .getByRole('button')
-    .elements()
-    .find((item) => item.getAttribute('aria-current') === 'true')?.textContent;
+export async function openArmyListText(): Promise<string | undefined> {
+  return (await savedArmyListItems()).find((item) => item.getAttribute('aria-current') === 'true')
+    ?.textContent;
 }
 
 export const unitProfiles = () => page.getByRole('navigation', { name: 'Unit Profiles' });

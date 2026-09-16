@@ -26,6 +26,7 @@ the menu and putting the menu's button beside the `h1` leaves a row that was the
 | 384–703 (390×620) | **167px (27%)** | 194px |
 | 704+ | 123px | 150px |
 
+Measured on the built app, like 0005, in Chromium; the prototype measured 2px less below 384px.
 That is smaller than 0005's own bar while also keeping the title, so the strip no longer buys anything by
 scrolling away. The name gets its own row below 44rem: sharing one with Bp was unusable between 362px and
 about 460px. Below 24rem print size and Download PDF take a row of their own. "Army List name" and

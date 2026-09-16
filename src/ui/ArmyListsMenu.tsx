@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FocusEvent } from 'react';
 import { newArmyList } from '../domain/armyList';
 import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import {
@@ -30,7 +30,7 @@ export function ArmyListsMenu({
 }) {
   const { state, store, openId, switchList } = useArmyList();
   const { list } = state;
-  const id = useId();
+  const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
   const popover = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -45,10 +45,10 @@ export function ArmyListsMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const entries = summaries.map(({ id, name, changed }) => ({
-    id,
+  const entries = summaries.map(({ id: listId, name, changed }) => ({
+    id: listId,
     // The Open Army List's name follows its field as it's typed.
-    name: displayName(id === openId ? list.name : name),
+    name: displayName(listId === openId ? list.name : name),
     changed: changedLabel(changed, now),
   }));
   // Storage couldn't keep the Open Army List, so it isn't among them; it's still the one open.
@@ -58,6 +58,18 @@ export function ArmyListsMenu({
   function choose(act: () => void) {
     popover.current?.hidePopover();
     act();
+  }
+
+  /**
+   * A popover closes on Esc or a click outside, but not when Tab or Shift+Tab takes focus out of it.
+   * Only a real destination counts: a click on something that can't take focus has none, and closing
+   * then would hide an item before its click lands.
+   */
+  function closeWhenFocusLeaves(event: FocusEvent<HTMLElement>) {
+    const menu = popover.current!;
+    const to = event.relatedTarget;
+    if (!to || menu.contains(to) || to === button.current) return;
+    if (menu.matches(':popover-open')) menu.hidePopover();
   }
 
   function remove() {
@@ -97,34 +109,32 @@ export function ArmyListsMenu({
         className={styles.button}
         aria-label="Army Lists"
         aria-expanded={open}
-        popoverTarget={id}
+        popoverTarget={menuId}
       >
         <MenuIcon />
       </button>
       <div
         ref={popover}
-        id={id}
+        id={menuId}
         popover="auto"
         className={styles.menu}
         onBeforeToggle={(event) => {
           if (event.newState !== 'open') return;
           setSummaries(listSavedArmyLists(store));
           setNow(new Date());
-          // Under the button, right edges aligned. Until anchor positioning reaches Firefox.
+          // Under the button, right edges aligned, until anchor positioning reaches Firefox. The pixel
+          // gap and screen margin are set from script, so they can't come from the spacing tokens.
           const { bottom, right } = button.current!.getBoundingClientRect();
           popover.current!.style.top = `${bottom + 4}px`;
           popover.current!.style.right = `${Math.max(8, innerWidth - right)}px`;
         }}
         onToggle={(event) => setOpen(event.newState === 'open')}
-        // A popover closes on Esc or a click outside, but not when Tab leaves it.
-        onBlur={(event) => {
-          if (!popover.current!.contains(event.relatedTarget)) popover.current!.hidePopover();
-        }}
+        onBlur={closeWhenFocusLeaves}
       >
-        <div id={`${id}-lists`} className={styles.heading}>
+        <div id={`${menuId}-lists`} className={styles.heading}>
           Saved Army Lists
         </div>
-        <div role="group" aria-labelledby={`${id}-lists`} className={styles.lists}>
+        <div role="group" aria-labelledby={`${menuId}-lists`} className={styles.lists}>
           {entries.map((entry) => {
             const current = entry.id === (openId ?? '');
             return (
