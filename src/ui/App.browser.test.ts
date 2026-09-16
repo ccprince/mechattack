@@ -158,3 +158,12 @@ describe('when storage is unavailable', () => {
     await expect.poll(openArmyListText).toBe('Iron Legion');
   });
 });
+
+describe('footer', () => {
+  it('links to the source on GitHub by name, with its mark', async () => {
+    load(fakeStore());
+    const link = page.getByRole('contentinfo').getByRole('link', { name: 'GitHub' });
+    await expect.element(link).toHaveAttribute('href', 'https://github.com/ccprince/mechattack');
+    expect(link.element().querySelector('svg')).not.toBeNull();
+  });
+});

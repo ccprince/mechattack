@@ -35,3 +35,16 @@
 .build a {
   font-family: var(--font-value);
 }
+
+/* The mark sits beside the word at the text's own height, so the link says what it leads to (#73). */
+.github {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.github svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}

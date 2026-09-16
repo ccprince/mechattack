@@ -1,5 +1,6 @@
 import styles from './AppFooter.module.css';
 import { buildLabel, repoUrl } from './buildLabel';
+import { GitHubIcon } from './icons';
 
 /** Identifies the build for a player checking what changed or reporting a problem (ADR 0006). */
 const build = buildLabel(import.meta.env.VITE_BUILD);
@@ -17,7 +18,10 @@ export function AppFooter({ onExplainStorage }: { onExplainStorage: () => void }
         </button>
       </p>
       <p>
-        <a href={repoUrl}>ccprince/mechattack</a>
+        <a href={repoUrl} className={styles.github}>
+          <GitHubIcon />
+          GitHub
+        </a>
       </p>
     </footer>
   );
