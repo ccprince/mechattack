@@ -42,8 +42,8 @@ export interface TroopNotesBlock {
 }
 
 // Box width is the field map's width minus 8 units of padding (docs/cards.md).
-export const troopNotesBox = { x: 16, y: 143, width: 230, fontSize: 10, lineHeight: 13 };
-const notesMaxLines = 2;
+export const troopNotesBox = { x: 16, y: 142, width: 230, fontSize: 11, lineHeight: 13 };
+const notesMaxLines = 3;
 const illegalMaxLines = 1;
 
 /**

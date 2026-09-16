@@ -207,7 +207,7 @@ describe('illegal marks', () => {
     // Positions from the field map in docs/cards.md: beside the name, the Crew Served Weapon row.
     expect(triangles).toEqual([
       { x: 364, y: 15, width: 12, height: 11 },
-      { x: 140, y: 205, width: 11, height: 10 },
+      { x: 140, y: 214, width: 11, height: 10 },
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: Md Laser too heavy', stroked: true });
     // The ILLEGAL line uses the short name; the row itself has room for the full one.

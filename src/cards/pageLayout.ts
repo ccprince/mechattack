@@ -19,7 +19,7 @@ const printableMargin = 0.25;
 const templateSizes: Record<UnitProfile['kind'], { width: number; height: number }> = {
   Mech: { width: 3.9, height: 5.46 },
   Vehicle: { width: 3.9, height: 5.46 },
-  Troop: { width: 3.9, height: 2.5 },
+  Troop: { width: 3.9, height: 2.59 },
 };
 
 const largeGutter = 0.2;

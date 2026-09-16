@@ -45,8 +45,8 @@ describe('buildTroopCardSvg', () => {
       for (const { x, y, size } of boxes) {
         expect(x).toBeGreaterThanOrEqual(214);
         expect(x + size).toBeLessThanOrEqual(250);
-        expect(y).toBeGreaterThanOrEqual(182);
-        expect(y + size).toBeLessThanOrEqual(238);
+        expect(y).toBeGreaterThanOrEqual(191);
+        expect(y + size).toBeLessThanOrEqual(247);
       }
     });
 
@@ -70,8 +70,8 @@ describe('buildTroopCardSvg', () => {
       for (const { x, y, size } of boxes) {
         expect(x).toBeGreaterThanOrEqual(214);
         expect(x + size).toBeLessThanOrEqual(250);
-        expect(y).toBeGreaterThanOrEqual(182);
-        expect(y + size).toBeLessThanOrEqual(238);
+        expect(y).toBeGreaterThanOrEqual(191);
+        expect(y + size).toBeLessThanOrEqual(247);
       }
     });
 
@@ -106,6 +106,7 @@ describe('buildTroopCardSvg', () => {
     expect(field(svg, 'illegal')).toBeNull();
     expect(marks(svg)).toEqual([]);
     expect(svg.querySelector('style')?.textContent).not.toContain('@import');
+    expect(svg.getAttribute('viewBox')).toBe('0 0 390 259');
 
     // Sv 5 crosses out boxes 6–10 and all of row 1.
     const crossed = Array.from(svg.querySelectorAll('#data rect.crossed'), (rect) =>
@@ -132,7 +133,7 @@ describe('buildTroopCardSvg', () => {
     name: 'Grenadier Heavy Weapons Platoon',
     class: 'Jump Infantry',
     crewServedWeapon: 'Medium Machine Gun (w/Armor Piercing Ammo)',
-    notes: 'Never printed: the ILLEGAL line and Standard Equipment fill the box.',
+    notes: 'Holds the ridge until relieved, whatever the cost to the company.',
   };
 
   it('marks an illegal Troop beside the name and on the Crew Served Weapon row', () => {
@@ -140,7 +141,9 @@ describe('buildTroopCardSvg', () => {
     expect(marks(svg)).toEqual(['illegal', 'weapon-illegal']);
     expect(lines(svg, 'illegal')).toEqual(['ILLEGAL: 2 issues']);
     expect(lines(svg, 'standard-equipment')).toEqual(['Individual Weapons, Jump Packs']);
-    expect(field(svg, 'notes')).toBeNull();
+    // One line is left for notes.
+    expect(lines(svg, 'notes')).toHaveLength(1);
+    expect(field(svg, 'notes')?.style.fontSize).toBe('11px');
     // Too long for one line, so it wraps rather than shrinking away.
     expect(lines(svg, 'weapon')).toEqual(['Medium Machine', 'Gun (w/Armor…']);
   });
@@ -176,14 +179,14 @@ describe('buildTroopCardSvg', () => {
         expect(illegal[0]).toMatch(/^ILLEGAL: Plasma Lance .*…$/);
       }
 
-      // The Notes box spans 12–250 × 113–164.
+      // The Notes box spans 12–250 × 113–173.
       for (const rect of notesBox) {
         expect(rect.x + rect.width).toBeLessThanOrEqual(250);
-        expect(rect.y + rect.height).toBeLessThanOrEqual(164);
+        expect(rect.y + rect.height).toBeLessThanOrEqual(173);
       }
       // The Crew Served Weapon row sits under its labels, clear of the Rv column at x 155.
       expect(weapon.x + weapon.width).toBeLessThanOrEqual(155);
-      expect(weapon.y + weapon.height).toBeLessThanOrEqual(238);
+      expect(weapon.y + weapon.height).toBeLessThanOrEqual(247);
       if (rv) {
         expect(rv.x).toBeGreaterThanOrEqual(155);
         expect(rv.x + rv.width).toBeLessThanOrEqual(214);

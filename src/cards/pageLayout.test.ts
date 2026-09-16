@@ -36,9 +36,9 @@ describe('printedCardSize', () => {
 
   it('prints a Troop at the Mech width and the Troop template’s height', () => {
     expect(printedCardSize('Troop', 'sleeve').width).toBeCloseTo(2.5);
-    expect(printedCardSize('Troop', 'sleeve').height).toBeCloseTo(1.603, 3);
+    expect(printedCardSize('Troop', 'sleeve').height).toBeCloseTo(1.66, 2);
     expect(printedCardSize('Troop', 'large').width).toBeCloseTo(3.679, 3);
-    expect(printedCardSize('Troop', 'large').height).toBeCloseTo(2.358, 3);
+    expect(printedCardSize('Troop', 'large').height).toBeCloseTo(2.443, 3);
   });
 
   it('prints Large Mechs as big as fit two rows on the page', () => {
@@ -55,18 +55,18 @@ describe('placeCards', () => {
     expect(top?.rect.x).toBeCloseTo(0.471, 3);
     expect(top?.rect.y).toBeCloseTo(0.25);
     expect(top?.rect.width).toBeCloseTo(3.679, 3);
-    expect(top?.rect.height).toBeCloseTo(2.358, 3);
+    expect(top?.rect.height).toBeCloseTo(2.443, 3);
     expect(bottom?.page).toBe(0);
     expect(bottom?.rect.x).toBeCloseTo(0.471, 3);
-    expect(bottom!.rect.y - (top!.rect.y + top!.rect.height)).toBeCloseTo(0.434, 3);
+    expect(bottom!.rect.y - (top!.rect.y + top!.rect.height)).toBeCloseTo(0.264, 3);
     expect(bottom!.rect.y + bottom!.rect.height).toBeCloseTo(0.25 + 5.15);
   });
 
-  it('stacks two Troops in one Sleeve slot with a 0.295" gap', () => {
+  it('stacks two Troops in one Sleeve slot with a 0.179" gap', () => {
     const [top, bottom] = placeCards(['Troop', 'Troop'], 'sleeve');
     expect(top?.rect.width).toBeCloseTo(2.5);
-    expect(top?.rect.height).toBeCloseTo(1.6, 2);
-    expect(bottom!.rect.y - (top!.rect.y + top!.rect.height)).toBeCloseTo(0.295, 3);
+    expect(top?.rect.height).toBeCloseTo(1.66, 2);
+    expect(bottom!.rect.y - (top!.rect.y + top!.rect.height)).toBeCloseTo(0.179, 3);
     expect(bottom!.rect.y + bottom!.rect.height).toBeCloseTo(
       slotRect('sleeve', 0).y + slotRect('sleeve', 0).height,
     );
@@ -91,7 +91,7 @@ describe('placeCards', () => {
     expect(mech).toEqual({ page: 0, rect: slotRect('large', 0) });
     expect(troop).toEqual({
       page: 0,
-      rect: { ...slotRect('large', 1), height: expect.closeTo(2.358, 3) },
+      rect: { ...slotRect('large', 1), height: expect.closeTo(2.443, 3) },
     });
   });
 

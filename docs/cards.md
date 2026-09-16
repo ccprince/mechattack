@@ -29,7 +29,7 @@ how to process it. If a number here disagrees with the SVG, trust the SVG and fi
 |---|---|---|---|---|
 | `cards/mech-card.svg` | 3.9" × 5.46" | 390 × 546 | 4-up (2 × 2) | 6-up (3 × 2) |
 | `cards/vehicle-card.svg` | 3.9" × 5.46" | 390 × 546 | 4-up (2 × 2) | 6-up (3 × 2) |
-| `cards/troops-card.svg` | 3.9" × 2.5" | 390 × 250 | 8-up (2 × 4) | 12-up (3 × 4) |
+| `cards/troops-card.svg` | 3.9" × 2.59" | 390 × 259 | 8-up (2 × 4) | 12-up (3 × 4) |
 
 **Coordinates:** 1 viewBox unit = 0.01 inch at native size, which no Print Size uses. All positions
 below are in viewBox units.
@@ -45,13 +45,14 @@ mixed unit kinds share a page. An odd Troop leaves the other half of its slot em
 
 | Size | Slot size | Grid | Gutter (h / v) | Troop half-slot gap | Resulting margins (h / v) |
 |---|---|---|---|---|---|
-| Large | 3.68 × 5.15 (scale 0.943) | 2 × 2 | 0.2 / 0.2 | 0.434 | 0.471 / 0.25 |
-| Sleeve | 2.5 × 3.5 (scale 0.641) | 3 × 2 | 0.25 / 0.25 | 0.295 | 0.25 / 1.875 |
+| Large | 3.68 × 5.15 (scale 0.943) | 2 × 2 | 0.2 / 0.2 | 0.264 | 0.471 / 0.25 |
+| Sleeve | 2.5 × 3.5 (scale 0.641) | 3 × 2 | 0.25 / 0.25 | 0.179 | 0.25 / 1.875 |
 
 Large scale fits two rows and the gutter in the page height less the 0.25 margins; Sleeve scale =
 2.5 / 3.9. The Sleeve page keeps space around every card, so it also works uncut as a 6-up sheet.
-Troop cards are 3.68 × 2.36 (Large) or 2.5 × 1.60 (Sleeve), so two plus the gap equal one slot
-height. Two sleeve-size Troop cards stacked fit one sleeve, as in the original sheets.
+Troop cards are 3.68 × 2.44 (Large) or 2.5 × 1.66 (Sleeve), so two plus the gap equal one slot
+height. The Troop template is as tall as keeps that gap close to the gutter, so Troops stay
+separate on an uncut sheet; the extra height went to Notes. Two sleeve-size Troop cards stacked fit one sleeve, as in the original sheets.
 At sleeve scale, labels print at ~4 pt and values at ~5.5 pt. That's tiny but matches the original.
 
 ### SVG structure conventions
@@ -184,16 +185,16 @@ Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; col
 | data-field | Anchor | Box | Notes |
 |---|---|---|---|
 | `bp` | 211, 43 center, 16px | 172–250 × 12–50 | |
-| `name` | 258, 44 | 254–378 × 12–57.2 | |
-| `type` | 258, 89.2 | 254–378 × 57.2–102.4 | The Troop Class in full, `Heavy Infantry` |
-| `mv` | 316, 134.4 center, 24px | 254–378 × 102.4–147.6 | |
-| `tp` | 316, 179.6 center, 24px | 254–378 × 147.6–192.8 | |
-| `sv` | 316, 224.8 center, 24px | 254–378 × 192.8–238 | Also drives the strength cross-out |
-| `illegal` | 16, 143, 10px | 12–250 × 113–164 | Only with Issues: `ILLEGAL: …`, emboldened like the Mech's, **1 line** |
-| `standard-equipment` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | One line: `Individual Weapons` or `Individual Weapons, Jump Packs` |
-| `notes` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`. The three fields share **2 lines**; `notes` gets what's left, cut off with "…", and is left out when none are |
-| `weapon` | 15, 214, 13px | 12–155 × 182–238 | The Crew Served Weapon's full name, 128 wide. Wraps to a 2nd line at the same size, `dy="14"`, first baseline 210 |
-| `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | Blank for Support Equipment with no range |
+| `name` | 258, 44 | 254–378 × 12–59 | |
+| `type` | 258, 91 | 254–378 × 59–106 | The Troop Class in full, `Heavy Infantry` |
+| `mv` | 316, 138 center, 24px | 254–378 × 106–153 | |
+| `tp` | 316, 185 center, 24px | 254–378 × 153–200 | |
+| `sv` | 316, 232 center, 24px | 254–378 × 200–247 | Also drives the strength cross-out |
+| `illegal` | 16, 142, 11px | 12–250 × 113–173 | Only with Issues: `ILLEGAL: …`, emboldened like the Mech's, **1 line** |
+| `standard-equipment` | 16, 142 + 13 per line above, 11px | 12–250 × 113–173 | One line: `Individual Weapons` or `Individual Weapons, Jump Packs` |
+| `notes` | 16, 142 + 13 per line above, 11px | 12–250 × 113–173 | Multi-line: `dy="13"`. The three fields share **3 lines**; `notes` gets what's left, cut off with "…", and is left out when none are |
+| `weapon` | 15, 223, 13px | 12–155 × 191–247 | The Crew Served Weapon's full name, 128 wide. Wraps to a 2nd line at the same size, `dy="14"`, first baseline 219 |
+| `rv` | 184.5, 229 center, 16px | 155–214 × 191–247 | Blank for Support Equipment with no range |
 
 **Crew Served Weapon.** Only a filled Crew Served Weapon prints `weapon` and `rv`. The row is wide
 enough for the full name, so it prints that; only the `ILLEGAL` line uses short names. Unlike the
@@ -206,7 +207,7 @@ stored: it follows from the Troop Class.
 | Mark | Position | Notes |
 |---|---|---|
 | `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
-| `<g data-mark="weapon-illegal">` | Triangle 140–151 × 205–215 | On the Crew Served Weapon row when it has an Issue, at the right of the weapon line. `weapon` fits 120 wide instead of 136 |
+| `<g data-mark="weapon-illegal">` | Triangle 140–151 × 214–224 | On the Crew Served Weapon row when it has an Issue, at the right of the weapon line. `weapon` fits 120 wide instead of 136 |
 
 One Issue's wording: `Md Laser too heavy` (short name), `Plasma Lance not in Catalog`, `Bp over max`.
 
@@ -239,7 +240,7 @@ are one box wide, so the text always fits.
 |---|---|---|---|---|
 | Mech | 166–195 / 349–378 × 440–487 (arms), 487–534 (torsos) | 5×5 | 5.8 | 9px |
 | Vehicle | 320–378 × 435–484 (mount 1), 484–534 (mount 2) | 4×4 | 7.75 | 11px |
-| Troops | 214–250 × 182–238 | 3×3 | 12 | 11px |
+| Troops | 214–250 × 191–247 | 3×3 | 12 | 11px |
 
 The box size is fixed per card rather than stretched to fill its area, so a Light Laser is the same
 size on every row of a card: the Mech's is 29 / 5 and the Vehicle's 31 / 4. That size is the **cell**: the square
@@ -333,7 +334,7 @@ Headless Chromium (from the Playwright cache) screenshots an SVG with web fonts 
   --screenshot=/path/to/out.png file://$PWD/cards/mech-card.svg
 ```
 
-Use window height 525 for Mech/Vehicle and 240 for Troops. The screenshot is 2× the window size.
+Use window height 525 for Mech/Vehicle and 249 for Troops. The screenshot is 2× the window size.
 
 ## Settled rules
 
