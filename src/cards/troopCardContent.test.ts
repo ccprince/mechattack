@@ -5,7 +5,7 @@ import type { Measure } from './fitText';
 import { testTroop } from './testTroop';
 import { crewServedWeaponRow, troopNotes } from './troopCardContent';
 
-// Every character is half the font size wide: at 10px, 46 characters fit the 230-wide Notes box.
+// Every character is half the font size wide: at 11px, 41 characters fit the 230-wide Notes box.
 const measure: Measure = (text, fontSize) => text.length * fontSize * 0.5;
 
 const row = (profile: TroopProfile) => crewServedWeaponRow(profile, troopIssues(profile));
@@ -63,8 +63,8 @@ describe('crewServedWeaponRow', () => {
 describe('troopNotes', () => {
   it('prints the Standard Equipment, then the notes, on a Legal Troop', () => {
     expect(notes(testTroop)).toEqual([
-      { field: 'standard-equipment', lines: ['Individual Weapons'], y: 143 },
-      { field: 'notes', lines: ['Holds the ridge.'], y: 156 },
+      { field: 'standard-equipment', lines: ['Individual Weapons'], y: 142 },
+      { field: 'notes', lines: ['Holds the ridge.'], y: 155 },
     ]);
   });
 
@@ -72,28 +72,29 @@ describe('troopNotes', () => {
     expect(notes({ ...testTroop, class: 'Jump Infantry' })[0]).toEqual({
       field: 'standard-equipment',
       lines: ['Individual Weapons, Jump Packs'],
-      y: 143,
+      y: 142,
     });
   });
 
-  it('cuts long notes off with "…" in the line left', () => {
+  it('cuts long notes off with "…" in the lines left', () => {
     const long = { ...testTroop, notes: 'Dug in on the ridge line. '.repeat(4) };
     const [, notesBlock] = notes(long);
-    expect(notesBlock?.lines).toHaveLength(1);
-    expect(notesBlock?.lines[0]).toMatch(/…$/);
-    expect(notesBlock?.lines[0]!.length).toBeLessThanOrEqual(46);
+    expect(notesBlock?.lines).toHaveLength(2);
+    expect(notesBlock?.lines[1]).toMatch(/…$/);
+    for (const line of notesBlock!.lines) expect(line.length).toBeLessThanOrEqual(41);
   });
 
-  it('heads an illegal Troop with one ILLEGAL line, leaving no line for notes', () => {
+  it('heads an illegal Troop with one ILLEGAL line, leaving one line for notes', () => {
     const illegal: TroopProfile = {
       ...testTroop,
       class: 'Jump Infantry',
       crewServedWeapon: 'Medium Laser',
-      notes: 'Never printed.',
+      notes: 'Holds the ridge.',
     };
     expect(notes(illegal)).toEqual([
-      { field: 'illegal', lines: ['ILLEGAL: 2 issues'], y: 143 },
-      { field: 'standard-equipment', lines: ['Individual Weapons, Jump Packs'], y: 156 },
+      { field: 'illegal', lines: ['ILLEGAL: 2 issues'], y: 142 },
+      { field: 'standard-equipment', lines: ['Individual Weapons, Jump Packs'], y: 155 },
+      { field: 'notes', lines: ['Holds the ridge.'], y: 168 },
     ]);
   });
 

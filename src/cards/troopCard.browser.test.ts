@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import type { TroopProfile } from '../domain/troop';
 import { createValueMeasure, loadCardFonts } from './fonts';
+import { printedCardSize, printSizes } from './pageLayout';
 import { testTroop } from './testTroop';
 import { buildTroopCardSvg } from './troopCard';
 
@@ -44,8 +45,8 @@ describe('buildTroopCardSvg', () => {
       for (const { x, y, size } of boxes) {
         expect(x).toBeGreaterThanOrEqual(214);
         expect(x + size).toBeLessThanOrEqual(250);
-        expect(y).toBeGreaterThanOrEqual(182);
-        expect(y + size).toBeLessThanOrEqual(238);
+        expect(y).toBeGreaterThanOrEqual(191);
+        expect(y + size).toBeLessThanOrEqual(247);
       }
     });
 
@@ -69,8 +70,8 @@ describe('buildTroopCardSvg', () => {
       for (const { x, y, size } of boxes) {
         expect(x).toBeGreaterThanOrEqual(214);
         expect(x + size).toBeLessThanOrEqual(250);
-        expect(y).toBeGreaterThanOrEqual(182);
-        expect(y + size).toBeLessThanOrEqual(238);
+        expect(y).toBeGreaterThanOrEqual(191);
+        expect(y + size).toBeLessThanOrEqual(247);
       }
     });
 
@@ -105,6 +106,7 @@ describe('buildTroopCardSvg', () => {
     expect(field(svg, 'illegal')).toBeNull();
     expect(marks(svg)).toEqual([]);
     expect(svg.querySelector('style')?.textContent).not.toContain('@import');
+    expect(svg.getAttribute('viewBox')).toBe('0 0 390 259');
 
     // Sv 5 crosses out boxes 6–10 and all of row 1.
     const crossed = Array.from(svg.querySelectorAll('#data rect.crossed'), (rect) =>
@@ -131,7 +133,7 @@ describe('buildTroopCardSvg', () => {
     name: 'Grenadier Heavy Weapons Platoon',
     class: 'Jump Infantry',
     crewServedWeapon: 'Medium Machine Gun (w/Armor Piercing Ammo)',
-    notes: 'Never printed: the ILLEGAL line and Standard Equipment fill the box.',
+    notes: 'Holds the ridge until relieved, whatever the cost to the company.',
   };
 
   it('marks an illegal Troop beside the name and on the Crew Served Weapon row', () => {
@@ -139,7 +141,9 @@ describe('buildTroopCardSvg', () => {
     expect(marks(svg)).toEqual(['illegal', 'weapon-illegal']);
     expect(lines(svg, 'illegal')).toEqual(['ILLEGAL: 2 issues']);
     expect(lines(svg, 'standard-equipment')).toEqual(['Individual Weapons, Jump Packs']);
-    expect(field(svg, 'notes')).toBeNull();
+    // One line is left for notes.
+    expect(lines(svg, 'notes')).toHaveLength(1);
+    expect(field(svg, 'notes')?.style.fontSize).toBe('11px');
     // Too long for one line, so it wraps rather than shrinking away.
     expect(lines(svg, 'weapon')).toEqual(['Medium Machine', 'Gun (w/Armor…']);
   });
@@ -175,14 +179,14 @@ describe('buildTroopCardSvg', () => {
         expect(illegal[0]).toMatch(/^ILLEGAL: Plasma Lance .*…$/);
       }
 
-      // The Notes box spans 12–250 × 113–164.
+      // The Notes box spans 12–250 × 113–173.
       for (const rect of notesBox) {
         expect(rect.x + rect.width).toBeLessThanOrEqual(250);
-        expect(rect.y + rect.height).toBeLessThanOrEqual(164);
+        expect(rect.y + rect.height).toBeLessThanOrEqual(173);
       }
       // The Crew Served Weapon row sits under its labels, clear of the Rv column at x 155.
       expect(weapon.x + weapon.width).toBeLessThanOrEqual(155);
-      expect(weapon.y + weapon.height).toBeLessThanOrEqual(238);
+      expect(weapon.y + weapon.height).toBeLessThanOrEqual(247);
       if (rv) {
         expect(rv.x).toBeGreaterThanOrEqual(155);
         expect(rv.x + rv.width).toBeLessThanOrEqual(214);
@@ -190,17 +194,15 @@ describe('buildTroopCardSvg', () => {
     }
   });
 
-  it.each([
-    { size: 'large', scale: 1 },
-    { size: 'sleeve', scale: 2.5 / 3.9 },
-  ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
+  it.each(printSizes)('keeps every mark legible and clear of the text at %s size', async (size) => {
     for (const [legality, profile] of [
       ['legal', legalTroop],
       ['illegal', crowdedIllegalTroop],
     ] as const) {
       const svg = buildTroopCardSvg(profile, createValueMeasure());
-      svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${2.5 * scale}in`);
+      const printed = printedCardSize('Troop', size);
+      svg.setAttribute('width', `${printed.width}in`);
+      svg.setAttribute('height', `${printed.height}in`);
       document.body.append(svg);
       // Written to disk for inspection by eye (gitignored).
       await page.screenshot({

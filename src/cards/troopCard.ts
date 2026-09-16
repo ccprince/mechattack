@@ -23,14 +23,14 @@ const weaponWidth = { unmarked: 128, marked: 112 };
  * A long name wraps to a second line rather than shrinking away. The row has the height to keep the
  * wrapped pair at full size; it starts `wrapDy` above the single line's baseline.
  */
-const weaponRow = { x: 15, y: 214, fontSize: 13, lineHeight: 14, maxLines: 2, wrapDy: -4 };
+const weaponRow = { x: 15, y: 223, fontSize: 13, lineHeight: 14, maxLines: 2, wrapDy: -4 };
 /** Mv, Tp and Sv print large in the middle of their cell: they're read constantly in play. */
 const statValue = { x: 316, width: 80, fontSize: 24 };
 // Illegal marks (docs/cards.md): the name triangle, and the Crew Served Weapon row's marker.
 const nameMark = { x: 364, y: 15, width: 12, height: 11 };
-const weaponMark = { x: 140, y: 205, width: 11, height: 10 };
+const weaponMark = { x: 140, y: 214, width: 11, height: 10 };
 /** The Crew Served Weapon's Dp area, 3×3 cells of 12 (docs/cards.md). */
-const dpArea = { x: 214, y: 182, width: 36, height: 56, cellSize: 12, rollsFontSize: 11 };
+const dpArea = { x: 214, y: 191, width: 36, height: 56, cellSize: 12, rollsFontSize: 11 };
 
 export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGSVGElement {
   const { svg, data } = parseTemplate(troopTemplate);
@@ -54,12 +54,12 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
 
   line('bp', String(stats.bp), 211, 43, 70, 16, 'middle');
   line('name', profile.name, 258, 44, 116);
-  line('type', profile.class, 258, 89.2, 116);
+  line('type', profile.class, 258, 91, 116);
   const stat = (field: string, value: number, y: number) =>
     line(field, String(value), statValue.x, y, statValue.width, statValue.fontSize, 'middle');
-  stat('mv', stats.mv, 134.4);
-  stat('tp', stats.tp, 179.6);
-  stat('sv', stats.sv, 224.8);
+  stat('mv', stats.mv, 138);
+  stat('tp', stats.tp, 185);
+  stat('sv', stats.sv, 232);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
   if (issues.length > 0) addWarningTriangle(data, 'illegal', nameMark);
@@ -92,7 +92,7 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
       weapon.fontSize,
       weaponRow.lineHeight,
     );
-    if (row.rv) line('rv', row.rv, 184.5, 220, 51, 16, 'middle');
+    if (row.rv) line('rv', row.rv, 184.5, 229, 51, 16, 'middle');
     if (row.dp) addDp(data, 'weapon', dpDrawing(row.dp, dpArea, measure));
   }
 

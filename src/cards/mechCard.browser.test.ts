@@ -4,6 +4,7 @@ import type { MechProfile } from '../domain/mech';
 import { testMech } from './testMech';
 import { createValueMeasure, loadCardFonts } from './fonts';
 import { buildMechCardSvg } from './mechCard';
+import { printedCardSize, printSizes } from './pageLayout';
 
 beforeAll(loadCardFonts);
 
@@ -68,7 +69,7 @@ describe('buildMechCardSvg', () => {
         expect(x).toBeGreaterThanOrEqual(349);
         expect(x + size).toBeLessThanOrEqual(378);
         expect(y).toBeGreaterThanOrEqual(440);
-        expect(y + size).toBeLessThanOrEqual(469);
+        expect(y + size).toBeLessThanOrEqual(487);
       }
     });
 
@@ -88,6 +89,22 @@ describe('buildMechCardSvg', () => {
       expect(text.x + text.width).toBeLessThanOrEqual(boxes[0]!.x);
       expect(boxes[0]!.x + boxes[0]!.size).toBeLessThanOrEqual(378);
     });
+  });
+
+  it('is drawn at a sleeve’s 5:7 ratio', () => {
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
+    expect(svg.getAttribute('viewBox')).toBe('0 0 390 546');
+  });
+
+  it('prints a Hardpoint’s short name, Rv and Hv on one line in the lower part of its row', () => {
+    const svg = buildMechCardSvg(testMech, createValueMeasure());
+    // The right arm row spans 440–487 and the right torso 487–534 (docs/cards.md).
+    for (const name of ['ra-weapon', 'ra-rv', 'ra-hv']) {
+      expect(field(svg, name)?.getAttribute('y')).toBe('474');
+    }
+    for (const name of ['lt-weapon', 'lt-rv']) {
+      expect(field(svg, name)?.getAttribute('y')).toBe('521');
+    }
   });
 
   it('replaces the sample data with the Unit Profile', () => {
@@ -197,55 +214,56 @@ describe('buildMechCardSvg', () => {
       expect(lines(svg, 'notes')).toHaveLength(11);
     });
 
-    it.each([
-      { size: 'large', scale: 1 },
-      { size: 'sleeve', scale: 2.5 / 3.9 },
-    ])('keeps every mark legible and clear of the text at $size size', async ({ size, scale }) => {
-      // A mark on every Hardpoint, beside the longest short name, under a name that fills its box.
-      const crowdedMech: MechProfile = {
-        ...illegalMech,
-        name: 'Annihilator Prime Mk. IV Siege Variant',
-        class: 'Light',
-        hardpoints: {
-          leftArm: 'Heavy Machine Gun (w/Armor Piercing Ammo)',
-          rightArm: 'Medium Machine Gun (w/Armor Piercing Ammo)',
-          leftTorso: 'Improved Weapon Targeting System',
-          rightTorso: 'Plasma Lance',
-        },
-      };
-      const svg = buildMechCardSvg(crowdedMech, createValueMeasure());
-      svg.setAttribute('width', `${3.9 * scale}in`);
-      svg.setAttribute('height', `${5.1 * scale}in`);
-      document.body.append(svg);
-      // Written to disk for inspection by eye (gitignored).
-      await page.screenshot({ element: svg, path: `../../test-output/illegal-card-${size}.png` });
+    it.each(printSizes)(
+      'keeps every mark legible and clear of the text at %s size',
+      async (size) => {
+        // A mark on every Hardpoint, beside the longest short name, under a name that fills its box.
+        const crowdedMech: MechProfile = {
+          ...illegalMech,
+          name: 'Annihilator Prime Mk. IV Siege Variant',
+          class: 'Light',
+          hardpoints: {
+            leftArm: 'Heavy Machine Gun (w/Armor Piercing Ammo)',
+            rightArm: 'Medium Machine Gun (w/Armor Piercing Ammo)',
+            leftTorso: 'Improved Weapon Targeting System',
+            rightTorso: 'Plasma Lance',
+          },
+        };
+        const svg = buildMechCardSvg(crowdedMech, createValueMeasure());
+        const printed = printedCardSize('Mech', size);
+        svg.setAttribute('width', `${printed.width}in`);
+        svg.setAttribute('height', `${printed.height}in`);
+        document.body.append(svg);
+        // Written to disk for inspection by eye (gitignored).
+        await page.screenshot({ element: svg, path: `../../test-output/illegal-card-${size}.png` });
 
-      const card = svg.getBoundingClientRect();
-      const texts = Array.from(svg.querySelectorAll('text'), (text) =>
-        text.getBoundingClientRect(),
-      );
-      const markRects = Array.from(svg.querySelectorAll('[data-mark]'), (mark) =>
-        mark.getBoundingClientRect(),
-      );
-      svg.remove();
+        const card = svg.getBoundingClientRect();
+        const texts = Array.from(svg.querySelectorAll('text'), (text) =>
+          text.getBoundingClientRect(),
+        );
+        const markRects = Array.from(svg.querySelectorAll('[data-mark]'), (mark) =>
+          mark.getBoundingClientRect(),
+        );
+        svg.remove();
 
-      expect(marks(svg)).toEqual([
-        'illegal',
-        'la-illegal',
-        'ra-illegal',
-        'lt-illegal',
-        'rt-illegal',
-      ]);
-      for (const mark of markRects) {
-        expect(mark.left).toBeGreaterThanOrEqual(card.left);
-        expect(mark.right).toBeLessThanOrEqual(card.right);
-        expect(mark.top).toBeGreaterThanOrEqual(card.top);
-        expect(mark.bottom).toBeLessThanOrEqual(card.bottom);
-        // 11 viewBox units, about 0.07" even at Sleeve size.
-        expect(mark.width).toBeGreaterThanOrEqual(6.5);
-        expect(texts.filter((text) => overlaps(mark, text))).toEqual([]);
-      }
-    });
+        expect(marks(svg)).toEqual([
+          'illegal',
+          'la-illegal',
+          'ra-illegal',
+          'lt-illegal',
+          'rt-illegal',
+        ]);
+        for (const mark of markRects) {
+          expect(mark.left).toBeGreaterThanOrEqual(card.left);
+          expect(mark.right).toBeLessThanOrEqual(card.right);
+          expect(mark.top).toBeGreaterThanOrEqual(card.top);
+          expect(mark.bottom).toBeLessThanOrEqual(card.bottom);
+          // 11 viewBox units, about 0.07" even at Sleeve size.
+          expect(mark.width).toBeGreaterThanOrEqual(6.5);
+          expect(texts.filter((text) => overlaps(mark, text))).toEqual([]);
+        }
+      },
+    );
   });
 
   it('keeps a long name inside its box in the real value font', async () => {
