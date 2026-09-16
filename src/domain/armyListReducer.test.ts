@@ -30,7 +30,7 @@ describe('armyListReducer', () => {
           id: expect.any(String),
           name: 'New Mech',
           class: 'Light',
-          armor: 0,
+          armor: 10,
           heatSinks: 0,
           engineUpgrades: 0,
           notes: '',
@@ -95,7 +95,7 @@ describe('armyListReducer', () => {
           id: expect.any(String),
           name: 'New Vehicle',
           class: 'Light',
-          armor: 0,
+          armor: 10,
           engineUpgrades: 0,
           turret: false,
           staticMount: false,
@@ -216,7 +216,8 @@ describe('armyListReducer', () => {
         changes: { crewServedWeapon: 'Light Laser' },
       });
       current = armyListReducer(current, { type: 'setQuantity', id: troop!.id, quantity: 4 });
-      expect(bpTotal(current.list)).toBe(4 * (2 + 1));
+      // The Vehicle adds the 1 Bp of its default 10 Armor.
+      expect(bpTotal(current.list)).toBe(4 * (2 + 1) + 1);
 
       current = armyListReducer(current, { type: 'duplicateUnitProfile', id: troop!.id });
       const [original, copy] = current.list.unitProfiles;
@@ -342,7 +343,8 @@ describe('armyListReducer', () => {
         changes: { armor: 20, turret: true, mounts: { turret: 'Light Laser' } },
       });
       current = armyListReducer(current, { type: 'setQuantity', id: vehicle!.id, quantity: 3 });
-      expect(bpTotal(current.list)).toBe(3 * (2 + 1));
+      // The Mech adds the 1 Bp of its default 10 Armor.
+      expect(bpTotal(current.list)).toBe(3 * (2 + 1) + 1);
 
       current = armyListReducer(current, { type: 'duplicateUnitProfile', id: vehicle!.id });
       const [original, copy] = current.list.unitProfiles;

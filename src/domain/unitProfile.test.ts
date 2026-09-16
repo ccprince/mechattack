@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { armyListReducer } from './armyListReducer';
 import { describeUnitProfileIssues, type UnitProfile } from './unitProfile';
+import type { MechProfile } from './mech';
 import type { TroopProfile } from './troop';
 import type { VehicleProfile } from './vehicle';
 
@@ -15,9 +16,8 @@ function added(type: 'addMech' | 'addVehicle' | 'addTroop'): UnitProfile {
 
 describe('describeUnitProfileIssues', () => {
   it("describes a Mech's Issues in Mech terms", () => {
-    expect(describeUnitProfileIssues(added('addMech'))).toEqual([
-      'Bp is 0; a Mech must cost at least 1',
-    ]);
+    const mech: MechProfile = { ...(added('addMech') as MechProfile), armor: 0 };
+    expect(describeUnitProfileIssues(mech)).toEqual(['Bp is 0; a Mech must cost at least 1']);
   });
 
   it("describes a Vehicle's Issues in Vehicle terms", () => {
@@ -25,6 +25,7 @@ describe('describeUnitProfileIssues', () => {
       ...(added('addVehicle') as VehicleProfile),
       class: 'Ultra-light',
       staticMount: true,
+      armor: 0,
     };
     expect(describeUnitProfileIssues(vehicle)).toEqual([
       "2 Hull Options is more than an Ultra-light Vehicle's 1",
@@ -45,8 +46,6 @@ describe('describeUnitProfileIssues', () => {
   });
 
   it('is empty for a Legal Unit Profile', () => {
-    expect(
-      describeUnitProfileIssues({ ...(added('addVehicle') as VehicleProfile), armor: 10 }),
-    ).toEqual([]);
+    expect(describeUnitProfileIssues(added('addVehicle'))).toEqual([]);
   });
 });
