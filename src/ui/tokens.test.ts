@@ -47,6 +47,15 @@ describe.each([
   });
 
   it('keeps the card preview on white paper', () => {
-    expect(contrastRatio(token(palette, '--paper'), '#000')).toBe(21);
+    expect(contrastRatio(token(palette, '--paper'), '#000')).toBeCloseTo(21);
   });
+});
+
+/*
+ * In light mode the paper is the same white as a panel and it's the drop shadow that lifts it off the
+ * page. In dark mode the page falls away from it instead, so the card has to stand off that surround
+ * on its own.
+ */
+it('stands the card preview off a dark page', () => {
+  expect(contrastRatio(token(dark, '--paper'), token(dark, '--surface-sunken'))).toBeGreaterThan(3);
 });

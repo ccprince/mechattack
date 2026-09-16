@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { fakeStore } from '../domain/testStores';
-import { setUpApp, unitProfiles } from './testApp';
+import { openButton, profileRow, setUpApp } from './testApp';
 // The tokens and base styles come with the entry point, not with the app: this file is about them.
 import './global.css';
 
 const load = setUpApp();
 
 const styleOf = (element: Element) => window.getComputedStyle(element);
-const openButton = (name: string) =>
-  unitProfiles()
-    .getByRole('listitem')
-    .filter({ has: page.getByText(name, { exact: true }) })
-    .getByRole('button')
-    .first();
 
 /** Starts the app with two Mechs, the second one selected. */
 async function loadWithTwoMechs() {
@@ -47,8 +41,9 @@ describe('the selected Unit Profile', () => {
     const other = openButton('New Mech').element();
 
     // Weight and a leading rule, not colour alone.
-    const name = (row: Element) => styleOf(row.querySelector('span')!).fontWeight;
-    expect(Number(name(selected))).toBeGreaterThan(Number(name(other)));
+    const weightOf = (name: string) =>
+      Number(styleOf(profileRow(name).getByText(name, { exact: true }).element()).fontWeight);
+    expect(weightOf('New Mech 2')).toBeGreaterThan(weightOf('New Mech'));
     expect(styleOf(selected).borderInlineStartWidth).not.toBe(
       styleOf(other).borderInlineStartWidth,
     );

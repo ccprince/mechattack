@@ -34,6 +34,15 @@ export function setUpApp(): (store: KeyValueStore) => void {
 
 export const unitProfiles = () => page.getByRole('navigation', { name: 'Unit Profiles' });
 
+/** A Unit Profile's row in the list, by the name it shows. */
+export const profileRow = (name: string) =>
+  unitProfiles()
+    .getByRole('listitem')
+    .filter({ has: page.getByText(name, { exact: true }) });
+
+/** The row's first button, which opens the Unit Profile in the editor. */
+export const openButton = (name: string) => profileRow(name).getByRole('button').first();
+
 /** The text of a field on the card preview, or null while the card is loading or the field is blank. */
 export function cardField(field: string): string | null {
   return document.querySelector(`[role="img"] [data-field="${field}"]`)?.textContent ?? null;
