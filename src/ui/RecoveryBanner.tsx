@@ -5,7 +5,8 @@ import styles from './RecoveryBanner.module.css';
 
 /**
  * Offers the unreadable save kept in the backup key. Stays up, across reloads too, until the player
- * downloads or discards it. Only Discard clears the backup: a download can be blocked or cancelled.
+ * downloads or discards it, or imports an Army List. Only Discard clears the backup: a download can
+ * be blocked or cancelled.
  */
 export function RecoveryBanner({ backup, onClose }: { backup: string; onClose: () => void }) {
   const { store } = useArmyList();

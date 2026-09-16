@@ -4,7 +4,7 @@ import type { ArmyList } from '../domain/armyList';
 import { backupKey, savedArmyListKey } from '../domain/armyListStorage';
 import { fakeStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
-import { setUpApp, unitProfiles } from './testApp';
+import { importFile, setUpApp, unitProfiles } from './testApp';
 
 const load = setUpApp();
 
@@ -81,6 +81,26 @@ describe('recovery banner', () => {
     load(store);
     await expect.element(listName()).toBeInTheDocument();
     await expect.element(banner()).not.toBeInTheDocument();
+  });
+
+  it('closes once an Army List is imported, keeping the backup', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const store = fakeStore({ [savedArmyListKey]: unreadable });
+    load(store);
+    await expect.element(banner()).toBeInTheDocument();
+
+    await importFile(JSON.stringify(ironLegion));
+    await expect.element(listName()).toHaveValue('Iron Legion');
+    await expect.element(banner()).not.toBeInTheDocument();
+    expect(store.entries[backupKey]).toBe(unreadable);
+  });
+
+  it('stays up when an import is declined', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    load(fakeStore({ [savedArmyListKey]: unreadable }));
+    await importFile(JSON.stringify(ironLegion));
+    await vi.waitFor(() => expect(window.confirm).toHaveBeenCalledOnce());
+    await expect.element(banner()).toBeInTheDocument();
   });
 
   it('downloads the raw JSON and keeps the backup', async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ArmyList } from './armyList';
-import { armyListFilename, parseArmyList, serializeArmyList } from './armyListFile';
+import { armyListFilename, parseArmyList, serializeArmyList } from './armyListDocument';
 
 const ironLegion: ArmyList = {
   version: 2,

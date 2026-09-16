@@ -11,6 +11,7 @@ import { exportArmyListPdf } from '../pdf/exportPdf';
 import {
   cardField,
   cardMarks,
+  importFile,
   openButton,
   profileFlags,
   profileRow,
@@ -949,16 +950,6 @@ describe('Export and Import JSON', () => {
     unitProfiles: [mech({ id: 'a', name: 'Fist' })],
   };
   const listName = () => page.getByLabelText('Army List name');
-  /** Picks a file in the input behind Import JSON, which the button would open a picker for. */
-  async function importFile(text: string, name = 'army.json') {
-    const input = await vi.waitFor(() => {
-      const element = document.querySelector('input[type="file"]');
-      if (!element) throw new Error('The app has not rendered yet.');
-      return element;
-    });
-    await page.elementLocator(input).upload(new File([text], name, { type: 'application/json' }));
-  }
-
   it('exports the saved document, named after the Army List, and imports it back', async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     const createObjectURL = vi.spyOn(URL, 'createObjectURL');
@@ -1023,6 +1014,20 @@ describe('Export and Import JSON', () => {
     await expect.element(listName()).toHaveValue('Steel Hand');
     expect(confirm).not.toHaveBeenCalled();
     expect(JSON.parse(store.entries[savedArmyListKey]!)).toEqual(steelHand);
+  });
+
+  it('reports a file the browser could not read, keeping the Army List', async () => {
+    vi.spyOn(Blob.prototype, 'text').mockRejectedValue(
+      new DOMException('The file could not be read', 'NotReadableError'),
+    );
+    const confirm = vi.spyOn(window, 'confirm');
+    loadList(steelHand);
+    await importFile(JSON.stringify(ironLegion), 'moved.json');
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent("Couldn't read moved.json, so nothing was imported.");
+    await expect.element(listName()).toHaveValue('Steel Hand');
+    expect(confirm).not.toHaveBeenCalled();
   });
 });
 

@@ -1,5 +1,5 @@
 import type { ArmyList } from './armyList';
-import { parseArmyList, serializeArmyList } from './armyListFile';
+import { parseArmyList, serializeArmyList } from './armyListDocument';
 
 /** The part of the Web Storage API the app uses, so Node tests can pass a fake. */
 export interface KeyValueStore {

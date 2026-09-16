@@ -8,7 +8,7 @@ import {
   hasFieldedCopies,
   isOverBpLimit,
 } from '../domain/armyList';
-import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListFile';
+import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
 import { downloadJson } from './downloadJson';
@@ -17,10 +17,13 @@ import { NumberField } from './NumberField';
 export function ArmyListHeader({
   measure,
   onError,
+  onImport,
 }: {
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
   onError: (message: string | undefined) => void;
+  /** Called once an imported Army List has replaced the one being edited. */
+  onImport: () => void;
 }) {
   const { state, dispatch } = useArmyList();
   const { list } = state;
@@ -60,12 +63,14 @@ export function ArmyListHeader({
     input.value = '';
     if (!file) return;
     onError(undefined);
-    let imported;
+    let text;
     try {
-      imported = parseArmyList(await file.text());
+      text = await file.text();
     } catch {
-      // The file couldn't be read at all: reported the same as an unreadable document.
+      onError(`Couldn't read ${file.name}, so nothing was imported.`);
+      return;
     }
+    const imported = parseArmyList(text);
     if (!imported) {
       onError(`Couldn't import ${file.name}: it isn't a readable Army List.`);
       return;
@@ -73,6 +78,7 @@ export function ArmyListHeader({
     // Only one Army List is kept, so importing overwrites the one being edited.
     if (window.confirm(importQuestion(list.name, imported.name, file.name))) {
       dispatch({ type: 'replaceList', list: imported });
+      onImport();
     }
   }
 

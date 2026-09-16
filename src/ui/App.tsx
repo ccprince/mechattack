@@ -14,6 +14,9 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
   return (
     <ArmyListProvider store={store} savedList={saved.list}>
       <ArmyListEditor
+        // The imported Army List stands in for the fresh one the banner announces. As with its
+        // download, the backup stays until Discard.
+        onImport={() => setBackup(undefined)}
         banner={
           backup !== undefined && (
             <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
@@ -24,7 +27,7 @@ export function App({ store, saved }: { store: KeyValueStore; saved: SavedArmyLi
   );
 }
 
-function ArmyListEditor({ banner }: { banner: ReactNode }) {
+function ArmyListEditor({ banner, onImport }: { banner: ReactNode; onImport: () => void }) {
   const { autosaveFailed } = useArmyList();
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -54,7 +57,7 @@ function ArmyListEditor({ banner }: { banner: ReactNode }) {
         <h1 className={styles.title}>Mech Attack List Builder</h1>
       </div>
       <header className={styles.bar}>
-        <ArmyListHeader measure={measure} onError={setError} />
+        <ArmyListHeader measure={measure} onError={setError} onImport={onImport} />
       </header>
       <main className={styles.page}>
         {banner}
