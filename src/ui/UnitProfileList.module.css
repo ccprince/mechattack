@@ -54,9 +54,21 @@
   background: var(--hover-wash);
 }
 
+/*
+ * Selected, and focused, have to be told apart: focus is the ring outside the row, so selection is
+ * the row lifted onto a panel surface with a rule down its leading edge and its name set bold. The
+ * rule and the weight carry it where colour doesn't — in a high-contrast mode, or printed in grey.
+ */
 .item[aria-current='true'] {
   border-color: var(--line-strong);
+  border-inline-start: var(--space-1) solid var(--accent);
+  /* The row keeps the unselected row's text alignment, minus what the thicker edge already takes. */
+  padding-inline-start: calc(var(--space-2) - var(--space-1) + var(--border));
   background: var(--surface);
+}
+
+.item[aria-current='true'] .itemName {
+  font-weight: 600;
 }
 
 .itemName {

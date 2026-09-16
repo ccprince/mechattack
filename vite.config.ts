@@ -15,6 +15,8 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
+          // tokens.test.ts reads global.css as text; without this Vitest stubs CSS imports away.
+          css: true,
           include: ['src/**/*.test.ts'],
           exclude: ['src/**/*.browser.test.ts'],
         },
