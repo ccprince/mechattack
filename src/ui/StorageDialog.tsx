@@ -58,7 +58,7 @@ export function StorageDialog({ ref }: { ref: Ref<StorageDialogHandle> }) {
         </p>
       ) : (
         <p>
-          Some browsers clear saved data on their own, such as Safari on iPhone and iPad after about
+          Some browsers, such as Safari on iPhone and iPiad, clear saved data on their own after about
           a week without a visit.
         </p>
       )}
