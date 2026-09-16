@@ -11,7 +11,19 @@ import { StorageDialog, type StorageDialogHandle } from './StorageDialog';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
 
-export function App({ store, saved: initial }: { store: KeyValueStore; saved: SavedArmyList }) {
+/**
+ * The app for one page load. `onChange` hears of every change stored to a Saved Army List, which is
+ * when it asks the browser to keep them (#67).
+ */
+export function App({
+  store,
+  saved: initial,
+  onChange,
+}: {
+  store: KeyValueStore;
+  saved: SavedArmyList;
+  onChange: () => void;
+}) {
   const [saved, setSaved] = useState(initial);
   // Counts switches, so opening a list remounts the editor even when the id stays the same.
   const [opened, setOpened] = useState(0);
@@ -25,7 +37,13 @@ export function App({ store, saved: initial }: { store: KeyValueStore; saved: Sa
   }
 
   return (
-    <ArmyListProvider key={opened} store={store} saved={saved} onSwitch={switchTo}>
+    <ArmyListProvider
+      key={opened}
+      store={store}
+      saved={saved}
+      onSwitch={switchTo}
+      onChange={onChange}
+    >
       <ArmyListEditor
         // Only the Army Lists menu switches lists, so after a switch focus goes back to it.
         focusMenuOnMount={opened > 0}

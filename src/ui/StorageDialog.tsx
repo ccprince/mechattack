@@ -1,18 +1,24 @@
-import { useId, useImperativeHandle, useRef, type Ref } from 'react';
+import { useId, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { isStoragePersisted } from './persistentStorage';
 import styles from './StorageDialog.module.css';
 
 export type StorageDialogHandle = { show: () => void };
 
 /**
  * Says where Army Lists are kept and what loses them, which the footer's one line can't (#50). Shown
- * modally, which returns focus on close to whatever opened it.
+ * modally, which returns focus on close to whatever opened it. Whether the browser has agreed to keep
+ * them is checked on each opening (#67).
  */
 export function StorageDialog({ ref }: { ref: Ref<StorageDialogHandle> }) {
   const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
+  const [persisted, setPersisted] = useState(false);
 
   useImperativeHandle(ref, () => ({
     show() {
+      // Unknown until the browser answers, so the dialog never opens on a stale agreement.
+      setPersisted(false);
+      void isStoragePersisted().then(setPersisted);
       const element = dialog.current!;
       element.showModal();
       // Opening focuses Close, the last thing in it, which on a short screen scrolls the reader past
@@ -45,10 +51,17 @@ export function StorageDialog({ ref }: { ref: Ref<StorageDialogHandle> }) {
         <strong>They won't be there</strong> in a different browser, on another device, or in a
         private window. A private window's lists are lost when it closes.
       </p>
-      <p>
-        Some browsers clear saved data on their own, such as Safari on iPhone and iPad after about a
-        week without a visit.
-      </p>
+      {persisted ? (
+        <p>
+          <strong>This browser has agreed</strong> not to clear them on its own, though they're
+          still lost in the cases above.
+        </p>
+      ) : (
+        <p>
+          Some browsers, such as Safari on iPhone and iPiad, clear saved data on their own after
+          about a week without a visit.
+        </p>
+      )}
       <p>
         <strong>To keep a copy</strong> or move a list to another device, open the Army Lists menu
         and choose <strong>Export Army List</strong>. It saves the open Army List as a file;{' '}

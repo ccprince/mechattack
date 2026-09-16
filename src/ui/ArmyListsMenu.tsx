@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type FocusEvent }
 import { newArmyList } from '../domain/armyList';
 import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import {
-  addSavedArmyList,
   deleteSavedArmyList,
   listSavedArmyLists,
   switchSavedArmyList,
@@ -31,7 +30,7 @@ export function ArmyListsMenu({
   /** Opens the dialog saying where Army Lists are kept (#50). */
   onExplainStorage: () => void;
 }) {
-  const { state, store, openId, switchList } = useArmyList();
+  const { state, store, openId, switchList, addList } = useArmyList();
   const { list } = state;
   const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
@@ -101,7 +100,7 @@ export function ArmyListsMenu({
       return;
     }
     // Added alongside the Open Army List, never over it, so there's nothing to confirm.
-    switchList((store) => addSavedArmyList(store, imported));
+    addList(imported);
   }
 
   return (
@@ -168,9 +167,7 @@ export function ArmyListsMenu({
         <button
           type="button"
           className={styles.item}
-          onClick={() =>
-            choose(() => switchList((store) => addSavedArmyList(store, newArmyList())))
-          }
+          onClick={() => choose(() => addList(newArmyList()))}
         >
           New Army List
         </button>
@@ -186,11 +183,7 @@ export function ArmyListsMenu({
           type="button"
           className={styles.item}
           onClick={() =>
-            choose(() =>
-              switchList((store) =>
-                addSavedArmyList(store, { ...list, name: `${displayName(list.name)} (copy)` }),
-              ),
-            )
+            choose(() => addList({ ...list, name: `${displayName(list.name)} (copy)` }))
           }
         >
           Duplicate Army List

@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { KeyValueStore } from '../domain/armyListStorage';
 import { openSavedArmyList } from '../domain/armyListStorage';
 import { App } from './App';
+import { askToPersistOncePerLoad } from './persistentStorage';
 
 /** Starts the app in `container` from what `store` holds, as a page load does. */
 export function mountApp(container: Element, store: KeyValueStore): Root {
@@ -11,7 +12,7 @@ export function mountApp(container: Element, store: KeyValueStore): Root {
   const root = createRoot(container);
   root.render(
     <StrictMode>
-      <App store={store} saved={saved} />
+      <App store={store} saved={saved} onChange={askToPersistOncePerLoad()} />
     </StrictMode>,
   );
   return root;
