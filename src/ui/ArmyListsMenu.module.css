@@ -1,12 +1,5 @@
 .button {
-  display: inline-flex;
   padding: var(--space-2);
-  line-height: 0;
-}
-
-.button svg {
-  width: var(--space-4);
-  height: var(--space-4);
 }
 
 /* Placed by script under the button; `inset: auto` clears the popover's default centring. */

@@ -100,11 +100,11 @@ describe('header', () => {
     await expect.element(increase).toBeEnabled();
   });
 
-  it('steps from a half-typed value, settled into range first', async () => {
+  it('steps a half-typed value back into range', async () => {
     load(fakeStore());
     await field('Bp Limit').fill('-3');
     await page.getByRole('button', { name: 'Increase Bp Limit' }).click();
-    await expect.element(field('Bp Limit')).toHaveValue(1);
+    await expect.element(field('Bp Limit')).toHaveValue(0);
   });
 });
 
@@ -322,6 +322,24 @@ describe('Unit Profile editor', () => {
     await expect.poll(() => cardField('armor')).toBe('110');
     await expect.poll(() => cardField('notes')).toBe('Jump jets');
     await expect.element(page.getByRole('img', { name: 'Ironclad record card' })).toBeVisible();
+  });
+
+  it('steps Armor by 10, from a half-typed value to the next 10 in that direction', async () => {
+    await loadWithNewMech();
+    const increase = page.getByRole('button', { name: 'Increase Armor' });
+    const decrease = page.getByRole('button', { name: 'Decrease Armor' });
+
+    await field('Armor').fill('50');
+    await increase.click();
+    await expect.element(field('Armor')).toHaveValue(60);
+
+    await field('Armor').fill('55');
+    await increase.click();
+    await expect.element(field('Armor')).toHaveValue(60);
+
+    await field('Armor').fill('55');
+    await decrease.click();
+    await expect.element(field('Armor')).toHaveValue(50);
   });
 
   it('works out Bp, Mv, Tp and Hc from the Class and upgrades, showing Bp against its max', async () => {

@@ -65,4 +65,15 @@ describe('stepInRange', () => {
     expect(stepInRange(150, armor, 1)).toBe(150);
     expect(stepInRange(0, armor, -1)).toBe(0);
   });
+
+  it('moves a value off the step to the next step in that direction', () => {
+    expect(stepInRange(55, armor, 1)).toBe(60);
+    expect(stepInRange(55, armor, -1)).toBe(50);
+    expect(stepInRange(2.5, bp, 1)).toBe(3);
+  });
+
+  it('brings a value outside the range back into it', () => {
+    expect(stepInRange(-3, bp, 1)).toBe(1);
+    expect(stepInRange(400, armor, -1)).toBe(150);
+  });
 });

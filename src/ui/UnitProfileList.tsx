@@ -1,5 +1,6 @@
 import { bpOfCopies, hasNameClash, type ArmyList } from '../domain/armyList';
 import type { ArmyListAction } from '../domain/armyListReducer';
+import { stepInRange } from '../domain/numberRange';
 import { quantityRange } from '../domain/profileFields';
 import { unitProfileBp, unitProfileIssues, type UnitProfile } from '../domain/unitProfile';
 import { useArmyList } from './ArmyListContext';
@@ -44,7 +45,6 @@ export function UnitProfileList() {
               </h2>
               <button
                 type="button"
-                className={styles.iconButton}
                 aria-label={addLabel}
                 title={addLabel}
                 onClick={() => dispatch(add)}
@@ -117,29 +117,28 @@ function describeFlag(list: ArmyList, profile: UnitProfile): string | undefined 
 function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) {
   const { dispatch } = useArmyList();
   const { id, quantity } = profile;
-  const { min, max, step } = quantityRange;
+  const fewer = stepInRange(quantity, quantityRange, -1);
+  const more = stepInRange(quantity, quantityRange, 1);
   const setQuantity = (value: number) => dispatch({ type: 'setQuantity', id, quantity: value });
 
   return (
     <div className={styles.actions}>
       <button
         type="button"
-        className={styles.iconButton}
         aria-label={`One fewer ${name}`}
         title="One fewer"
-        disabled={quantity - step < min}
-        onClick={() => setQuantity(quantity - step)}
+        disabled={fewer === quantity}
+        onClick={() => setQuantity(fewer)}
       >
         <MinusIcon />
       </button>
       <output className={styles.quantity}>{quantity}</output>
       <button
         type="button"
-        className={styles.iconButton}
         aria-label={`One more ${name}`}
         title="One more"
-        disabled={quantity + step > max}
-        onClick={() => setQuantity(quantity + step)}
+        disabled={more === quantity}
+        onClick={() => setQuantity(more)}
       >
         <PlusIcon />
       </button>
@@ -147,7 +146,6 @@ function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) 
       <span className={styles.spacer} />
       <button
         type="button"
-        className={styles.iconButton}
         aria-label={`Duplicate ${name}`}
         title="Duplicate"
         onClick={() => dispatch({ type: 'duplicateUnitProfile', id })}
@@ -156,7 +154,6 @@ function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) 
       </button>
       <button
         type="button"
-        className={styles.iconButton}
         aria-label={`Delete ${name}`}
         title="Delete"
         onClick={() => {

@@ -1,5 +1,11 @@
 import { useId, useState } from 'react';
-import { clampToRange, parseInRange, stepInRange, type NumberRange } from '../domain/numberRange';
+import {
+  clampToRange,
+  parseInRange,
+  readNumber,
+  stepInRange,
+  type NumberRange,
+} from '../domain/numberRange';
 import { MinusIcon, PlusIcon } from './icons';
 import styles from './NumberField.module.css';
 
@@ -26,7 +32,8 @@ export function NumberField({
 }) {
   const id = useId();
   const [draft, setDraft] = useState<string>();
-  const settled = draft === undefined ? value : clampToRange(draft, range, value);
+  /** What the buttons step from: the number as typed, even out of range, or else the value. */
+  const typed = (draft === undefined ? undefined : readNumber(draft)) ?? value;
 
   function edit(text: string) {
     setDraft(text);
@@ -36,12 +43,13 @@ export function NumberField({
 
   function settle() {
     if (draft === undefined) return;
+    const settled = clampToRange(draft, range, value);
     if (settled !== value) onChange(settled);
     setDraft(undefined);
   }
 
   function step(direction: 1 | -1) {
-    const stepped = stepInRange(settled, range, direction);
+    const stepped = stepInRange(typed, range, direction);
     if (stepped !== value) onChange(stepped);
     setDraft(undefined);
   }
@@ -51,12 +59,18 @@ export function NumberField({
     <label className={className} htmlFor={id}>
       {!labelHidden && <span>{label}</span>}
       <span className={styles.control}>
-        {/* Out of the tab order: the input's own arrow keys step it from the keyboard. */}
+        {/*
+         * Out of the tab order: the input's own arrow keys step it from the keyboard. Pressing one
+         * keeps focus in the input, so a half-typed value isn't settled by the blur before it's
+         * stepped, and a phone's keyboard stays open.
+         */}
         <button
           type="button"
           tabIndex={-1}
+          onMouseDown={(event) => event.preventDefault()}
           aria-label={`Decrease ${label}`}
-          disabled={settled <= range.min}
+          title="Decrease"
+          disabled={typed <= range.min}
           onClick={() => step(-1)}
         >
           <MinusIcon />
@@ -79,8 +93,10 @@ export function NumberField({
         <button
           type="button"
           tabIndex={-1}
+          onMouseDown={(event) => event.preventDefault()}
           aria-label={`Increase ${label}`}
-          disabled={settled >= range.max}
+          title="Increase"
+          disabled={typed >= range.max}
           onClick={() => step(1)}
         >
           <PlusIcon />

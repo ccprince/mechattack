@@ -22,17 +22,6 @@
   margin: 0;
 }
 
-/* Square around the icon, with no text baseline for the SVG to sit on. */
 .control button {
-  display: inline-flex;
   flex-shrink: 0;
-  align-items: center;
-  padding: var(--space-1);
-  line-height: 0;
-}
-
-/* The icons' own 16 box, sized here rather than on the SVG so layout stays in this module. */
-.control svg {
-  width: var(--space-4);
-  height: var(--space-4);
 }
