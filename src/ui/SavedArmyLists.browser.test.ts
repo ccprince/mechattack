@@ -81,11 +81,15 @@ describe('Saved Army Lists', () => {
     await expect.poll(optionNames).toEqual(['Iron Legion', 'Untitled Army List']);
 
     await listName().fill('Steel Hand');
-    // An edit marks it changed, and the picker shows that the next time it's used.
+    // Closed, the picker shows names only; in use, it shows when each changed, an edit counting.
+    await expect.poll(optionTexts).toEqual(['Iron Legion', 'Steel Hand']);
     await savedLists().click();
     await expect
       .poll(optionTexts)
       .toEqual(['Steel Hand · just now', expect.stringMatching(/^Iron Legion · /)]);
+
+    await listName().click();
+    await expect.poll(optionTexts).toEqual(['Steel Hand', 'Iron Legion']);
   });
 
   it('reopens the list last open on reload', async () => {

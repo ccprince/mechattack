@@ -17,16 +17,19 @@ export function SavedArmyListPicker() {
   // Read from storage when the picker is used, not on every edit: each read parses every list.
   const [summaries, setSummaries] = useState(() => listSavedArmyLists(store));
   const [now, setNow] = useState(() => new Date());
+  // Times show only while the picker is in use, so a closed picker never shows a stale one.
+  const [active, setActive] = useState(false);
 
-  function refresh() {
+  function activate() {
     setSummaries(listSavedArmyLists(store));
     setNow(new Date());
+    setActive(true);
   }
 
   const options = summaries.map(({ id, name, changed }) => {
     // The Open Army List's name follows its field as it's typed.
-    const shown = id === openId ? list.name : name;
-    return { id, text: `${displayName(shown)} · ${changedLabel(changed, now)}` };
+    const text = displayName(id === openId ? list.name : name);
+    return { id, text: active ? `${text} · ${changedLabel(changed, now)}` : text };
   });
   // Storage couldn't keep the Open Army List, so it isn't among them; it's still the one shown.
   if (openId === undefined) options.unshift({ id: '', text: displayName(list.name) });
@@ -43,8 +46,10 @@ export function SavedArmyListPicker() {
         <span>Saved Army Lists</span>
         <select
           value={openId ?? ''}
-          onFocus={refresh}
-          onPointerDown={refresh}
+          // Pointer down comes before the browser draws the options, so they open with times.
+          onFocus={activate}
+          onPointerDown={activate}
+          onBlur={() => setActive(false)}
           onChange={(event) => {
             const id = event.target.value;
             if (id !== '') switchList((store) => switchSavedArmyList(store, id));

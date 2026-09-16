@@ -112,9 +112,7 @@ describe('recovery banner', () => {
     store.entries[armyListKey('list-2')] = unreadable;
     load(store);
     await expect.element(banner()).not.toBeInTheDocument();
-    await expect
-      .poll(() => optionTexts().some((text) => text.startsWith('Unreadable Army List · ')))
-      .toBe(true);
+    await expect.poll(optionTexts).toContain('Unreadable Army List');
 
     await savedLists().selectOptions('list-2');
     await expect.element(banner()).toBeInTheDocument();
