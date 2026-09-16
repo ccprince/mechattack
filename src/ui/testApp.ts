@@ -32,6 +32,16 @@ export function setUpApp(): (store: KeyValueStore) => void {
   };
 }
 
+/** Picks a file in the input behind Import JSON, which the button would open a picker for. */
+export async function importFile(text: string, name = 'army.json') {
+  const input = await vi.waitFor(() => {
+    const element = document.querySelector('input[type="file"]');
+    if (!element) throw new Error('The app has not rendered yet.');
+    return element;
+  });
+  await page.elementLocator(input).upload(new File([text], name, { type: 'application/json' }));
+}
+
 export const unitProfiles = () => page.getByRole('navigation', { name: 'Unit Profiles' });
 
 /** A Unit Profile's row in the list, by the name it shows. */

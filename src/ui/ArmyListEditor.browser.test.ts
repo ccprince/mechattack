@@ -11,6 +11,7 @@ import { exportArmyListPdf } from '../pdf/exportPdf';
 import {
   cardField,
   cardMarks,
+  importFile,
   openButton,
   profileFlags,
   profileRow,
@@ -928,6 +929,104 @@ describe('Download PDF', () => {
 
     await downloadPdf().click();
     await vi.waitFor(() => expect(save).toHaveBeenCalledOnce());
+    expect(confirm).not.toHaveBeenCalled();
+  });
+});
+
+describe('Export and Import JSON', () => {
+  const ironLegion: ArmyList = {
+    version: 2,
+    name: 'Iron Legion',
+    bpLimit: 40,
+    unitProfiles: [
+      mech({ id: 'a', name: 'Ironclad', quantity: 2 }),
+      vehicle({ id: 'b', name: 'Hellhound' }),
+    ],
+  };
+  const steelHand: ArmyList = {
+    version: 2,
+    name: 'Steel Hand',
+    bpLimit: 60,
+    unitProfiles: [mech({ id: 'a', name: 'Fist' })],
+  };
+  const listName = () => page.getByLabelText('Army List name');
+  it('exports the saved document, named after the Army List, and imports it back', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL');
+    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(ironLegion) });
+    load(store);
+
+    await page.getByRole('button', { name: 'Export JSON' }).click();
+    expect(click).toHaveBeenCalledOnce();
+    expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('iron-legion.json');
+    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toBe('application/json');
+    const exported = await blob.text();
+    expect(exported).toBe(store.entries[savedArmyListKey]);
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    loadList(steelHand);
+    await expect.element(listName()).toHaveValue('Steel Hand');
+    await importFile(exported);
+    await expect.element(listName()).toHaveValue('Iron Legion');
+    expect(confirm).toHaveBeenCalledWith(
+      "Replace Steel Hand with Iron Legion from army.json? This can't be undone.",
+    );
+    await expect.element(unitProfiles().getByText('Hellhound')).toBeInTheDocument();
+    await expect.element(field('Name')).toHaveValue('Ironclad');
+  });
+
+  it('replaces the Army List only once confirmed', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList(steelHand);
+    await importFile(JSON.stringify(ironLegion));
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+    await expect.element(listName()).toHaveValue('Steel Hand');
+
+    confirm.mockReturnValue(true);
+    // The same file again: the input is cleared after each pick, so choosing it still imports.
+    await importFile(JSON.stringify(ironLegion));
+    await expect.element(listName()).toHaveValue('Iron Legion');
+  });
+
+  it('names unnamed Army Lists in the confirmation', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    loadList({ ...steelHand, name: '' });
+    await importFile(JSON.stringify({ ...ironLegion, name: ' ' }));
+    await vi.waitFor(() =>
+      expect(confirm).toHaveBeenCalledWith(
+        "Replace the current Army List with the Army List from army.json? This can't be undone.",
+      ),
+    );
+  });
+
+  it.each([
+    ['a file that is not JSON', 'not json at all'],
+    ['JSON the schema rejects', JSON.stringify({ ...ironLegion, bpLimit: -5 })],
+  ])('rejects %s, keeping the Army List and showing an error', async (_, text) => {
+    const confirm = vi.spyOn(window, 'confirm');
+    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(steelHand) });
+    load(store);
+    await importFile(text, 'broken.json');
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent("Couldn't import broken.json: it isn't a readable Army List.");
+    await expect.element(listName()).toHaveValue('Steel Hand');
+    expect(confirm).not.toHaveBeenCalled();
+    expect(JSON.parse(store.entries[savedArmyListKey]!)).toEqual(steelHand);
+  });
+
+  it('reports a file the browser could not read, keeping the Army List', async () => {
+    vi.spyOn(Blob.prototype, 'text').mockRejectedValue(
+      new DOMException('The file could not be read', 'NotReadableError'),
+    );
+    const confirm = vi.spyOn(window, 'confirm');
+    loadList(steelHand);
+    await importFile(JSON.stringify(ironLegion), 'moved.json');
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent("Couldn't read moved.json, so nothing was imported.");
+    await expect.element(listName()).toHaveValue('Steel Hand');
     expect(confirm).not.toHaveBeenCalled();
   });
 });

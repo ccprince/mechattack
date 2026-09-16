@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import type { Measure } from '../cards/fitText';
 import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
 import {
@@ -8,17 +8,22 @@ import {
   hasFieldedCopies,
   isOverBpLimit,
 } from '../domain/armyList';
+import { armyListFilename, parseArmyList, serializeArmyList } from '../domain/armyListDocument';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
+import { downloadJson } from './downloadJson';
 import { NumberField } from './NumberField';
 
 export function ArmyListHeader({
   measure,
   onError,
+  onImport,
 }: {
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
   onError: (message: string | undefined) => void;
+  /** Called once an imported Army List has replaced the one being edited. */
+  onImport: () => void;
 }) {
   const { state, dispatch } = useArmyList();
   const { list } = state;
@@ -27,6 +32,7 @@ export function ArmyListHeader({
   const total = bpTotal(list);
   const over = isOverBpLimit(list);
   const canPrint = measure !== undefined && hasFieldedCopies(list);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   async function downloadPdf() {
     if (!measure) return;
@@ -43,6 +49,36 @@ export function ArmyListHeader({
       onError(`Couldn't build the PDF: ${String(reason)}`);
     } finally {
       setPrinting(false);
+    }
+  }
+
+  function exportJson() {
+    downloadJson(serializeArmyList(list), armyListFilename(list.name));
+  }
+
+  async function importJson(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    // Cleared so picking the same file again still fires a change.
+    input.value = '';
+    if (!file) return;
+    onError(undefined);
+    let text;
+    try {
+      text = await file.text();
+    } catch {
+      onError(`Couldn't read ${file.name}, so nothing was imported.`);
+      return;
+    }
+    const imported = parseArmyList(text);
+    if (!imported) {
+      onError(`Couldn't import ${file.name}: it isn't a readable Army List.`);
+      return;
+    }
+    // Only one Army List is kept, so importing overwrites the one being edited.
+    if (window.confirm(importQuestion(list.name, imported.name, file.name))) {
+      dispatch({ type: 'replaceList', list: imported });
+      onImport();
     }
   }
 
@@ -73,6 +109,22 @@ export function ArmyListHeader({
           </p>
         )}
       </div>
+      <div className={styles.fileControls}>
+        <button type="button" onClick={exportJson}>
+          Export JSON
+        </button>
+        <button type="button" onClick={() => fileInput.current?.click()}>
+          Import JSON
+        </button>
+        {/* Opened by Import JSON: a bare file input can't be labelled or styled like the buttons. */}
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onChange={importJson}
+        />
+      </div>
       <div className={styles.printControls}>
         <label className={styles.printSize}>
           <span>Print size</span>
@@ -102,4 +154,11 @@ function illegalPrintQuestion(profiles: readonly { name: string }[]): string {
   const subject = names.length > 0 ? `${names.join(', ')} and ${last} have` : `${last} has`;
   const cards = names.length > 0 ? 'their cards print' : 'its card prints';
   return `${subject} Issues, so ${cards} marked ILLEGAL. Download the PDF anyway?`;
+}
+
+/** Asks whether to replace the Army List being edited, naming an unnamed one by where it is. */
+function importQuestion(currentName: string, importedName: string, filename: string): string {
+  const current = currentName.trim() || 'the current Army List';
+  const imported = importedName.trim() || 'the Army List';
+  return `Replace ${current} with ${imported} from ${filename}? This can't be undone.`;
 }
