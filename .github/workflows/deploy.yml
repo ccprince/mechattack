@@ -45,3 +45,7 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        env:
+          # deploy-pages sends GITHUB_SHA as the Pages build version, and Pages keeps the first deploy of
+          # a version. A release tag's commit was already deployed by its merge, so make each run unique.
+          GITHUB_SHA: ${{ github.sha }}-${{ github.run_id }}
