@@ -98,7 +98,7 @@ describe('buildTroopCardSvg', () => {
     expect(field(svg, 'mv')?.textContent).toBe('3');
     expect(field(svg, 'tp')?.textContent).toBe('4');
     expect(field(svg, 'sv')?.textContent).toBe('5');
-    expect(field(svg, 'weapon')?.textContent).toBe('Light Missile');
+    expect(lines(svg, 'weapon')).toEqual(['Light Missile']);
     expect(field(svg, 'rv')?.textContent).toBe('3-10/14');
     expect(lines(svg, 'standard-equipment')).toEqual(['Individual Weapons']);
     expect(lines(svg, 'notes')).toEqual(['Holds the ridge.']);
@@ -140,7 +140,8 @@ describe('buildTroopCardSvg', () => {
     expect(lines(svg, 'illegal')).toEqual(['ILLEGAL: 2 issues']);
     expect(lines(svg, 'standard-equipment')).toEqual(['Individual Weapons, Jump Packs']);
     expect(field(svg, 'notes')).toBeNull();
-    expect(field(svg, 'weapon')?.textContent).toBe('Medium Machine Gun (w/A…');
+    // Too long for one line, so it wraps rather than shrinking away.
+    expect(lines(svg, 'weapon')).toEqual(['Medium Machine', 'Gun (w/Armor…']);
   });
 
   // Legal Jump Infantry with long notes and the widest Rv.

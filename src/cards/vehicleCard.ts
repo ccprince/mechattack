@@ -3,7 +3,7 @@ import { vehicleStats } from '../domain/frame';
 import type { VehicleProfile } from '../domain/vehicle';
 import { vehicleIssues } from '../domain/vehicleRules';
 import { dpDrawing } from './dpShape';
-import { fitLine, type Measure } from './fitText';
+import { fitLine, fitOrWrap, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
@@ -25,7 +25,20 @@ const dpAreas = [
   { x: 320, y: 435, width: 58, height: 31, cellSize: 7.75, rollsFontSize: 11 },
   { x: 320, y: 466, width: 58, height: 32, cellSize: 7.75, rollsFontSize: 11 },
 ];
-const mountRow = { weaponX: 16, rvX: 276, rvDy: 2, weaponFontSize: 14 };
+/**
+ * A long name wraps to a second line rather than shrinking away. The row is only 31 tall, so the
+ * wrapped pair sets smaller and tighter than a single line, and starts `wrapDy` above its baseline.
+ */
+const mountRow = {
+  weaponX: 16,
+  rvX: 276,
+  rvDy: 2,
+  fontSize: 14,
+  wrapFontSize: 11.5,
+  lineHeight: 12.5,
+  maxLines: 2,
+  wrapDy: -6,
+};
 /** Mv and Tp print large in the middle of their cell: they're read constantly in play. */
 const statValue = { x: 316, width: 80, fontSize: 24 };
 // Full names run to the end of the row, where canvas measurement under-reports the rendered width
@@ -84,7 +97,23 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
       addWarningTriangle(data, `${prefix}-illegal`, { x, y: y + dy, width, height });
     }
     const maxWidth = weaponWidth[row.marked ? 'marked' : 'unmarked'];
-    line(`${prefix}-weapon`, row.text, mountRow.weaponX, y, maxWidth, mountRow.weaponFontSize);
+    const weapon = fitOrWrap(
+      row.text,
+      maxWidth,
+      mountRow.fontSize,
+      mountRow.wrapFontSize,
+      mountRow.maxLines,
+      measure,
+    );
+    addWrappedValue(
+      data,
+      `${prefix}-weapon`,
+      weapon.lines,
+      mountRow.weaponX,
+      y + (weapon.lines.length > 1 ? mountRow.wrapDy : 0),
+      weapon.fontSize,
+      mountRow.lineHeight,
+    );
     if (row.rv) line(`${prefix}-rv`, row.rv, mountRow.rvX, y + mountRow.rvDy, 80, 16, 'middle');
     if (row.dp) addDp(data, prefix, dpDrawing(row.dp, dpAreas[index]!, measure));
   }

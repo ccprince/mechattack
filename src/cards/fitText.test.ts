@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fitLine, wrapLines, type Measure } from './fitText';
+import { fitLine, fitOrWrap, wrapLines, type Measure } from './fitText';
 
 // Every character is half the font size wide.
 const measure: Measure = (text, fontSize) => text.length * fontSize * 0.5;
@@ -22,6 +22,31 @@ describe('fitLine', () => {
     const fitted = fitLine('a'.repeat(40), 100, 12, measure);
     expect(fitted.fontSize).toBe(8);
     expect(fitted.text).toBe(`${'a'.repeat(24)}…`);
+  });
+});
+
+describe('fitOrWrap', () => {
+  it('keeps a name that fits on one line at full size', () => {
+    // 16 chars: 14px → 112 wide.
+    expect(fitOrWrap('Turret: Lt Laser', 204, 14, 12, 2, measure)).toEqual({
+      lines: ['Turret: Lt Laser'],
+      fontSize: 14,
+    });
+  });
+
+  it('wraps a name too wide for one line, at the smaller wrapped size', () => {
+    // 36 chars: 14px → 252 wide, over 204; at 12px each char is 6 wide, so 34 fit.
+    expect(fitOrWrap('Static: Remote Guided Missile System', 204, 14, 12, 2, measure)).toEqual({
+      lines: ['Static: Remote Guided Missile', 'System'],
+      fontSize: 12,
+    });
+  });
+
+  it('truncates the last line when the name needs more lines than it has', () => {
+    const { lines, fontSize } = fitOrWrap('word '.repeat(30).trim(), 60, 13, 13, 2, measure);
+    expect(fontSize).toBe(13);
+    expect(lines).toHaveLength(2);
+    expect(lines.at(-1)).toMatch(/…$/);
   });
 });
 

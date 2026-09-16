@@ -2,7 +2,7 @@ import troopTemplate from '../../cards/troops-card.svg?raw';
 import { troopStats, type TroopProfile } from '../domain/troop';
 import { troopIssues } from '../domain/troopRules';
 import { dpDrawing } from './dpShape';
-import { fitLine, type Measure } from './fitText';
+import { fitLine, fitOrWrap, type Measure } from './fitText';
 import { strengthCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
 import {
@@ -19,7 +19,11 @@ import { crewServedWeaponRow, troopNotes, troopNotesBox } from './troopCardConte
 // Full names run to the end of the row, where canvas measurement under-reports the rendered width
 // by a few percent, so these keep 8 more padding than the field map's ~8.
 const weaponWidth = { unmarked: 128, marked: 112 };
-const weaponFontSize = 13;
+/**
+ * A long name wraps to a second line rather than shrinking away. The row has the height to keep the
+ * wrapped pair at full size; it starts `wrapDy` above the single line's baseline.
+ */
+const weaponRow = { x: 15, y: 214, fontSize: 13, lineHeight: 14, maxLines: 2, wrapDy: -4 };
 /** Mv, Tp and Sv print large in the middle of their cell: they're read constantly in play. */
 const statValue = { x: 316, width: 80, fontSize: 24 };
 // Illegal marks (docs/cards.md): the name triangle, and the Crew Served Weapon row's marker.
@@ -71,13 +75,22 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
   const row = crewServedWeaponRow(profile, issues);
   if (row) {
     if (row.marked) addWarningTriangle(data, 'weapon-illegal', weaponMark);
-    line(
-      'weapon',
+    const weapon = fitOrWrap(
       row.text,
-      15,
-      214,
       weaponWidth[row.marked ? 'marked' : 'unmarked'],
-      weaponFontSize,
+      weaponRow.fontSize,
+      weaponRow.fontSize,
+      weaponRow.maxLines,
+      measure,
+    );
+    addWrappedValue(
+      data,
+      'weapon',
+      weapon.lines,
+      weaponRow.x,
+      weaponRow.y + (weapon.lines.length > 1 ? weaponRow.wrapDy : 0),
+      weapon.fontSize,
+      weaponRow.lineHeight,
     );
     if (row.rv) line('rv', row.rv, 184.5, 220, 51, 16, 'middle');
     if (row.dp) addDp(data, 'weapon', dpDrawing(row.dp, dpArea, measure));

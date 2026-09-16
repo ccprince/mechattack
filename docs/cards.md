@@ -83,6 +83,11 @@ Anchor = `x`,`y` of the `<text>` (baseline). "Center" means `text-anchor="middle
 the value must stay inside: use its width minus ~8 units of padding as the max text width. Value
 font is 12px unless noted.
 
+**Padding on rows that print a full name.** Canvas `measureText` under-reports the width the browser
+and svg2pdf actually lay out, by up to ~3% on a long string, so a value fitted right to the edge of
+its box spills past it. The Vehicle mount rows and the Troop Crew Served Weapon row print names long
+enough to reach that edge, so they take 8 more padding than the ~8 above. See issue #42.
+
 Conventions across all cards:
 - Rv prints as `normal/extended`, like `10/14`, or `min-normal/extended`, like `3-10/14`, in its single box. It stays blank for Support Equipment with no range.
 - Only Mechs track heat, so only the Mech card has Hc and Hv. Hv stays blank when the entry generates none.
@@ -143,11 +148,14 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 | `illegal` | 16, 277, 11px | 12–378 × 246–400 | Only with Issues: `ILLEGAL: …`, emboldened and wrapped like the Mech's, ≤ 2 lines |
 | `cargo-bays` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Only with Cargo Bays: `Cargo Bay ×N`, one line below `illegal` |
 | `notes` | 16, 277 + 14 per line above, 11px | 12–378 × 246–400 | Multi-line: `dy="14"`. The three fields share 9 lines; `notes` gets what's left |
-| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 14px | 12–232 × 435–466 / 466–498 | Mount row: label and full name, `Turret: Light Laser` or `Static: Light Machine Gun` |
+| `mount1-weapon` / `mount2-weapon` | 16, 455 / 486, 14px | 12–232 × 435–466 / 466–498 | Mount row: label and full name, `Turret: Light Laser` or `Static: Light Machine Gun`. Wraps: see below |
 | `mount1-rv` / `mount2-rv` | 276, 457 / 488 center, 16px | 232–320 × 435–466 / 466–498 | The row's Rv, blank for Support Equipment with no range |
 
 **Mount rows.** The row is wide enough for the entry's full name, so it prints that rather than the
-short name; only the `ILLEGAL` line is tight enough to need short names. The box under the
+short name; only the `ILLEGAL` line is tight enough to need short names. A name too wide for one line
+**wraps** to a second rather than shrinking away: at 11.5px, `dy="12.5"`, ≤ 2 lines, with the first
+baseline 6 above the single-line one (449 / 480). The row is only 31 tall, so the wrapped pair sets
+smaller and tighter than a single line; 14px is for the one-line case alone. The box under the
 `WEAPON / EQUIPMENT:` and `RV:` labels holds two rows. Only
 filled mounts print, one per row from the top, in the order Turret, Static Mount slot 1, Static
 Mount slot 2; a Hull Option the Vehicle doesn't take prints nothing. A Legal Vehicle fills at most
@@ -180,11 +188,12 @@ Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; col
 | `illegal` | 16, 143, 10px | 12–250 × 113–164 | Only with Issues: `ILLEGAL: …`, emboldened like the Mech's, **1 line** |
 | `standard-equipment` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | One line: `Individual Weapons` or `Individual Weapons, Jump Packs` |
 | `notes` | 16, 143 + 13 per line above, 10px | 12–250 × 113–164 | Multi-line: `dy="13"`. The three fields share **2 lines**; `notes` gets what's left, cut off with "…", and is left out when none are |
-| `weapon` | 15, 214, 13px | 12–155 × 182–238 | The Crew Served Weapon's full name, one line, 136 wide |
+| `weapon` | 15, 214, 13px | 12–155 × 182–238 | The Crew Served Weapon's full name, 128 wide. Wraps to a 2nd line at the same size, `dy="14"`, first baseline 210 |
 | `rv` | 184.5, 220 center, 16px | 155–214 × 182–238 | Blank for Support Equipment with no range |
 
 **Crew Served Weapon.** Only a filled Crew Served Weapon prints `weapon` and `rv`. The row is wide
-enough for the full name, so it prints that; only the `ILLEGAL` line uses short names. A name missing
+enough for the full name, so it prints that; only the `ILLEGAL` line uses short names. Unlike the
+Vehicle's mount row, this one has the height to keep a wrapped pair at full size. A name missing
 from the Catalog prints as stored, with a blank Rv. Standard Equipment isn't
 stored: it follows from the Troop Class.
 
