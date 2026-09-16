@@ -13,11 +13,9 @@ const textPairs: [ink: string, on: string, where: string][] = [
   ['--ink-muted', '--surface-sunken', 'the footer, the empty-editor note'],
   ['--accent', '--surface', 'a link in the app bar'],
   ['--accent', '--surface-sunken', 'a link in the footer'],
-  ['--danger', '--surface', 'an over-limit Bp total in the app bar'],
-  ['--danger', '--surface-sunken', 'an over-limit value in the editor'],
-  ['--ink-inverse', '--danger', 'the Issues badge on a Unit Profile row'],
+  ['--danger', '--surface', 'an over-limit Bp total in the app bar, the mark on a selected row'],
+  ['--danger', '--surface-sunken', 'an over-limit value in the editor, the mark on a row'],
   ['--danger-ink', '--danger-surface', "the editor's Issues panel"],
-  ['--warning-ink', '--warning-badge', 'the same-name badge on a Unit Profile row'],
   ['--warning-ink', '--surface', "the editor's name-clash hint"],
   ['--warning-ink', '--surface-sunken', 'a name-clash hint on the page'],
 ];

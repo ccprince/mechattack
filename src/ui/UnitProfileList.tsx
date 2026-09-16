@@ -8,17 +8,16 @@ import styles from './UnitProfileList.module.css';
 
 interface Section {
   kind: UnitProfile['kind'];
+  /** The kind as a group of them, which is what the section holds. */
   heading: string;
-  /** Names the Unit Profile the button would add, since the icon says nothing on its own. */
-  addLabel: string;
-  add: ArmyListAction;
+  add: Extract<ArmyListAction, { type: `add${string}` }>;
 }
 
 /** The three kinds, in the order the list always shows them. */
 const sections: Section[] = [
-  { kind: 'Mech', heading: 'Mechs', addLabel: 'Add Mech', add: { type: 'addMech' } },
-  { kind: 'Vehicle', heading: 'Vehicles', addLabel: 'Add Vehicle', add: { type: 'addVehicle' } },
-  { kind: 'Troop', heading: 'Troops', addLabel: 'Add Troop', add: { type: 'addTroop' } },
+  { kind: 'Mech', heading: 'Mechs', add: { type: 'addMech' } },
+  { kind: 'Vehicle', heading: 'Vehicles', add: { type: 'addVehicle' } },
+  { kind: 'Troop', heading: 'Troops', add: { type: 'addTroop' } },
 ];
 
 /**
@@ -30,18 +29,18 @@ export function UnitProfileList() {
 
   return (
     <nav className={styles.panel} aria-label="Unit Profiles">
-      {sections.map(({ kind, heading, addLabel, add }) => {
+      {sections.map(({ kind, heading, add }) => {
         const profiles = state.list.unitProfiles.filter((profile) => profile.kind === kind);
         const headingId = `unit-profiles-${kind}`;
+        // The icon says nothing on its own, so the button names the Unit Profile it would add.
+        const addLabel = `Add ${kind}`;
         return (
           <section key={kind} className={styles.section} aria-labelledby={headingId}>
             <div className={styles.sectionHeader}>
               {/* The subtotal rides in the heading, so it names the section along with the kind. */}
               <h2 id={headingId} className={styles.sectionHeading}>
                 <span className={styles.sectionKind}>{heading}</span>
-                {profiles.length > 0 && (
-                  <span className={styles.sectionBp}>{bpOfCopies(profiles)} Bp</span>
-                )}
+                <span className={styles.sectionBp}>{bpOfCopies(profiles)} Bp</span>
               </h2>
               <button
                 type="button"

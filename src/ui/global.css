@@ -39,7 +39,6 @@
   /* A name clash, or an unreadable save worth keeping. */
   --warning: #9a7700;
   --warning-surface: #fff4cc;
-  --warning-badge: #f2d98a;
   --warning-ink: #6b5200;
 
   /* Spacing. Every gap, margin and padding in the UI comes from this scale. */
@@ -86,7 +85,6 @@
 
     --warning: #d9a400;
     --warning-surface: #3a2e10;
-    --warning-badge: #6b5200;
     --warning-ink: #f7d98a;
   }
 }

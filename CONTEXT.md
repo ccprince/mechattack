@@ -29,7 +29,9 @@ marked as such. Exceeding the Bp Limit is a problem with the Army List, not an I
 _Avoid_: Valid, invalid (for build rules)
 
 **Mech**, **Vehicle**, **Troop**:
-The only three kinds of unit. Each prints on its own card layout.
+The only three kinds of unit. Each prints on its own card layout. The Unit Profile list groups by
+kind under plural headings — Mechs, Vehicles, Troops — where the plural names a group of units
+rather than the kind.
 _Avoid_: Troops (as a kind name), infantry
 
 **Class**:

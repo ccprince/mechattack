@@ -142,17 +142,13 @@ describe('Unit Profile list', () => {
       ],
     });
     const troops = page.getByRole('region', { name: /^Troops/ });
+    const headings = unitProfiles().getByRole('heading');
 
     // Always Mechs, Vehicles then Troops, whatever order the Army List holds them in, each heading
     // carrying its section's Bp subtotal: one Ironclad at 6 Bp, two Haulers at 3 Bp, no Troops.
-    await expect
-      .poll(() =>
-        unitProfiles()
-          .getByRole('heading')
-          .elements()
-          .map((heading) => heading.textContent),
-      )
-      .toEqual(['Mechs6 Bp', 'Vehicles6 Bp', 'Troops']);
+    await expect.element(headings.nth(0)).toHaveAccessibleName('Mechs 6 Bp');
+    await expect.element(headings.nth(1)).toHaveAccessibleName('Vehicles 6 Bp');
+    await expect.element(headings.nth(2)).toHaveAccessibleName('Troops 0 Bp');
 
     // An empty section still says so, and still offers its Add.
     await expect.element(troops.getByText('None')).toBeInTheDocument();
@@ -236,13 +232,12 @@ describe("the selected Unit Profile's actions", () => {
     await expect.element(quantityOf('Ironclad (copy)')).toHaveTextContent('0');
     await expect.element(field('Armor')).toHaveValue(60);
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
-    // The copy follows the Unit Profile it came from, ahead of the rest of its section.
-    expect(
-      unitProfiles()
-        .getByRole('listitem')
-        .elements()
-        .map((row) => row.querySelector('button')?.textContent),
-    ).toEqual(['Ironclad6 Bp', 'Ironclad (copy)×06 Bp', 'Scout3 Bp']);
+    // The copy follows the Unit Profile it came from, ahead of the rest of its section. A row's
+    // button is the one named for its Unit Profile's Bp; every other button names an action.
+    const rows = unitProfiles().getByRole('button', { name: /Bp$/ });
+    await expect.element(rows.nth(0)).toHaveAccessibleName('Ironclad 6 Bp');
+    await expect.element(rows.nth(1)).toHaveAccessibleName('Ironclad (copy) ×0 6 Bp');
+    await expect.element(rows.nth(2)).toHaveAccessibleName('Scout 3 Bp');
   });
 
   it('deletes a Unit Profile only once confirmed', async () => {
