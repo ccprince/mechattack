@@ -7,7 +7,7 @@ import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
 import { ArmyListsMenu } from './ArmyListsMenu';
 import { RecoveryBanner } from './RecoveryBanner';
-import { StorageDialog } from './StorageDialog';
+import { StorageDialog, type StorageDialogHandle } from './StorageDialog';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
 
@@ -50,8 +50,8 @@ function ArmyListEditor({
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
-  const storageDialog = useRef<HTMLDialogElement>(null);
-  const explainStorage = () => storageDialog.current?.showModal();
+  const storageDialog = useRef<StorageDialogHandle>(null);
+  const explainStorage = () => storageDialog.current?.show();
 
   useEffect(() => {
     let cancelled = false;

@@ -27,6 +27,7 @@
   border-radius: 0;
   background: none;
   color: var(--accent);
+  text-align: inherit;
   text-decoration: underline;
 }
 

@@ -9,9 +9,13 @@
   color: var(--ink);
 }
 
-/* Local on purpose, like the Army Lists menu's shadow: the only thing that dims the page. */
 .dialog::backdrop {
-  background: rgb(0 0 0 / 40%);
+  background: var(--scrim);
+}
+
+/* It takes focus only so it opens at the top: it's a container, not a control, so it has no ring. */
+.dialog:focus-visible {
+  outline: none;
 }
 
 .dialog p,

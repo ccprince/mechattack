@@ -8,8 +8,8 @@ over-limit warning, print size and **Download PDF**. Nothing scrolls away.
 The menu replaces the Saved Army Lists `select` and the row of list buttons beside it (#47, #62, #65).
 In order: a "Saved Army Lists" group with each list as a button (the Open Army List marked with
 `aria-current` and a ✓, each showing when it last changed), then New Army List and Import Army List…, then
-Duplicate Army List and Export Army List, then Delete Army List…, then Where are Army Lists kept? (#50), which opens a dialog rather than acting on a
-list, with separators between the groups.
+Duplicate Army List and Export Army List, then Delete Army List…, then Where are Army Lists kept? (#50),
+which opens a dialog rather than acting on a list, with separators between the groups.
 Choosing the Open Army List only closes the menu. An Open Army List that storage couldn't keep is still
 shown in the group, current and with no time.
 

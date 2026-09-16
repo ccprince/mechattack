@@ -1,14 +1,29 @@
-import { useId, type RefObject } from 'react';
+import { useId, useImperativeHandle, useRef, type Ref } from 'react';
 import styles from './StorageDialog.module.css';
 
+export type StorageDialogHandle = { show: () => void };
+
 /**
- * Says where Army Lists are kept and what loses them, which the footer's one line can't (#50). Opened
- * with `showModal()`, which returns focus on close to whatever opened it.
+ * Says where Army Lists are kept and what loses them, which the footer's one line can't (#50). Shown
+ * modally, which returns focus on close to whatever opened it.
  */
-export function StorageDialog({ ref }: { ref: RefObject<HTMLDialogElement | null> }) {
+export function StorageDialog({ ref }: { ref: Ref<StorageDialogHandle> }) {
   const titleId = useId();
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    show() {
+      const element = dialog.current!;
+      element.showModal();
+      // Opening focuses Close, the last thing in it, which on a short screen scrolls the reader past
+      // the whole explanation. The dialog takes focus instead, so it opens at the top.
+      element.focus();
+      element.scrollTop = 0;
+    },
+  }));
+
   return (
-    <dialog ref={ref} className={styles.dialog} aria-labelledby={titleId}>
+    <dialog ref={dialog} tabIndex={-1} className={styles.dialog} aria-labelledby={titleId}>
       <h2 id={titleId} className={styles.title}>
         Where your Army Lists are kept
       </h2>
