@@ -43,6 +43,16 @@ export const profileRow = (name: string) =>
 /** The row's first button, which opens the Unit Profile in the editor. */
 export const openButton = (name: string) => profileRow(name).getByRole('button').first();
 
+/**
+ * What every mark in the list says: one per Unit Profile with Issues or a clashing name, in list
+ * order. The row itself only carries the mark; the words are its accessible name.
+ */
+export const profileFlags = (): (string | null)[] =>
+  unitProfiles()
+    .getByRole('img')
+    .elements()
+    .map((mark) => mark.getAttribute('aria-label'));
+
 /** The text of a field on the card preview, or null while the card is loading or the field is blank. */
 export function cardField(field: string): string | null {
   return document.querySelector(`[role="img"] [data-field="${field}"]`)?.textContent ?? null;

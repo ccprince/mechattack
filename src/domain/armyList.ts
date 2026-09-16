@@ -24,12 +24,17 @@ export const armyListSchema = z.object({
 
 export type ArmyList = z.infer<typeof armyListSchema>;
 
-/** Bp of every fielded copy: each Unit Profile's Bp times its quantity. */
+/**
+ * Bp of every fielded copy of these Unit Profiles: each one's Bp times its quantity. Takes the Unit
+ * Profiles rather than the Army List so part of a list — one kind's section — subtotals the same way.
+ */
+export function bpOfCopies(profiles: UnitProfile[]): number {
+  return profiles.reduce((total, profile) => total + unitProfileBp(profile) * profile.quantity, 0);
+}
+
+/** Bp of every fielded copy on the Army List: what counts against the Bp Limit. */
 export function bpTotal(list: ArmyList): number {
-  return list.unitProfiles.reduce(
-    (total, profile) => total + unitProfileBp(profile) * profile.quantity,
-    0,
-  );
+  return bpOfCopies(list.unitProfiles);
 }
 
 /** One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing. */
