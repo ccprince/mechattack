@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createValueMeasure, loadCardFonts } from '../cards/fonts';
 import type { KeyValueStore, SavedArmyList } from '../domain/armyListStorage';
 import styles from './App.module.css';
@@ -7,6 +7,7 @@ import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
 import { ArmyListsMenu } from './ArmyListsMenu';
 import { RecoveryBanner } from './RecoveryBanner';
+import { StorageDialog, type StorageDialogHandle } from './StorageDialog';
 import { UnitProfileEditor } from './UnitProfileEditor';
 import { UnitProfileList } from './UnitProfileList';
 
@@ -49,6 +50,8 @@ function ArmyListEditor({
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
+  const storageDialog = useRef<StorageDialogHandle>(null);
+  const explainStorage = () => storageDialog.current?.show();
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +77,11 @@ function ArmyListEditor({
         <div className={styles.titleBand}>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>Mech Attack List Builder</h1>
-            <ArmyListsMenu focusOnMount={focusMenuOnMount} onError={setError} />
+            <ArmyListsMenu
+              focusOnMount={focusMenuOnMount}
+              onError={setError}
+              onExplainStorage={explainStorage}
+            />
           </div>
         </div>
         <ArmyListHeader measure={measure} onError={setError} />
@@ -96,7 +103,8 @@ function ArmyListEditor({
           )}
         </div>
       </main>
-      <AppFooter />
+      <AppFooter onExplainStorage={explainStorage} />
+      <StorageDialog ref={storageDialog} />
     </div>
   );
 }

@@ -20,6 +20,17 @@
   color: var(--accent);
 }
 
+/* Reads as the footer's link it is, though it opens a dialog rather than a page. */
+.link {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--accent);
+  text-align: inherit;
+  text-decoration: underline;
+}
+
 .build span,
 .build a {
   font-family: var(--font-value);

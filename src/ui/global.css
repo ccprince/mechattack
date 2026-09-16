@@ -24,6 +24,8 @@
   --ink-inverse: #fff;
   /* Washed over a surface to show a row is under the pointer. */
   --hover-wash: rgb(0 0 0 / 5%);
+  /* Dims the page behind a dialog. */
+  --scrim: rgb(0 0 0 / 40%);
 
   /*
    * The card preview is a proof of what comes out of the printer: the paper it paints behind the card
@@ -78,6 +80,7 @@
     --accent: #8fb8e8;
     --ink-inverse: #1a1a1a;
     --hover-wash: rgb(255 255 255 / 8%);
+    --scrim: rgb(0 0 0 / 60%);
 
     --danger: #f2837a;
     --danger-surface: #3a1614;
