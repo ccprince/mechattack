@@ -2,8 +2,13 @@ name: Release label
 
 # Gives a pull request the release label of the issues it closes, so the release it will cut shows on
 # the pull request before merge. A release label already on it, `release: none` included, is kept.
+#
+# pull_request_target, so a pull request from a fork gets a token that can label it too. That trigger
+# hands out a write token, which is only safe because nothing from the pull request runs: the checkout
+# is this repo's base branch, and the script reads the pull request's number and labels through the API.
+# Never check out or build the pull request's code in this workflow.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, reopened]
 
 permissions:
@@ -17,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # The base branch, never the pull request's head; see above.
           sparse-checkout: .github/scripts
       - run: .github/scripts/release-label.sh copy ${{ github.event.pull_request.number }}
         env:
