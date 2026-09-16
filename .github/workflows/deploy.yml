@@ -13,8 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,46 +27,40 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - id: upload
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: github.event_name == 'push'
         with:
+          name: dist
           path: dist
 
+  # Pages publishes the gh-pages branch, which holds only the latest build as a single commit. Each
+  # deploy is a new commit there, so a release tag's rebuild of a commit its merge already deployed
+  # still goes live; deploying an artifact can't do that, because Pages takes one per source commit
+  # (ADR 0006).
   deploy:
     if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
+    # One deploy at a time, in order, so a merge's deploy can't land after its release tag's.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     steps:
-      # The Pages deployment API, called directly rather than through actions/deploy-pages: that action
-      # sends the commit SHA as the build version, and Pages keeps the first deploy of a version, so a
-      # release tag on a commit its merge already deployed would change nothing (ADR 0006).
-      - id: deployment
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Push the build to gh-pages
+        working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
-          ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
         run: |
-          oidc_token=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r .value)
-          deployment=$(gh api -X POST "repos/$GITHUB_REPOSITORY/pages/deployments" \
-            -F artifact_id="$ARTIFACT_ID" \
-            -f pages_build_version="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            -f oidc_token="$oidc_token")
-          echo "page_url=$(jq -r .page_url <<<"$deployment")" >> "$GITHUB_OUTPUT"
-          status_url=$(jq -r .status_url <<<"$deployment")
-          for _ in $(seq 120); do
-            status=$(gh api "$status_url" --jq .status)
-            echo "Pages deployment: $status"
-            case $status in
-              succeed) exit 0 ;;
-              *failed* | *cancelled* | *error* | *lost*) exit 1 ;;
-            esac
-            sleep 5
-          done
-          echo "Pages deployment timed out" && exit 1
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -qm "Deploy $GITHUB_REF_NAME (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" gh-pages
