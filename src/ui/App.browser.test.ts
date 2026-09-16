@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
-import { backupKey, savedArmyListKey } from '../domain/armyListStorage';
-import { fakeStore, unavailableStore } from '../domain/testStores';
+import { backupKey, singleSlotKey } from '../domain/armyListStorage';
+import { fakeStore, savedStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
 import { importFile, setUpApp, unitProfiles } from './testApp';
 
@@ -30,9 +30,20 @@ describe('autosave', () => {
   });
 
   it('opens a saved Army List', async () => {
-    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(ironLegion) });
-    load(store);
+    load(savedStore(ironLegion));
     await expect.element(listName()).toHaveValue('Iron Legion');
+    await expect.element(banner()).not.toBeInTheDocument();
+  });
+
+  it('opens the Army List saved before there were several, and keeps its edits', async () => {
+    localStorage.setItem(singleSlotKey, JSON.stringify(ironLegion));
+    load(browserStore);
+    await expect.element(listName()).toHaveValue('Iron Legion');
+    await listName().fill('Iron Legion II');
+    expect(localStorage.getItem(singleSlotKey)).toBeNull();
+
+    load(browserStore);
+    await expect.element(listName()).toHaveValue('Iron Legion II');
     await expect.element(banner()).not.toBeInTheDocument();
   });
 
@@ -51,7 +62,7 @@ describe('autosave', () => {
         },
       ],
     };
-    load(fakeStore({ [savedArmyListKey]: JSON.stringify(withTroop) }));
+    load(savedStore(withTroop));
     await expect.element(unitProfiles().getByText('Skyborne')).toBeInTheDocument();
     await expect.element(unitProfiles().getByText('6 Bp')).toBeInTheDocument();
     await expect.element(page.getByLabelText('Name', { exact: true })).toHaveValue('Skyborne');
@@ -62,13 +73,13 @@ describe('recovery banner', () => {
   const unreadable = '{"version": 1, "name": ';
 
   it('starts a fresh Army List when the save is unreadable', async () => {
-    load(fakeStore({ [savedArmyListKey]: unreadable }));
+    load(fakeStore({ [singleSlotKey]: unreadable }));
     await expect.element(banner()).toBeInTheDocument();
     await expect.element(listName()).toHaveValue('New Army List');
   });
 
   it('stays up across reloads until Discard, which clears the backup', async () => {
-    const store = fakeStore({ [savedArmyListKey]: unreadable });
+    const store = fakeStore({ [singleSlotKey]: unreadable });
     load(store);
     await expect.element(banner()).toBeInTheDocument();
 
@@ -85,7 +96,7 @@ describe('recovery banner', () => {
 
   it('closes once an Army List is imported, keeping the backup', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const store = fakeStore({ [savedArmyListKey]: unreadable });
+    const store = fakeStore({ [singleSlotKey]: unreadable });
     load(store);
     await expect.element(banner()).toBeInTheDocument();
 
@@ -97,7 +108,7 @@ describe('recovery banner', () => {
 
   it('stays up when an import is declined', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
-    load(fakeStore({ [savedArmyListKey]: unreadable }));
+    load(fakeStore({ [singleSlotKey]: unreadable }));
     await importFile(JSON.stringify(ironLegion));
     await vi.waitFor(() => expect(window.confirm).toHaveBeenCalledOnce());
     await expect.element(banner()).toBeInTheDocument();
@@ -106,7 +117,7 @@ describe('recovery banner', () => {
   it('downloads the raw JSON and keeps the backup', async () => {
     const createObjectURL = vi.spyOn(URL, 'createObjectURL');
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-    const store = fakeStore({ [savedArmyListKey]: unreadable });
+    const store = fakeStore({ [singleSlotKey]: unreadable });
     load(store);
 
     await page.getByRole('button', { name: 'Download it' }).click();

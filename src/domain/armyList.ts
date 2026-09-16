@@ -24,6 +24,11 @@ export const armyListSchema = z.object({
 
 export type ArmyList = z.infer<typeof armyListSchema>;
 
+/** An empty Army List, as a new one starts. */
+export function newArmyList(): ArmyList {
+  return { version: 2, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
+}
+
 /**
  * Bp of every fielded copy of these Unit Profiles: each one's Bp times its quantity. Takes the Unit
  * Profiles rather than the Army List so part of a list — one kind's section — subtotals the same way.

@@ -3,9 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import type { ArmyList } from '../domain/armyList';
 import { quantityRange } from '../domain/profileFields';
-import { savedArmyListKey } from '../domain/armyListStorage';
 import type { MechProfile } from '../domain/mech';
-import { fakeStore } from '../domain/testStores';
+import { fakeStore, openDocument, savedStore } from '../domain/testStores';
 import type { VehicleProfile } from '../domain/vehicle';
 import { exportArmyListPdf } from '../pdf/exportPdf';
 import {
@@ -24,7 +23,7 @@ vi.mock('../pdf/exportPdf', { spy: true });
 
 const load = setUpApp();
 
-const loadList = (list: ArmyList) => load(fakeStore({ [savedArmyListKey]: JSON.stringify(list) }));
+const loadList = (list: ArmyList) => load(savedStore(list));
 const addMech = () => page.getByRole('button', { name: 'Add Mech' }).click();
 
 /** Starts the app with a fresh Army List and one new Mech selected. */
@@ -953,7 +952,7 @@ describe('Export and Import JSON', () => {
   it('exports the saved document, named after the Army List, and imports it back', async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     const createObjectURL = vi.spyOn(URL, 'createObjectURL');
-    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(ironLegion) });
+    const store = savedStore(ironLegion);
     load(store);
 
     await page.getByRole('button', { name: 'Export JSON' }).click();
@@ -962,7 +961,7 @@ describe('Export and Import JSON', () => {
     const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
     expect(blob.type).toBe('application/json');
     const exported = await blob.text();
-    expect(exported).toBe(store.entries[savedArmyListKey]);
+    expect(exported).toBe(openDocument(store));
 
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     loadList(steelHand);
@@ -1005,7 +1004,7 @@ describe('Export and Import JSON', () => {
     ['JSON the schema rejects', JSON.stringify({ ...ironLegion, bpLimit: -5 })],
   ])('rejects %s, keeping the Army List and showing an error', async (_, text) => {
     const confirm = vi.spyOn(window, 'confirm');
-    const store = fakeStore({ [savedArmyListKey]: JSON.stringify(steelHand) });
+    const store = savedStore(steelHand);
     load(store);
     await importFile(text, 'broken.json');
     await expect
@@ -1013,7 +1012,7 @@ describe('Export and Import JSON', () => {
       .toHaveTextContent("Couldn't import broken.json: it isn't a readable Army List.");
     await expect.element(listName()).toHaveValue('Steel Hand');
     expect(confirm).not.toHaveBeenCalled();
-    expect(JSON.parse(store.entries[savedArmyListKey]!)).toEqual(steelHand);
+    expect(JSON.parse(openDocument(store)!)).toEqual(steelHand);
   });
 
   it('reports a file the browser could not read, keeping the Army List', async () => {
