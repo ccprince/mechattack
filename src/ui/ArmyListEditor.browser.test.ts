@@ -939,7 +939,7 @@ describe('Download PDF', () => {
 
     await downloadPdf().click();
     await vi.waitFor(
-      () => expect(links.map(({ download }) => download)).toContain('mech-attack-cards.pdf'),
+      () => expect(links.map(({ download }) => download)).toContain('iron-legion-cards.pdf'),
       { timeout: 10_000 },
     );
     const blob = createObjectURL.mock.calls.at(-1)?.[0] as Blob;
@@ -989,7 +989,7 @@ describe('Download PDF', () => {
     vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
     await downloadPdf().click();
     await answerConfirmation('Download anyway');
-    await vi.waitFor(() => expect(save).toHaveBeenCalledWith('mech-attack-cards.pdf'));
+    await vi.waitFor(() => expect(save).toHaveBeenCalledWith('iron-legion-cards-large.pdf'));
   });
 
   it("doesn't ask about Issues on Unit Profiles that aren't fielded", async () => {

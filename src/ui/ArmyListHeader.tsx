@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Measure } from '../cards/fitText';
-import { printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
+import { cardsPdfFilename, printSizeLabels, printSizes, type PrintSize } from '../cards/pageLayout';
 import {
   bpLimitRange,
   bpTotal,
@@ -47,7 +47,7 @@ export function ArmyListHeader({
       // Loaded on demand: jsPDF and svg2pdf are most of the bundle.
       const { exportArmyListPdf } = await import('../pdf/exportPdf');
       const doc = await exportArmyListPdf(list, printSize, measure);
-      doc.save('mech-attack-cards.pdf');
+      doc.save(cardsPdfFilename(list.name, printSize));
     } catch (reason) {
       onError(`Couldn't build the PDF: ${String(reason)}`);
     } finally {
