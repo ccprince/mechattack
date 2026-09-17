@@ -4,7 +4,7 @@ import { stepInRange } from '../domain/numberRange';
 import { quantityRange } from '../domain/profileFields';
 import { unitProfileBp, unitProfileIssues, type UnitProfile } from '../domain/unitProfile';
 import { useArmyList } from './ArmyListContext';
-import { useConfirm } from './ConfirmDialog';
+import { deleteConfirmation, useConfirm } from './ConfirmContext';
 import { BinIcon, DuplicateIcon, MinusIcon, PlusIcon } from './icons';
 import styles from './UnitProfileList.module.css';
 
@@ -168,12 +168,8 @@ function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) 
         title="Delete"
         onClick={async () => {
           // An icon-only bin makes this confirmation load-bearing.
-          const yes = await confirm({
-            question: `Delete ${name}?`,
-            confirm: 'Delete',
-            destructive: true,
-          });
-          if (yes) dispatch({ type: 'deleteUnitProfile', id });
+          const confirmed = await confirm(deleteConfirmation(name));
+          if (confirmed) dispatch({ type: 'deleteUnitProfile', id });
         }}
       >
         <BinIcon />

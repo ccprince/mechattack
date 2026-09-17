@@ -47,12 +47,18 @@ describe('the confirmation dialog', () => {
     await expect.element(profileRow('New Mech')).not.toBeInTheDocument();
   });
 
-  it('marks a destructive answer in the danger colour', async () => {
+  it('fills a destructive answer with the danger colour, and only that one', async () => {
     await askToDeleteMech();
-    const remove = confirmation().getByRole('button', { name: 'Delete' }).element();
-    const cancel = confirmation().getByRole('button', { name: 'Cancel' }).element();
-    expect(getComputedStyle(remove).backgroundColor).not.toBe(
-      getComputedStyle(cancel).backgroundColor,
-    );
+    const fill = (name: string) =>
+      getComputedStyle(confirmation().getByRole('button', { name }).element()).backgroundColor;
+    // The token resolved to a colour the way a background resolves it, so the two compare equal.
+    const probe = document.createElement('div');
+    probe.style.background = 'var(--danger)';
+    document.body.append(probe);
+    const danger = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+
+    expect(fill('Delete')).toBe(danger);
+    expect(fill('Cancel')).not.toBe(danger);
   });
 });

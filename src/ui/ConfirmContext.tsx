@@ -15,7 +15,7 @@ export type Confirmation = {
   /** Says more under the question, such as what can't be undone. */
   detail?: string;
   /** The answer that goes ahead, such as `Delete`. */
-  confirm: string;
+  confirmLabel: string;
   /** Whether going ahead destroys something, which colours its answer as danger. */
   destructive?: boolean;
 };
@@ -50,10 +50,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       setAsking(confirmation);
     });
 
-  // Every way out closes the dialog; only the answer that goes ahead returns `confirm`.
+  // Every way out closes the dialog; only the answer that goes ahead returns `goAhead`.
   function close() {
     const element = dialog.current!;
-    answer.current?.(element.returnValue === 'confirm');
+    answer.current?.(element.returnValue === 'goAhead');
     answer.current = undefined;
     element.returnValue = '';
     setAsking(undefined);
@@ -83,10 +83,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               </button>
               <button
                 type="submit"
-                value="confirm"
+                value="goAhead"
                 className={asking.destructive ? styles.danger : undefined}
               >
-                {asking.confirm}
+                {asking.confirmLabel}
               </button>
             </form>
           </>
@@ -94,6 +94,11 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       </dialog>
     </ConfirmContext>
   );
+}
+
+/** Asks whether to delete something that can't be brought back, such as a Unit Profile, by name. */
+export function deleteConfirmation(name: string, detail?: string): Confirmation {
+  return { question: `Delete ${name}?`, detail, confirmLabel: 'Delete', destructive: true };
 }
 
 /** Asks the player to confirm, resolving true if they go ahead. */

@@ -6,7 +6,7 @@ import { AppFooter } from './AppFooter';
 import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
 import { ArmyListsMenu } from './ArmyListsMenu';
-import { ConfirmProvider } from './ConfirmDialog';
+import { ConfirmProvider } from './ConfirmContext';
 import { RecoveryBanner } from './RecoveryBanner';
 import { StorageDialog, type StorageDialogHandle } from './StorageDialog';
 import { UnitProfileEditor } from './UnitProfileEditor';

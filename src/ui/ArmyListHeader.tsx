@@ -10,7 +10,7 @@ import {
 } from '../domain/armyList';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
-import { useConfirm } from './ConfirmDialog';
+import { useConfirm } from './ConfirmContext';
 import { NumberField } from './NumberField';
 
 export function ArmyListHeader({
@@ -33,15 +33,13 @@ export function ArmyListHeader({
   async function downloadPdf() {
     if (!measure) return;
     const markedProfiles = fieldedWithIssues(list);
-    if (
-      markedProfiles.length > 0 &&
-      !(await confirm({
+    if (markedProfiles.length > 0) {
+      const confirmed = await confirm({
         question: 'Print cards marked ILLEGAL?',
         detail: illegalPrintDetail(markedProfiles),
-        confirm: 'Download anyway',
-      }))
-    ) {
-      return;
+        confirmLabel: 'Download anyway',
+      });
+      if (!confirmed) return;
     }
     setPrinting(true);
     onError(undefined);

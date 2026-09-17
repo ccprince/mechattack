@@ -9,7 +9,7 @@ import {
 import styles from './ArmyListsMenu.module.css';
 import { useArmyList } from './ArmyListContext';
 import { changedLabel } from './changedLabel';
-import { useConfirm } from './ConfirmDialog';
+import { deleteConfirmation, useConfirm } from './ConfirmContext';
 import { downloadJson } from './downloadJson';
 import { MenuIcon } from './icons';
 
@@ -77,13 +77,10 @@ export function ArmyListsMenu({
   }
 
   async function remove() {
-    const yes = await confirm({
-      question: `Delete ${displayName(list.name)}?`,
-      detail: "This can't be undone.",
-      confirm: 'Delete',
-      destructive: true,
-    });
-    if (yes) {
+    const confirmed = await confirm(
+      deleteConfirmation(displayName(list.name), "This can't be undone."),
+    );
+    if (confirmed) {
       switchList((store) => deleteSavedArmyList(store, openId));
     }
   }
