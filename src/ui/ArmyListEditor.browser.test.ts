@@ -8,9 +8,11 @@ import { fakeStore, openDocument, savedStore } from '../domain/testStores';
 import type { VehicleProfile } from '../domain/vehicle';
 import { exportArmyListPdf } from '../pdf/exportPdf';
 import {
+  answerConfirmation,
   cardField,
   cardMarks,
   chooseFromMenu,
+  confirmation,
   importFile,
   openButton,
   profileFlags,
@@ -293,17 +295,18 @@ describe("the selected Unit Profile's actions", () => {
   });
 
   it('deletes a Unit Profile only once confirmed', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     loadList(twoMechList());
     const deleteIronclad = profileRow('Ironclad').getByRole('button', { name: 'Delete Ironclad' });
 
     await deleteIronclad.click();
-    expect(confirm).toHaveBeenCalledWith('Delete Ironclad?');
+    await expect.element(confirmation('Delete Ironclad?')).toBeVisible();
+    await answerConfirmation('Cancel');
     await expect.element(profileRow('Ironclad')).toBeInTheDocument();
     await expect.element(page.getByText('Bp 9 /')).toBeInTheDocument();
+    await expect.element(deleteIronclad).toHaveFocus();
 
-    confirm.mockReturnValue(true);
     await deleteIronclad.click();
+    await answerConfirmation('Delete');
     await expect.element(profileRow('Ironclad')).not.toBeInTheDocument();
     await expect.element(page.getByText('Bp 3 /')).toBeInTheDocument();
     await expect.element(field('Name')).toHaveValue('Scout');
@@ -951,7 +954,6 @@ describe('Download PDF', () => {
   });
 
   it('asks before printing fielded Unit Profiles with Issues', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     loadList({
       version: 2,
       name: 'Iron Legion',
@@ -974,20 +976,23 @@ describe('Download PDF', () => {
     });
 
     await downloadPdf().click();
-    expect(confirm).toHaveBeenCalledWith(
-      'Cheap, Flawed, Overloaded and Heavy Handed have Issues, so their cards print marked ILLEGAL. Download the PDF anyway?',
-    );
+    const question = confirmation('Print cards marked ILLEGAL?');
+    await expect
+      .element(question)
+      .toHaveAccessibleDescription(
+        'Cheap, Flawed, Overloaded and Heavy Handed have Issues, so their cards print marked ILLEGAL.',
+      );
+    await answerConfirmation('Cancel');
     expect(vi.mocked(exportArmyListPdf)).not.toHaveBeenCalled();
 
     const save = vi.fn();
     vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
-    confirm.mockReturnValue(true);
     await downloadPdf().click();
+    await answerConfirmation('Download anyway');
     await vi.waitFor(() => expect(save).toHaveBeenCalledWith('mech-attack-cards.pdf'));
   });
 
   it("doesn't ask about Issues on Unit Profiles that aren't fielded", async () => {
-    const confirm = vi.spyOn(window, 'confirm');
     const save = vi.fn();
     vi.mocked(exportArmyListPdf).mockResolvedValueOnce({ save } as unknown as jsPDF);
     loadList({
@@ -1002,7 +1007,7 @@ describe('Download PDF', () => {
 
     await downloadPdf().click();
     await vi.waitFor(() => expect(save).toHaveBeenCalledOnce());
-    expect(confirm).not.toHaveBeenCalled();
+    expect(confirmation().query()).toBeNull();
   });
 });
 

@@ -1,4 +1,4 @@
-/* The app's only dialog so far: styled here until a second one wants the same (#50). */
+/* The app's dialogs: where Army Lists are kept (#50) and the confirmation (#84). */
 .dialog {
   width: min(36rem, calc(100vw - 2 * var(--space-4)));
   max-height: calc(100dvh - 2 * var(--space-4));
@@ -7,6 +7,11 @@
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
+}
+
+/* A question and two answers read best close together. */
+.narrow {
+  width: min(24rem, calc(100vw - 2 * var(--space-4)));
 }
 
 .dialog::backdrop {
@@ -30,5 +35,18 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* An answer that destroys something, such as Delete. */
+.danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--ink-inverse);
+}
+
+.danger:hover:not(:disabled) {
+  border-color: var(--danger-ink);
 }

@@ -9,6 +9,7 @@ import {
 import styles from './ArmyListsMenu.module.css';
 import { useArmyList } from './ArmyListContext';
 import { changedLabel } from './changedLabel';
+import { deleteConfirmation, useConfirm } from './ConfirmContext';
 import { downloadJson } from './downloadJson';
 import { MenuIcon } from './icons';
 
@@ -31,6 +32,7 @@ export function ArmyListsMenu({
   onExplainStorage: () => void;
 }) {
   const { state, store, openId, switchList, addList } = useArmyList();
+  const confirm = useConfirm();
   const { list } = state;
   const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
@@ -74,8 +76,11 @@ export function ArmyListsMenu({
     if (menu.matches(':popover-open')) menu.hidePopover();
   }
 
-  function remove() {
-    if (window.confirm(`Delete ${displayName(list.name)}? This can't be undone.`)) {
+  async function remove() {
+    const confirmed = await confirm(
+      deleteConfirmation(displayName(list.name), "This can't be undone."),
+    );
+    if (confirmed) {
       switchList((store) => deleteSavedArmyList(store, openId));
     }
   }

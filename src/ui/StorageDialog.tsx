@@ -1,6 +1,6 @@
 import { useId, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { isStoragePersisted } from './persistentStorage';
-import styles from './StorageDialog.module.css';
+import styles from './Dialog.module.css';
 
 export type StorageDialogHandle = { show: () => void };
 

@@ -4,6 +4,7 @@ import { stepInRange } from '../domain/numberRange';
 import { quantityRange } from '../domain/profileFields';
 import { unitProfileBp, unitProfileIssues, type UnitProfile } from '../domain/unitProfile';
 import { useArmyList } from './ArmyListContext';
+import { deleteConfirmation, useConfirm } from './ConfirmContext';
 import { BinIcon, DuplicateIcon, MinusIcon, PlusIcon } from './icons';
 import styles from './UnitProfileList.module.css';
 
@@ -124,6 +125,7 @@ function describeFlag(list: ArmyList, profile: UnitProfile): string | undefined 
  */
 function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) {
   const { dispatch } = useArmyList();
+  const confirm = useConfirm();
   const { id, quantity } = profile;
   const fewer = stepInRange(quantity, quantityRange, -1);
   const more = stepInRange(quantity, quantityRange, 1);
@@ -164,9 +166,10 @@ function ActionStrip({ profile, name }: { profile: UnitProfile; name: string }) 
         type="button"
         aria-label={`Delete ${name}`}
         title="Delete"
-        onClick={() => {
+        onClick={async () => {
           // An icon-only bin makes this confirmation load-bearing.
-          if (window.confirm(`Delete ${name}?`)) dispatch({ type: 'deleteUnitProfile', id });
+          const confirmed = await confirm(deleteConfirmation(name));
+          if (confirmed) dispatch({ type: 'deleteUnitProfile', id });
         }}
       >
         <BinIcon />
