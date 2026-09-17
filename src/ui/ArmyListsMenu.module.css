@@ -1,5 +1,18 @@
+/* It sits on the title band, so it takes the band's ink, focus ring included. */
 .button {
   padding: var(--space-2);
+  border-color: var(--band-ink);
+  background: transparent;
+  color: var(--band-ink);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--band-ink);
+  background: var(--hover-wash);
+}
+
+.button:focus-visible {
+  outline-color: var(--band-ink);
 }
 
 /* Placed by script under the button; `inset: auto` clears the popover's default centring. */

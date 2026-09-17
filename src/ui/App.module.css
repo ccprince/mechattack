@@ -14,9 +14,11 @@
   background: var(--surface);
 }
 
-/* A sunken band sets the title and the Army Lists menu apart from the controls below. */
+/* A navy band sets the title and the Army Lists menu apart from the controls below. */
 .titleBand {
-  background: var(--surface-sunken);
+  border-bottom: var(--space-1) solid var(--stripe);
+  background: var(--band);
+  color: var(--band-ink);
 }
 
 /* The same page width as the editor, so the menu button lines up with its right edge. */
@@ -33,7 +35,7 @@
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 400;
 }
 
