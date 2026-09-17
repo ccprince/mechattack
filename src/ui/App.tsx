@@ -68,6 +68,8 @@ function ArmyListEditor({
   const selected = useSelectedUnitProfile();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<string>();
+  // Set by Add, so the editor it opens puts focus on the Name, ready to type over; cleared once it has.
+  const [focusName, setFocusName] = useState(false);
   const storageDialog = useRef<StorageDialogHandle>(null);
   const explainStorage = () => storageDialog.current?.show();
 
@@ -111,9 +113,15 @@ function ArmyListEditor({
         )}
         {error && <p role="alert">{error}</p>}
         <div className={styles.columns}>
-          <UnitProfileList />
+          <UnitProfileList onAdd={() => setFocusName(true)} />
           {selected ? (
-            <UnitProfileEditor key={selected.id} profile={selected} measure={measure} />
+            <UnitProfileEditor
+              key={selected.id}
+              profile={selected}
+              measure={measure}
+              focusNameOnMount={focusName}
+              onNameFocused={() => setFocusName(false)}
+            />
           ) : (
             <p className={styles.empty}>
               Add a Mech, Vehicle or Troop to start building the Army List.

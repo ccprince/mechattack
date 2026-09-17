@@ -25,7 +25,12 @@ const sections: Section[] = [
  * The Unit Profiles, grouped by kind. A row is navigation; what can be done to a Unit Profile is
  * drawn inside the selected row alone, and adding one belongs to its section's header.
  */
-export function UnitProfileList() {
+export function UnitProfileList({
+  onAdd,
+}: {
+  /** Called after a section's Add dispatches a new Unit Profile. */
+  onAdd: () => void;
+}) {
   const { state, dispatch } = useArmyList();
 
   return (
@@ -47,7 +52,10 @@ export function UnitProfileList() {
                 type="button"
                 aria-label={addLabel}
                 title={addLabel}
-                onClick={() => dispatch(add)}
+                onClick={() => {
+                  dispatch(add);
+                  onAdd();
+                }}
               >
                 <PlusIcon />
               </button>

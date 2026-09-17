@@ -1,4 +1,4 @@
-import { useId, useMemo, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react';
 import type { Measure } from '../cards/fitText';
 import { buildUnitCardSvg } from '../cards/unitCard';
 import { hasNameClash } from '../domain/armyList';
@@ -61,10 +61,16 @@ const vehicleUpgradeLabels = {
 export function UnitProfileEditor({
   profile,
   measure,
+  focusNameOnMount,
+  onNameFocused,
 }: {
   profile: UnitProfile;
   /** Measures card text; undefined until the card fonts load. */
   measure: Measure | undefined;
+  /** Focuses the Name with its text selected when it mounts, so a new Unit Profile is named by typing. */
+  focusNameOnMount: boolean;
+  /** Called once the Name has taken focus on mount. */
+  onNameFocused: () => void;
 }) {
   const { state, dispatch } = useArmyList();
   const update: UpdateUnitProfile = (changes) =>
@@ -73,6 +79,16 @@ export function UnitProfileEditor({
   const issueTexts = describeUnitProfileIssues(profile);
   const nameClashes = hasNameClash(state.list, profile);
   const clashId = useId();
+  const nameInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!focusNameOnMount) return;
+    nameInput.current?.focus();
+    nameInput.current?.select();
+    onNameFocused();
+    // Once, on mount: opening another Unit Profile mounts a new editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section className={styles.editor} aria-label={`Edit ${profile.name}`}>
@@ -81,6 +97,7 @@ export function UnitProfileEditor({
           <label className={styles.field}>
             <span>Name</span>
             <input
+              ref={nameInput}
               value={profile.name}
               aria-describedby={nameClashes ? clashId : undefined}
               onChange={(event) => update({ name: event.target.value })}
