@@ -146,6 +146,24 @@ describe('Unit Profile list', () => {
     expect(unitProfiles().getByRole('listitem').elements()).toHaveLength(2);
   });
 
+  it("focuses the new Unit Profile's name, all selected, so typing replaces it", async () => {
+    await loadWithNewMech();
+    await expect.element(field('Name')).toHaveFocus();
+    await userEvent.keyboard('Atlas');
+    await expect.element(field('Name')).toHaveValue('Atlas');
+    await expect.element(openButton('Atlas')).toBeInTheDocument();
+  });
+
+  it('keeps focus on the row that opens a Unit Profile', async () => {
+    await loadWithNewMech();
+    await addMech();
+
+    const first = openButton('New Mech');
+    await first.click();
+    await expect.element(field('Name')).toHaveValue('New Mech');
+    await expect.element(first).toHaveFocus();
+  });
+
   it('opens a Unit Profile in the editor when clicked', async () => {
     await loadWithNewMech();
     await addMech();
