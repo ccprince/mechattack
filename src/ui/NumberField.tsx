@@ -60,7 +60,7 @@ export function NumberField({
       {!labelHidden && <span>{label}</span>}
       <span className={styles.control}>
         {/*
-         * Out of the tab order: the input's own arrow keys step it from the keyboard. Pressing one
+         * Out of the tab order: the input's arrow keys step it the same way from the keyboard. Pressing one
          * keeps focus in the input, so a half-typed value isn't settled by the blur before it's
          * stepped, and a phone's keyboard stays open.
          */}
@@ -89,7 +89,8 @@ export function NumberField({
           onKeyDown={(event) => {
             if (event.key === 'Enter') settle();
             // Arrow keys press like the buttons do, which may move further than the input's step.
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            const modified = event.altKey || event.ctrlKey || event.metaKey;
+            if (!modified && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
               event.preventDefault();
               step(event.key === 'ArrowUp' ? 1 : -1);
             }

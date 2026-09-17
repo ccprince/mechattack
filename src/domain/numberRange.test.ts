@@ -72,8 +72,8 @@ describe('stepInRange', () => {
     expect(stepInRange(2.5, bp, 1)).toBe(3);
   });
 
-  it('moves by the press stride when the range has one, to its next multiple', () => {
-    const bpLimit: NumberRange = { min: 0, max: 1000, step: 1, press: 5 };
+  it('moves by the stride when the range has one, to its next multiple', () => {
+    const bpLimit: NumberRange = { min: 0, max: 1000, step: 1, stride: 5 };
     expect(stepInRange(100, bpLimit, 1)).toBe(105);
     expect(stepInRange(100, bpLimit, -1)).toBe(95);
     expect(stepInRange(42, bpLimit, 1)).toBe(45);

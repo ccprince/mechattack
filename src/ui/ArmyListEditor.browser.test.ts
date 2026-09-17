@@ -367,6 +367,10 @@ describe('Unit Profile editor', () => {
     await field('Armor').fill('55');
     await decrease.click();
     await expect.element(field('Armor')).toHaveValue(50);
+
+    await field('Armor').fill('75');
+    await userEvent.keyboard('{ArrowDown}');
+    await expect.element(field('Armor')).toHaveValue(70);
   });
 
   it('works out Bp, Mv, Tp and Hc from the Class and upgrades, showing Bp against its max', async () => {

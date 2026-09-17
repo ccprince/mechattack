@@ -15,7 +15,7 @@ export const bpLimitRange: NumberRange = {
   min: 0,
   max: Number.MAX_SAFE_INTEGER,
   step: 1,
-  press: 5,
+  stride: 5,
 };
 
 export const armyListSchema = z.object({
