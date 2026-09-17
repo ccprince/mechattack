@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placeCards, printedCardSize, slotRect } from './pageLayout';
+import { cardsPdfFilename, placeCards, printedCardSize, slotRect } from './pageLayout';
 
 describe('slotRect', () => {
   it('fits the Large 2 × 2 grid to the page height with 0.25" margins and a 0.2" gutter', () => {
@@ -102,5 +102,16 @@ describe('placeCards', () => {
       page: 1,
       rect: slotRect('sleeve', 0),
     });
+  });
+});
+
+describe('cardsPdfFilename', () => {
+  it('names the file after the Army List, marking only the large size', () => {
+    expect(cardsPdfFilename('Iron Legion', 'sleeve')).toBe('iron-legion-cards.pdf');
+    expect(cardsPdfFilename('Iron Legion', 'large')).toBe('iron-legion-cards-large.pdf');
+  });
+
+  it('falls back to a generic name for an unnamed Army List', () => {
+    expect(cardsPdfFilename('  ', 'sleeve')).toBe('army-list-cards.pdf');
   });
 });

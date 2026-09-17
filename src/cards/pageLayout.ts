@@ -1,3 +1,4 @@
+import { armyListSlug } from '../domain/armyListDocument';
 import type { UnitProfile } from '../domain/unitProfile';
 import type { Rect } from './geometry';
 
@@ -5,6 +6,14 @@ export const printSizes = ['large', 'sleeve'] as const;
 export type PrintSize = (typeof printSizes)[number];
 
 export const printSizeLabels: Record<PrintSize, string> = { large: 'Large', sleeve: 'Sleeve' };
+
+/**
+ * The filename for an Army List's printed cards: the list's name, then what the file holds, and the
+ * print size when it's the large one, so both sizes of a list can sit in one folder.
+ */
+export function cardsPdfFilename(listName: string, size: PrintSize): string {
+  return `${armyListSlug(listName)}-cards${size === 'large' ? '-large' : ''}.pdf`;
+}
 
 /** US Letter, portrait, in inches. */
 export const page = { width: 8.5, height: 11 };

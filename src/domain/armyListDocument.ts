@@ -21,13 +21,18 @@ export function parseArmyList(text: string): ArmyList | undefined {
   return result.success ? result.data : undefined;
 }
 
-/** A download filename from the Army List's name: lower-case words joined by hyphens. */
-export function armyListFilename(name: string): string {
+/** The Army List's name as a filename stem: lower-case words joined by hyphens. */
+export function armyListSlug(name: string): string {
   const slug = name
     .normalize('NFKD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-|-$/g, '');
-  return `${slug || 'army-list'}.json`;
+  return slug || 'army-list';
+}
+
+/** A download filename for the Army List document itself. */
+export function armyListFilename(name: string): string {
+  return `${armyListSlug(name)}.json`;
 }
