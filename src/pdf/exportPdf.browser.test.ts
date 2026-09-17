@@ -55,6 +55,18 @@ describe('exportArmyListPdf', () => {
     ],
   };
 
+  it('names the Army List and says it is fan-made in the document properties', async () => {
+    const pdf = (await exportArmyListPdf(list, 'sleeve', createValueMeasure())).output();
+
+    expect(pdf).toContain('/Title (Iron Legion)');
+    expect(pdf).toContain('/Creator (Mech Attack List Builder \\(fan-made, not official\\))');
+    expect(pdf).toContain(
+      '/Subject (A fan-made tool for Mech Attack by Armor Grid Games and Miniatures ' +
+        '\\(https://armorgridgames.blogspot.com/\\). Not official or endorsed.)',
+    );
+    expect(pdf).not.toContain('/Author');
+  });
+
   it.each([
     { size: 'large', pages: 3 },
     { size: 'sleeve', pages: 2 },

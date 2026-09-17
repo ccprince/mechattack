@@ -5,6 +5,7 @@ import { cardFonts } from '../cards/fonts';
 import { placeCards, type PrintSize } from '../cards/pageLayout';
 import { buildUnitCardSvg } from '../cards/unitCard';
 import { fieldedCopies, type ArmyList } from '../domain/armyList';
+import { unofficialNotice } from '../domain/publisher';
 import type { UnitProfile } from '../domain/unitProfile';
 import { rasterizeTexture } from './texture';
 
@@ -18,7 +19,7 @@ const pointsPerInch = 72;
 /**
  * Prints one card per fielded copy of every Unit Profile on the Army List, in list order.
  */
-export function exportArmyListPdf(
+export async function exportArmyListPdf(
   list: ArmyList,
   size: PrintSize,
   measure: Measure,
@@ -33,7 +34,14 @@ export function exportArmyListPdf(
     }
     return { kind: profile.kind, svg };
   });
-  return exportCardsPdf(cards, size);
+  const doc = await exportCardsPdf(cards, size);
+  // Printed cards travel without the app's footer, so the file itself says it isn't official (#75).
+  doc.setDocumentProperties({
+    title: list.name,
+    creator: 'Mech Attack List Builder (fan-made, not official)',
+    subject: unofficialNotice,
+  });
+  return doc;
 }
 
 /** Lays cards out on US Letter pages at one print size and returns the PDF document. */
