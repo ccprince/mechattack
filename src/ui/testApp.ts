@@ -1,5 +1,5 @@
 import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, expect, vi } from 'vitest';
 import type { KeyValueStore } from '../domain/armyListStorage';
 import { mountApp } from './mountApp';
 
@@ -40,6 +40,16 @@ export async function importFile(text: string, name = 'army.json') {
     return element;
   });
   await page.elementLocator(input).upload(new File([text], name, { type: 'application/json' }));
+}
+
+/** The dialog asking to confirm an action, such as a Delete, named by the question it asks. */
+export const confirmation = (question?: string) =>
+  page.getByRole('alertdialog', question === undefined ? {} : { name: question, exact: true });
+
+/** Answers the open confirmation with the button named `answer`, such as Cancel or Delete. */
+export async function answerConfirmation(answer: string) {
+  await confirmation().getByRole('button', { name: answer, exact: true }).click();
+  await expect.element(confirmation()).not.toBeInTheDocument();
 }
 
 export const armyListsButton = () => page.getByRole('button', { name: 'Army Lists', exact: true });

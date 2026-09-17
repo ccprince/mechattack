@@ -10,6 +10,7 @@ import {
 } from '../domain/armyList';
 import styles from './ArmyListHeader.module.css';
 import { useArmyList } from './ArmyListContext';
+import { useConfirm } from './ConfirmDialog';
 import { NumberField } from './NumberField';
 
 export function ArmyListHeader({
@@ -21,6 +22,7 @@ export function ArmyListHeader({
   onError: (message: string | undefined) => void;
 }) {
   const { state, dispatch } = useArmyList();
+  const confirm = useConfirm();
   const { list } = state;
   const [printSize, setPrintSize] = useState<PrintSize>('large');
   const [printing, setPrinting] = useState(false);
@@ -31,7 +33,16 @@ export function ArmyListHeader({
   async function downloadPdf() {
     if (!measure) return;
     const markedProfiles = fieldedWithIssues(list);
-    if (markedProfiles.length > 0 && !window.confirm(illegalPrintQuestion(markedProfiles))) return;
+    if (
+      markedProfiles.length > 0 &&
+      !(await confirm({
+        question: 'Print cards marked ILLEGAL?',
+        detail: illegalPrintDetail(markedProfiles),
+        confirm: 'Download anyway',
+      }))
+    ) {
+      return;
+    }
     setPrinting(true);
     onError(undefined);
     try {
@@ -97,11 +108,11 @@ export function ArmyListHeader({
   );
 }
 
-/** Asks whether to print cards that will be marked illegal, naming their Unit Profiles. */
-function illegalPrintQuestion(profiles: readonly { name: string }[]): string {
+/** Says which Unit Profiles' cards will print marked illegal, and why. */
+function illegalPrintDetail(profiles: readonly { name: string }[]): string {
   const names = profiles.map(({ name }) => name);
   const last = names.pop();
   const subject = names.length > 0 ? `${names.join(', ')} and ${last} have` : `${last} has`;
   const cards = names.length > 0 ? 'their cards print' : 'its card prints';
-  return `${subject} Issues, so ${cards} marked ILLEGAL. Download the PDF anyway?`;
+  return `${subject} Issues, so ${cards} marked ILLEGAL.`;
 }

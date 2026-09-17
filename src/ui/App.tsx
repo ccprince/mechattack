@@ -6,6 +6,7 @@ import { AppFooter } from './AppFooter';
 import { ArmyListHeader } from './ArmyListHeader';
 import { ArmyListProvider, useArmyList, useSelectedUnitProfile } from './ArmyListContext';
 import { ArmyListsMenu } from './ArmyListsMenu';
+import { ConfirmProvider } from './ConfirmDialog';
 import { RecoveryBanner } from './RecoveryBanner';
 import { StorageDialog, type StorageDialogHandle } from './StorageDialog';
 import { UnitProfileEditor } from './UnitProfileEditor';
@@ -37,23 +38,26 @@ export function App({
   }
 
   return (
-    <ArmyListProvider
-      key={opened}
-      store={store}
-      saved={saved}
-      onSwitch={switchTo}
-      onChange={onChange}
-    >
-      <ArmyListEditor
-        // Only the Army Lists menu switches lists, so after a switch focus goes back to it.
-        focusMenuOnMount={opened > 0}
-        banner={
-          backup !== undefined && (
-            <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
-          )
-        }
-      />
-    </ArmyListProvider>
+    // Outside the Army List, so a Delete that opens another list can still be answered.
+    <ConfirmProvider>
+      <ArmyListProvider
+        key={opened}
+        store={store}
+        saved={saved}
+        onSwitch={switchTo}
+        onChange={onChange}
+      >
+        <ArmyListEditor
+          // Only the Army Lists menu switches lists, so after a switch focus goes back to it.
+          focusMenuOnMount={opened > 0}
+          banner={
+            backup !== undefined && (
+              <RecoveryBanner backup={backup} onClose={() => setBackup(undefined)} />
+            )
+          }
+        />
+      </ArmyListProvider>
+    </ConfirmProvider>
   );
 }
 

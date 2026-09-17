@@ -16,6 +16,7 @@ const textPairs: [ink: string, on: string, where: string][] = [
   ['--danger', '--surface', 'an over-limit Bp total in the app bar, the mark on a selected row'],
   ['--danger', '--surface-sunken', 'an over-limit value in the editor, the mark on a row'],
   ['--danger-ink', '--danger-surface', "the editor's Issues panel"],
+  ['--ink-inverse', '--danger', 'a destructive answer, such as Delete, in a confirmation'],
   ['--warning-ink', '--surface', "the editor's name-clash hint"],
   ['--warning-ink', '--surface-sunken', 'a name-clash hint on the page'],
 ];

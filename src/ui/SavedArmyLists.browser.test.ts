@@ -4,8 +4,10 @@ import type { ArmyList } from '../domain/armyList';
 import { armyListKey } from '../domain/armyListStorage';
 import { openDocument, savedStore } from '../domain/testStores';
 import {
+  answerConfirmation,
   armyListsButton,
   chooseFromMenu,
+  confirmation,
   importFile,
   openArmyListsMenu,
   openArmyListText,
@@ -134,15 +136,17 @@ describe('Saved Army Lists', () => {
   });
 
   it('deletes the Open Army List only once confirmed, then opens the most recent left', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const store = savedStore(ironLegion, steelHand);
     load(store);
     await chooseFromMenu('Delete Army List…');
-    expect(confirm).toHaveBeenCalledWith("Delete Iron Legion? This can't be undone.");
+    await expect
+      .element(confirmation('Delete Iron Legion?'))
+      .toHaveAccessibleDescription("This can't be undone.");
+    await answerConfirmation('Cancel');
     await expect.element(listName()).toHaveValue('Iron Legion');
 
-    confirm.mockReturnValue(true);
     await chooseFromMenu('Delete Army List…');
+    await answerConfirmation('Delete');
     await expect.element(listName()).toHaveValue('Steel Hand');
     await expect.poll(savedArmyListNames).toEqual(['Steel Hand']);
     expect(store.entries[armyListKey('list-1')]).toBeUndefined();
@@ -150,23 +154,22 @@ describe('Saved Army Lists', () => {
   });
 
   it('opens a new, empty Army List when the last one is deleted', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     load(savedStore(ironLegion));
     await chooseFromMenu('Delete Army List…');
+    await answerConfirmation('Delete');
     await expect.element(listName()).toHaveValue('New Army List');
     await expect.element(unitProfiles().getByText('Ironclad')).not.toBeInTheDocument();
     await expect.poll(savedArmyListNames).toEqual(['New Army List']);
   });
 
   it('adds an imported file as a new list and opens it, leaving the Open Army List untouched', async () => {
-    const confirm = vi.spyOn(window, 'confirm');
     const store = savedStore(steelHand);
     load(store);
     await importFile(JSON.stringify(ironLegion));
     await expect.element(listName()).toHaveValue('Iron Legion');
     await expect.element(unitProfiles().getByText('Ironclad')).toBeInTheDocument();
     await expect.poll(savedArmyListNames).toEqual(['Iron Legion', 'Steel Hand']);
-    expect(confirm).not.toHaveBeenCalled();
+    expect(confirmation().query()).toBeNull();
     expect(JSON.parse(store.entries[armyListKey('list-1')]!)).toEqual(steelHand);
 
     // The same file again: the input is cleared after each pick, so choosing it still imports.
@@ -182,10 +185,15 @@ describe('focus in the Army Lists menu', () => {
     ['New Army List', () => chooseFromMenu('New Army List')],
     ['Duplicate Army List', () => chooseFromMenu('Duplicate Army List')],
     ['choosing another list', () => openSavedArmyList('Steel Hand')],
-    ['a confirmed Delete', () => chooseFromMenu('Delete Army List…')],
+    [
+      'a confirmed Delete',
+      async () => {
+        await chooseFromMenu('Delete Army List…');
+        await answerConfirmation('Delete');
+      },
+    ],
     ['Import', () => importFile(JSON.stringify(steelHand))],
   ])('lands on the menu button after %s opens another list', async (_, act) => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     load(savedStore(ironLegion, steelHand));
     await expect.element(listName()).toHaveValue('Iron Legion');
     await act();
@@ -195,7 +203,13 @@ describe('focus in the Army Lists menu', () => {
 
   it.each<[string, () => Promise<void>]>([
     ['Export', () => chooseFromMenu('Export Army List')],
-    ['a cancelled Delete', () => chooseFromMenu('Delete Army List…')],
+    [
+      'a cancelled Delete',
+      async () => {
+        await chooseFromMenu('Delete Army List…');
+        await answerConfirmation('Cancel');
+      },
+    ],
     ['choosing the Open Army List', () => openSavedArmyList('Iron Legion')],
     [
       'a cancelled Import',
@@ -205,7 +219,6 @@ describe('focus in the Army Lists menu', () => {
       },
     ],
   ])('returns to the menu button after %s', async (_, act) => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     // Stands in for the file picker, which a headless browser can't show.
     vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
