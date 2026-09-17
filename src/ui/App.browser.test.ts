@@ -167,4 +167,17 @@ describe('footer', () => {
     await expect.element(link).toHaveAttribute('href', repoUrl);
     expect(link.element().querySelector('svg')).not.toBeNull();
   });
+
+  it('says the app is fan-made and not official, linking the publisher', async () => {
+    load(fakeStore());
+    const footer = page.getByRole('contentinfo');
+    await expect
+      .element(
+        footer.getByText(/^A fan-made tool for Mech Attack by .+\. Not official or endorsed\.$/),
+      )
+      .toBeInTheDocument();
+    await expect
+      .element(footer.getByRole('link', { name: 'Armor Grid Games and Miniatures' }))
+      .toHaveAttribute('href', 'https://armorgridgames.blogspot.com/');
+  });
 });

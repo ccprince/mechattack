@@ -1,4 +1,5 @@
 import styles from './AppFooter.module.css';
+import { publisher } from '../domain/publisher';
 import { buildLabel, repoUrl } from './buildLabel';
 import { GitHubIcon } from './icons';
 
@@ -22,6 +23,10 @@ export function AppFooter({ onExplainStorage }: { onExplainStorage: () => void }
           <GitHubIcon />
           GitHub
         </a>
+      </p>
+      <p className={styles.notice}>
+        A fan-made tool for <cite>Mech Attack</cite> by <a href={publisher.url}>{publisher.name}</a>
+        . Not official or endorsed.
       </p>
     </footer>
   );

@@ -31,6 +31,12 @@
   text-decoration: underline;
 }
 
+/* A whole sentence, so it takes its own line rather than wrapping among the short items (#75). */
+.notice {
+  flex-basis: 100%;
+  text-align: center;
+}
+
 .build span,
 .build a {
   font-family: var(--font-value);
