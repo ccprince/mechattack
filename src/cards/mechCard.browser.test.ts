@@ -107,6 +107,55 @@ describe('buildMechCardSvg', () => {
     }
   });
 
+  it('spells out a suffix under the short name, the pair centered on the row’s baseline', () => {
+    const svg = buildMechCardSvg(
+      {
+        ...testMech,
+        hardpoints: {
+          ...testMech.hardpoints,
+          rightArm: 'Heavy Machine Gun (w/Armor Piercing Ammo)',
+        },
+      },
+      createValueMeasure(),
+    );
+    expect(field(svg, 'ra-weapon')?.textContent).toBe('Hv MG');
+    expect(field(svg, 'ra-weapon')?.getAttribute('y')).toBe('468.5');
+    expect(field(svg, 'ra-suffix')?.textContent).toBe('AP Ammo');
+    expect(field(svg, 'ra-suffix')?.getAttribute('y')).toBe('481.5');
+    expect(field(svg, 'ra-rv')?.getAttribute('y')).toBe('474');
+    // No suffix, one line.
+    expect(field(svg, 'la-suffix')).toBeNull();
+  });
+
+  it('keeps every Hardpoint value inside its column, a Missile’s Rv included', () => {
+    // Columns from the field map in docs/cards.md: name 12–95, Rv 95–138, Hv 138–166.
+    const svg = buildMechCardSvg(
+      {
+        ...testMech,
+        hardpoints: { ...testMech.hardpoints, leftArm: 'Medium Laser (Twin Linked)' },
+      },
+      createValueMeasure(),
+    );
+    const leftTorsoMissile = buildMechCardSvg(testMech, createValueMeasure());
+    document.body.append(svg, leftTorsoMissile);
+    const inside = (card: SVGSVGElement, name: string, left: number, right: number) => {
+      const box = field(card, name)!.getBBox();
+      expect(box.x, name).toBeGreaterThanOrEqual(left);
+      expect(box.x + box.width, name).toBeLessThanOrEqual(right);
+    };
+    inside(svg, 'la-weapon', 12, 95);
+    inside(svg, 'la-suffix', 12, 95);
+    inside(svg, 'la-rv', 95, 138);
+    inside(svg, 'la-hv', 138, 166);
+    inside(leftTorsoMissile, 'la-rv', 95, 138);
+    svg.remove();
+    leftTorsoMissile.remove();
+
+    expect(field(svg, 'la-rv')?.style.fontSize).toBe('14px');
+    // The longer Missile Rv shrinks, but no smaller than it printed before (11px).
+    expect(parseFloat(field(leftTorsoMissile, 'la-rv')!.style.fontSize)).toBeGreaterThan(11);
+  });
+
   it('replaces the sample data with the Unit Profile', () => {
     const svg = buildMechCardSvg(testMech, createValueMeasure());
     expect(field(svg, 'name')?.textContent).toBe('Ironclad');

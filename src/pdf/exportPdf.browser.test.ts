@@ -182,8 +182,8 @@ describe('illegal marks', () => {
     // Positions from the field map in docs/cards.md: beside the name, Left Arm, Right Torso.
     expect(triangles).toEqual([
       { x: 364, y: 15, width: 12, height: 11 },
-      { x: 67, y: 465, width: 11, height: 10 },
-      { x: 250, y: 512, width: 11, height: 10 },
+      { x: 82, y: 465, width: 11, height: 10 },
+      { x: 265, y: 512, width: 11, height: 10 },
     ]);
     expect(texts).toContainEqual({ text: 'ILLEGAL: 2 issues', stroked: true });
   });

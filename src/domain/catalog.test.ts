@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { catalog, dpGridSize, findCatalogEntry, formatRv, parseDp } from './catalog';
+import {
+  catalog,
+  dpGridSize,
+  findCatalogEntry,
+  formatRv,
+  oneLineShortName,
+  parseDp,
+} from './catalog';
 
 describe('catalog', () => {
   it('holds the 21 Weapons and 4 Support Equipment from the CSV', () => {
@@ -31,9 +38,17 @@ describe('catalog', () => {
     }
   });
 
-  it('has unique names and unique short names', () => {
+  it('has unique names and unique one-line short names', () => {
     expect(new Set(catalog.map((entry) => entry.name)).size).toBe(catalog.length);
-    expect(new Set(catalog.map((entry) => entry.shortName)).size).toBe(catalog.length);
+    expect(new Set(catalog.map(oneLineShortName)).size).toBe(catalog.length);
+  });
+
+  it('reads a suffix apart from the short name, and joins them on one line', () => {
+    const entry = findCatalogEntry('Medium Machine Gun (w/Armor Piercing Ammo)')!;
+    expect(entry.shortName).toBe('Md MG');
+    expect(entry.suffix).toEqual({ short: 'AP', name: 'AP Ammo' });
+    expect(oneLineShortName(entry)).toBe('Md MG-AP');
+    expect(oneLineShortName(findCatalogEntry('Medium Machine Gun')!)).toBe('Md MG');
   });
 
   it('reads a Weapon with a minimum range', () => {

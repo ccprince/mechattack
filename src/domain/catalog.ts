@@ -21,10 +21,20 @@ export interface Dp {
 /** The largest Dp a Class may have: 3×3 Light, 4×4 Medium, 5×5 Heavy (CONTEXT.md). */
 export const dpGridSize: Record<CatalogClass, number> = { Light: 3, Medium: 4, Heavy: 5 };
 
+export interface NameSuffix {
+  /** Joined to the short name on one line: `TL` in `Md Laser-TL`. */
+  short: string;
+  /** Spelled out under the short name where there's room: `Twin Linked`. */
+  name: string;
+}
+
 interface CatalogEntryBase {
   /** Unique across the Catalog and permanent; Army Lists reference entries by this name (ADR 0001). */
   name: string;
+  /** Abbreviated for tight card rows, without any suffix: `Md Laser` (docs/cards.md). */
   shortName: string;
+  /** What sets this entry apart from the one it's named after, such as Twin Linked (docs/cards.md). */
+  suffix?: NameSuffix;
   class: CatalogClass;
   bp: number;
   rv?: Rv;
@@ -44,7 +54,8 @@ export interface SupportEquipment extends CatalogEntryBase {
 
 export type CatalogEntry = Weapon | SupportEquipment;
 
-const header = 'name,kind,class,bp,rv_min,rv_normal,rv_extended,hv,dp,short_name';
+const header =
+  'name,kind,class,bp,rv_min,rv_normal,rv_extended,hv,dp,short_name,short_suffix,name_suffix';
 
 /**
  * Parses a `dp` cell (docs/cards.md): an optional `N x` roll count, then one digit per row, top to
@@ -85,6 +96,8 @@ function parseCatalog(csv: string): CatalogEntry[] {
       hv,
       dp = '',
       shortName = '',
+      shortSuffix = '',
+      nameSuffix = '',
     ] = cells;
     const fail = (problem: string) => {
       throw new Error(`Catalog CSV line ${index + 2} (${name}): ${problem}`);
@@ -95,7 +108,7 @@ function parseCatalog(csv: string): CatalogEntry[] {
       return Number.isFinite(value) ? value : fail(`"${cell}" is not a number`);
     };
 
-    if (cells.length !== 10) fail(`expected 10 cells, got ${cells.length}`);
+    if (cells.length !== 12) fail(`expected 12 cells, got ${cells.length}`);
     const catalogClass = catalogClasses.find((known) => known === entryClass);
     if (!catalogClass) return fail(`unknown Class "${entryClass}"`);
     const normal = optionalNumber(rvNormal);
@@ -113,6 +126,8 @@ function parseCatalog(csv: string): CatalogEntry[] {
     if (normal !== undefined && extended !== undefined) {
       entry.rv = min === undefined ? { normal, extended } : { min, normal, extended };
     }
+    if (!shortSuffix !== !nameSuffix) fail('a suffix needs both short_suffix and name_suffix');
+    if (shortSuffix) entry.suffix = { short: shortSuffix, name: nameSuffix };
     const hvValue = optionalNumber(hv);
     if (hvValue !== undefined) entry.hv = hvValue;
 
@@ -150,4 +165,9 @@ export function weaponDp(entry: CatalogEntry | undefined): Dp | undefined {
 /** Rv as written on cards: `10/14`, or `3-10/14` with a minimum range. */
 export function formatRv({ min, normal, extended }: Rv): string {
   return `${min === undefined ? '' : `${min}-`}${normal}/${extended}`;
+}
+
+/** An entry's short name on one line, with any suffix joined: `Md Laser-TL`. */
+export function oneLineShortName({ shortName, suffix }: CatalogEntry): string {
+  return suffix ? `${shortName}-${suffix.short}` : shortName;
 }

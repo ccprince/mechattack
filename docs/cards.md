@@ -112,16 +112,22 @@ Conventions across all cards:
 | `hc` | 316, 182 center, 22px | 254–378 × 156–192 | |
 | `armor` | 258, 222 | 254–378 × 192–228 | Also drives the armor cross-out |
 | `notes` | 258, 260, 11px | 254–378 × 228–422 | Multi-line: `<tspan x="258" dy="14">`, ≤ 12 lines |
-| `la-rv` / `la-hv` | 101 / 144, 474 center, 11px | 80–123 / 123–166 × 440–487 | Left arm |
-| `ra-rv` / `ra-hv` | 284 / 327, 474 center, 11px | 263–306 / 306–349 × 440–487 | Right arm |
-| `lt-rv` / `lt-hv` | 101 / 144, 521 center, 11px | 80–123 / 123–166 × 487–534 | Left torso |
-| `rt-rv` / `rt-hv` | 284 / 327, 521 center, 11px | 263–306 / 306–349 × 487–534 | Right torso |
-| `la-weapon` / `lt-weapon` | 15, 474 / 521, 10px | 12–80 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
-| `ra-weapon` / `rt-weapon` | 198, 474 / 521, 10px | 195–263 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
+| `la-rv` / `la-hv` | 116.5 / 152, 474 center, 14px | 95–138 / 138–166 × 440–487 | Left arm |
+| `ra-rv` / `ra-hv` | 299.5 / 335, 474 center, 14px | 278–321 / 321–349 × 440–487 | Right arm |
+| `lt-rv` / `lt-hv` | 116.5 / 152, 521 center, 14px | 95–138 / 138–166 × 487–534 | Left torso |
+| `rt-rv` / `rt-hv` | 299.5 / 335, 521 center, 14px | 278–321 / 321–349 × 487–534 | Right torso |
+| `la-weapon` / `lt-weapon` | 15, 474 / 521, 12px | 12–95 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
+| `ra-weapon` / `rt-weapon` | 198, 474 / 521, 12px | 195–278 × 440–487 / 487–534 | Weapon or Support Equipment short name, under the hardpoint label |
+| `la-suffix` … `rt-suffix` | as `*-weapon`, 7.5 below the baseline, 11px | as `*-weapon` | Only with a suffix: spelled out, `Twin Linked` |
 
-An empty hardpoint leaves its `*-weapon`, `*-rv` and `*-hv` fields out. A Hardpoint row's short name,
-Rv and Hv share one baseline, 474 or 521, so the three line up. The row's labels sit 11 below its top
-and the baseline is centered in the space under them.
+An empty hardpoint leaves its `*-weapon`, `*-suffix`, `*-rv` and `*-hv` fields out. A Hardpoint row's
+Rv, Hv and one-line short name share one baseline, 474 or 521, so they line up. The row's labels sit
+11 below its top and the baseline is centered in the space under them. A short name with a suffix
+prints on two lines centered on that baseline: the short name 5.5 above it (468.5 / 515.5) and the
+suffix, spelled out, 7.5 below (481.5 / 528.5). Both fit 75 wide, the short name 63 beside a mark.
+
+Rv and Hv print at 14px. Rv fits 40 wide rather than the usual 35, so a Missile's `3-10/14` shrinks
+only to about 11.5px. The Hv column is just wide enough for its label, since Hv is one digit.
 
 **Illegal marks.** A printed card is taken as Legal at the table, so a Unit Profile with Issues
 prints with three marks. A Legal card has none of them.
@@ -129,13 +135,14 @@ prints with three marks. A Legal card has none of them.
 | Mark | Position | Notes |
 |---|---|---|
 | `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Warning triangle beside the name, in the empty end of the NAME label row |
-| `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 67–78 / 250–261 × 465–475 (arms) or 512–522 (torsos) | On each Hardpoint row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 48 wide instead of 60 |
+| `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 82–93 / 265–276 × 465–475 (arms) or 512–522 (torsos), 5.5 higher with a suffix | On each Hardpoint row with an Issue, at the right of the short name's line. The row's `*-weapon` fits 63 wide instead of 75; `*-suffix` keeps 75 |
 | `illegal` data-field | 258, 260, 10px | `ILLEGAL: <Issue>` for one Issue, `ILLEGAL: 2 issues` for several. Emboldened with a 0.6 stroke in the fill color (only weight 600 is bundled), which svg2pdf draws as text render mode 2. Wraps like `notes`, 0.6 narrower, ≤ 2 lines; `notes` starts `dy="14"` below its last line and keeps the remaining lines of the 12 |
 
 A warning triangle is a black path with a white `!` drawn as shapes, so it needs no font. The line
 stays 10px while `notes` is 11px, because its wordings are short enough to fit this narrow box on one
 line only at that size. One Issue's
-wording is short to leave room for notes: `HL too heavy`, `ECTS on an arm` (short names),
+wording is short to leave room for notes: `Hv Laser too heavy`, `ECTS on an arm` (short names, any
+suffix joined: `Md Laser-TL`),
 `Left Arm not in Catalog` (the name may be long), `Bp over max` or `Bp is 0`.
 
 Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spans y = 90 + 20*i* to
@@ -228,6 +235,12 @@ center column, and the whole shape fits the entry's Class: 3×3 Light, 4×4 Medi
 Weapon must have a Dp; Support Equipment must leave the cell blank. The Catalog loader rejects
 anything else, so a typo fails the build.
 
+**Short names** (the `short_name`, `short_suffix` and `name_suffix` columns): `short_name` is the
+abbreviation for tight rows, `Md Laser`. An entry named for another plus something extra, like
+Twin Linked or Armor Piercing Ammo, also has a suffix: `short_suffix` (`TL`) and `name_suffix`
+(`Twin Linked`), both or neither. One-line uses, such as the ILLEGAL line, join them as
+`Md Laser-TL`; the Mech's Hardpoint rows print the short name with the suffix spelled out underneath.
+
 **Drawing.** Each row's Dp is a `<g data-dp="…">` in `#data`, named for the row (`la`, `mount1`,
 `weapon`), holding one `<rect>` per box and, with Rolls, a `<text data-field="…-rolls">`.
 Boxes are squares of a fixed size per card, with a gap of 20% of the box between them.
@@ -238,7 +251,7 @@ are one box wide, so the text always fits.
 
 | Card | Dp area (x1–x2 × y1–y2) | Grid | Cell | `N×` size |
 |---|---|---|---|---|
-| Mech | 166–195 / 349–378 × 440–487 (arms), 487–534 (torsos) | 5×5 | 5.8 | 9px |
+| Mech | 166–195 / 349–378 × 440–487 (arms), 487–534 (torsos) | 5×5 | 5.8 | 12px |
 | Vehicle | 320–378 × 435–484 (mount 1), 484–534 (mount 2) | 4×4 | 7.75 | 11px |
 | Troops | 214–250 × 191–247 | 3×3 | 12 | 11px |
 
