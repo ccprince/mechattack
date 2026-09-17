@@ -1,4 +1,4 @@
-import { findCatalogEntry } from '../domain/catalog';
+import { findCatalogEntry, oneLineShortName } from '../domain/catalog';
 import { hardpointLabels } from '../domain/mech';
 import type { MechIssue } from '../domain/mechRules';
 import type { TroopIssue } from '../domain/troopRules';
@@ -75,5 +75,6 @@ function shortTroopIssue(issue: TroopIssue): string {
 
 /** The rules name only Catalog entries in the Issues that use a short name, so the lookup falls back just in case. */
 function shortName(name: string): string {
-  return findCatalogEntry(name)?.shortName ?? name;
+  const entry = findCatalogEntry(name);
+  return entry ? oneLineShortName(entry) : name;
 }
