@@ -52,7 +52,7 @@ describe('header', () => {
     load(fakeStore());
     await expect.element(page.getByLabelText('Army List name')).toHaveValue('New Army List');
     await expect.element(page.getByText('Bp 0 /')).toBeInTheDocument();
-    await expect.element(field('Bp Limit')).toHaveValue(50);
+    await expect.element(field('Bp Limit')).toHaveValue(100);
 
     await addMech();
     await field('Armor').fill('70');
@@ -90,10 +90,17 @@ describe('header', () => {
     const decrease = page.getByRole('button', { name: 'Decrease Bp Limit' });
 
     await increase.click();
-    await expect.element(field('Bp Limit')).toHaveValue(51);
+    await expect.element(field('Bp Limit')).toHaveValue(105);
     await decrease.click();
     await decrease.click();
-    await expect.element(field('Bp Limit')).toHaveValue(49);
+    await expect.element(field('Bp Limit')).toHaveValue(95);
+
+    // Any whole number can be typed in; the buttons then step to the next multiple of 5.
+    await field('Bp Limit').fill('42');
+    await increase.click();
+    await expect.element(field('Bp Limit')).toHaveValue(45);
+    await userEvent.keyboard('{ArrowUp}');
+    await expect.element(field('Bp Limit')).toHaveValue(50);
 
     await field('Bp Limit').fill('0');
     await expect.element(decrease).toBeDisabled();

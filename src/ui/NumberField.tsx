@@ -88,6 +88,11 @@ export function NumberField({
           onBlur={settle}
           onKeyDown={(event) => {
             if (event.key === 'Enter') settle();
+            // Arrow keys press like the buttons do, which may move further than the input's step.
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+              event.preventDefault();
+              step(event.key === 'ArrowUp' ? 1 : -1);
+            }
           }}
         />
         <button
