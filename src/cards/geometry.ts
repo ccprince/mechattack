@@ -5,7 +5,11 @@ export interface Rect {
   height: number;
 }
 
-const armorGrid = { x: 44, width: 206, top: 90, rowHeight: 20 };
+/**
+ * The armor grid's box, not just its cells: the block spans the full width, so an unusable row is
+ * marked across the armor value that names it as well as across its ten cells (docs/cards.md).
+ */
+const armorGrid = { x: 12, width: 238, top: 90, rowHeight: 20 };
 
 /**
  * The block of armor rows to cross out on a Mech or Vehicle card: every row above `armor`, from the
@@ -46,3 +50,42 @@ export function strengthCrossOut(sv: number): Rect[] {
   }
   return blocks;
 }
+
+/** A straight line between two points, in viewBox units. */
+export interface Line {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/**
+ * How far apart the hatch lines run. Wide enough that the lines stay separate at Sleeve size, where
+ * they carry a stroke thick enough to print; closer spacing at that weight fills in to a gray wash.
+ */
+const hatchSpacing = 9;
+
+/**
+ * The 45° lines that hatch a crossed-out block, top-left to bottom-right. Clipped to the block by
+ * arithmetic rather than a `clipPath`, which svg2pdf ignores (docs/cards.md).
+ */
+export function hatchLines(block: Rect, spacing = hatchSpacing): Line[] {
+  const lines: Line[] = [];
+  const endX = block.x + block.width;
+  const endY = block.y + block.height;
+  // Offsets step in `spacing` from the block's top-left corner, so offset 0 is always the corner
+  // diagonal and even a block smaller than the spacing is hatched. A line enters the block on its
+  // top edge, or on the left edge once the offset has run past the corner.
+  const first = -Math.ceil(block.height / spacing) * spacing;
+  for (let offset = first; offset < block.width; offset += spacing) {
+    const x1 = offset >= 0 ? block.x + offset : block.x;
+    const y1 = offset >= 0 ? block.y : block.y - offset;
+    const run = Math.min(endX - x1, endY - y1);
+    // Rounded to 0.01 of a unit, a ten-thousandth of an inch: the tracker's box width is a
+    // repeating decimal, which would otherwise print 17 digits of float noise into the path.
+    if (run > 0) lines.push({ x1, y1, x2: round(x1 + run), y2: round(y1 + run) });
+  }
+  return lines;
+}
+
+const round = (value: number) => Math.round(value * 100) / 100;

@@ -68,7 +68,7 @@ Every template has the same layers, in paint order:
    grid numbers, `.title` card name).
 3. `<g id="data">`: **sample** unit data. The app must empty this group and regenerate it. Each
    value is a `<text class="val" data-field="…">`. The crossed-out block is `<rect class="crossed">`
-   plus an X `<path>`.
+   plus a hatching `<path>`.
 
 Label styling conventions:
 - Abbreviations are small caps built from two sizes: `M<tspan font-size="9">V</tspan>:`.
@@ -288,12 +288,21 @@ mount rows; the two Dp areas line up with the mount rows, leaving the 418–435 
    - Measure with the same font the PDF uses: canvas `measureText()` in `600 <size>px "Roboto Slab"`
      once the card fonts have loaded. This needs no in-DOM SVG, so the fitting logic takes the
      measure function as a parameter and is tested in Node with a fake one.
-4. **Cross out unused capacity.** Draw one `rect.crossed` per contiguous block, plus an X path
-   corner to corner across the block (see the sample `#data` groups).
+4. **Cross out unused capacity.** Draw one `rect.crossed` per contiguous block, plus a path of 45°
+   hatching filling it (see the sample `#data` groups). The hatching, not the gray fill, is what
+   marks a block unusable, so a card still reads printed in one ink or seen by a colour-blind
+   player. Lines run top-left to bottom-right, 9 units apart, at stroke width 1.1 and the same
+   `#333` at 0.6 opacity the gray uses; `hatchLines` clips them to the block by arithmetic, since
+   svg2pdf ignores `clipPath`. **Both numbers are set by the smaller Print Size:** 1.1 units prints
+   a 0.5 pt line at Sleeve's 0.641 scale, about the thinnest a home printer renders reliably, and
+   lines that thick need the wider spacing or they fill in to a gray wash. Fewer, heavier lines is
+   the right trade — a finer hatch is what vanishes on a sleeve-size card.
    - Mech/Vehicle armor grid: cross out every row whose value is greater than `armor`. A block
-     spans x = 44–250 from the top row down.
+     spans the full width of the grid box, x = 12–250, from the top row down — across the armor
+     values, so an unusable row is struck along with the value naming it, not just its ten cells.
    - Troops strength tracker: cross out boxes *n* > Sv. Sv 5 covers part of row 0 and all of row 1,
-     so draw one rect per row.
+     so draw one rect per row. The tracker's numbers sit inside its boxes, so its blocks cover the
+     boxes alone.
 5. **Draw each Dp** (see [Dp](#dp)): one `<rect>` per box in the row's Dp area, plus the `N×` text
    when the entry has Rolls. Pure geometry, so it's tested in Node.
 6. **Texture** (see below): replace the filter-based texture before handing the SVG to svg2pdf.
@@ -351,9 +360,15 @@ Use window height 525 for Mech/Vehicle and 249 for Troops. The screenshot is 2×
 
 ## Settled rules
 
-- Armor is always a multiple of 10. Cross out every armor row above it.
+- Armor is always a multiple of 10. Cross out every armor row above it, hatching the row's armor
+  value along with its cells.
 - Troop Sv is 5 or 10, set by its Troop Class. Cross out every strength box above it; players mark
   damage on the rest.
+- **Hatching, not an X.** An X corner to corner across the whole unused block read oddly, worst on
+  a Mech at low Armor where it spanned most of the card. Seven treatments were prototyped on real
+  cards before settling on hatching (#92): per-cell diagonals striped too busily, and blanking the
+  rows outright looked cleanest but only by editing this template's static artwork, which the card
+  builder never does — it fills `#data` and nothing else.
 - The Critical Systems Area row is static artwork. Its numbers repeat the column numbers so hits
   are easier to mark, and it never takes printed data.
 

@@ -167,9 +167,10 @@
 
   <!-- ===== Sample data (the app will generate this group) ===== -->
   <g id="data">
-    <!-- unused armor layers crossed out: armor 110 → rows 150..120 -->
-    <rect class="crossed" x="44" y="90"  width="206" height="80"/>
-    <path d="M44 90L250 170 M44 170L250 90" stroke="#333" stroke-width="0.8" opacity="0.6"/>
+    <!-- unused armor layers hatched out: armor 110 → rows 150..120, values included -->
+    <rect class="crossed" x="12" y="90" width="238" height="80"/>
+    <path d="M12 162L20 170 M12 153L29 170 M12 144L38 170 M12 135L47 170 M12 126L56 170 M12 117L65 170 M12 108L74 170 M12 99L83 170 M12 90L92 170 M21 90L101 170 M30 90L110 170 M39 90L119 170 M48 90L128 170 M57 90L137 170 M66 90L146 170 M75 90L155 170 M84 90L164 170 M93 90L173 170 M102 90L182 170 M111 90L191 170 M120 90L200 170 M129 90L209 170 M138 90L218 170 M147 90L227 170 M156 90L236 170 M165 90L245 170 M174 90L250 166 M183 90L250 157 M192 90L250 148 M201 90L250 139 M210 90L250 130 M219 90L250 121 M228 90L250 112 M237 90L250 103 M246 90L250 94"
+          fill="none" stroke="#333" stroke-width="1.1" opacity="0.6"/>
 
     <text class="val" data-field="bp"    x="211" y="46" text-anchor="middle" style="font-size:16px">185</text>
     <text class="val" data-field="name"  x="258" y="42">Ironclad</text>

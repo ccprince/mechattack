@@ -109,10 +109,18 @@ describe('buildVehicleCardSvg', () => {
     expect(svg.querySelector('style')?.textContent).not.toContain('@import');
     expect(svg.getAttribute('viewBox')).toBe('0 0 390 546');
 
-    // Armor 20 crosses out rows 60…30.
+    // Armor 20 crosses out rows 60…30, across the armor values as well as the cells.
     const crossed = svg.querySelector('#data rect.crossed');
     expect(crossed?.getAttribute('y')).toBe('90');
     expect(crossed?.getAttribute('height')).toBe('80');
+    expect(crossed?.getAttribute('x')).toBe('12');
+    expect(crossed?.getAttribute('width')).toBe('238');
+
+    // The block is hatched, not crossed with an X: many 45° lines, none of them back-slanted.
+    const hatch = svg.querySelector('#data path');
+    const segments = hatch?.getAttribute('d')?.split('M').filter(Boolean) ?? [];
+    expect(segments.length).toBeGreaterThan(20);
+    expect(hatch?.getAttribute('stroke-width')).toBe('1.1');
   });
 
   const illegalVehicle: VehicleProfile = {

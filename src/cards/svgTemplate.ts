@@ -1,5 +1,5 @@
 import type { DpDrawing } from './dpShape';
-import type { Rect } from './geometry';
+import { hatchLines, type Rect } from './geometry';
 
 const svgNs = 'http://www.w3.org/2000/svg';
 
@@ -100,23 +100,36 @@ export function addDp(data: SVGGElement, row: string, { boxes, rolls }: DpDrawin
   return group;
 }
 
-/** Grays out `rect` and draws an X corner to corner across it. */
-export function addCrossOut(data: SVGGElement, { x, y, width, height }: Rect): void {
+/**
+ * How wide the hatch lines stroke. Chosen for the smaller Print Size: at Sleeve's 0.641 this prints
+ * a 0.5 pt line, about the thinnest a home printer renders reliably (docs/cards.md).
+ */
+const hatchWidth = 1.1;
+
+/**
+ * Grays out `rect` and hatches it at 45°. The hatching, not the gray, is what marks the block as
+ * unusable, so the card still reads in one ink or to a colour-blind player.
+ */
+export function addCrossOut(data: SVGGElement, rect: Rect): void {
   const doc = data.ownerDocument;
   const block = doc.createElementNS(svgNs, 'rect');
   block.setAttribute('class', 'crossed');
-  block.setAttribute('x', String(x));
-  block.setAttribute('y', String(y));
-  block.setAttribute('width', String(width));
-  block.setAttribute('height', String(height));
-  const cross = doc.createElementNS(svgNs, 'path');
-  const right = x + width;
-  const bottom = y + height;
-  cross.setAttribute('d', `M${x} ${y}L${right} ${bottom} M${x} ${bottom}L${right} ${y}`);
-  cross.setAttribute('stroke', '#333');
-  cross.setAttribute('stroke-width', '0.8');
-  cross.setAttribute('opacity', '0.6');
-  data.append(block, cross);
+  block.setAttribute('x', String(rect.x));
+  block.setAttribute('y', String(rect.y));
+  block.setAttribute('width', String(rect.width));
+  block.setAttribute('height', String(rect.height));
+  const hatch = doc.createElementNS(svgNs, 'path');
+  hatch.setAttribute(
+    'd',
+    hatchLines(rect)
+      .map(({ x1, y1, x2, y2 }) => `M${x1} ${y1}L${x2} ${y2}`)
+      .join(' '),
+  );
+  hatch.setAttribute('fill', 'none');
+  hatch.setAttribute('stroke', '#333');
+  hatch.setAttribute('stroke-width', String(hatchWidth));
+  hatch.setAttribute('opacity', '0.6');
+  data.append(block, hatch);
 }
 
 /**
