@@ -27,24 +27,48 @@
   gap: var(--space-3);
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-  gap: var(--space-3);
+.classPicker select {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
-.stat {
-  display: grid;
-  gap: var(--space-1);
+/* The values worked out from the Class, joined under its picker as one sunken strip. */
+.workedOut {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border) solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface-sunken);
+}
+
+.workedOut > div {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.workedOut dt {
   font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.workedOut dd {
+  margin: 0;
 }
 
 /* Worked-out values are set in the cards' value font, so they read as the printed card does. */
-.stat output,
+.workedOut output,
 .hullOptions output {
   font-family: var(--font-value);
-  font-size: var(--text-base);
   font-weight: 600;
+}
+
+.hullOptions output {
+  font-size: var(--text-base);
 }
 
 .hardpoints,
