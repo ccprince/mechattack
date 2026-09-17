@@ -28,7 +28,7 @@ const sections: Section[] = [
 export function UnitProfileList({
   onAdd,
 }: {
-  /** Hears of each Unit Profile added with a section's Add, as it's dispatched. */
+  /** Called after a section's Add dispatches a new Unit Profile. */
   onAdd: () => void;
 }) {
   const { state, dispatch } = useArmyList();

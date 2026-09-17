@@ -83,6 +83,7 @@ export function UnitProfileEditor({
 
   useEffect(() => {
     if (!focusNameOnMount) return;
+    nameInput.current?.focus();
     nameInput.current?.select();
     onNameFocused();
     // Once, on mount: opening another Unit Profile mounts a new editor.

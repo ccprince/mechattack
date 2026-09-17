@@ -149,6 +149,8 @@ describe('Unit Profile list', () => {
   it("focuses the new Unit Profile's name, all selected, so typing replaces it", async () => {
     await loadWithNewMech();
     await expect.element(field('Name')).toHaveFocus();
+    const input = field('Name').element() as HTMLInputElement;
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 'New Mech'.length]);
     await userEvent.keyboard('Atlas');
     await expect.element(field('Name')).toHaveValue('Atlas');
     await expect.element(openButton('Atlas')).toBeInTheDocument();
