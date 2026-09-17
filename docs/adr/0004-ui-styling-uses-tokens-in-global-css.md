@@ -22,6 +22,12 @@ display font and worked-out values (stats, the Bp total) use the value font, so 
 the card it prints. They load asynchronously, so they are only used where a flash of fallback text
 doesn't matter — never for body text, labels or controls.
 
+The UI font, `IBM Plex Sans`, and the heading font, `Barlow Condensed`, are a separate pair (#89),
+bundled from `@fontsource` and imported in `main.tsx` rather than fetched from a font service, so the
+site works offline and asks no third party for anything. They're declared with `font-display: swap`,
+so the body shows in the system font for the moment before they arrive. Headings (Unit Profile
+sections, fieldset legends, dialog titles) use the heading font; everything else uses the UI font.
+
 ## Consequences
 
 - A visual change is made once, in `global.css`, and the whole UI follows.

@@ -19,6 +19,8 @@ const textPairs: [ink: string, on: string, where: string][] = [
   ['--ink-inverse', '--danger', 'a destructive answer, such as Delete, in a confirmation'],
   ['--warning-ink', '--surface', "the editor's name-clash hint"],
   ['--warning-ink', '--surface-sunken', 'a name-clash hint on the page'],
+  ['--band-ink', '--band', 'the app title and Army Lists menu on the title band'],
+  ['--highlight-ink', '--highlight', 'the Download PDF button'],
 ];
 
 /** Borders and rules: they identify a control or a panel, so WCAG asks 3:1, not 4.5:1. */
@@ -28,7 +30,8 @@ const uiPairs: [mark: string, on: string, where: string][] = [
   ['--line-strong', '--surface', 'a hovered button, the selected row'],
   ['--line-strong', '--surface-sunken', 'a hovered button on the page'],
   ['--accent', '--surface', 'the focus ring on a control'],
-  ['--accent', '--surface-sunken', 'the focus ring on the page'],
+  ['--accent', '--surface-sunken', 'the focus ring on the page, a Unit Profile section rule'],
+  ['--band-ink', '--band', "the Army Lists menu button's border and focus ring"],
   ['--danger', '--danger-surface', "the Issues panel's rule"],
   ['--warning', '--warning-surface', "the recovery banner's border"],
 ];

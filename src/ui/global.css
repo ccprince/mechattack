@@ -3,8 +3,12 @@
  * these tokens; they don't name their own colours, type sizes or spacing.
  */
 :root {
-  /* Type. The card fonts are loaded by src/cards/fonts.ts and shared with the printed cards. */
-  --font-ui: system-ui, sans-serif;
+  /*
+   * Type. The UI and heading fonts are bundled from @fontsource and imported in main.tsx; the card
+   * fonts are loaded by src/cards/fonts.ts and shared with the printed cards.
+   */
+  --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-heading: 'Barlow Condensed', 'IBM Plex Sans', system-ui, sans-serif;
   --font-display: 'Alfa Slab One', Georgia, serif;
   --font-value: 'Roboto Slab', Georgia, serif;
   --text-sm: 0.85rem;
@@ -13,19 +17,28 @@
   --text-xl: 1.4rem;
 
   /* Ink and surfaces. The page sits on the sunken surface; panels and controls are raised onto it. */
-  --ink: #1a1a1a;
-  --ink-muted: #555;
+  --ink: #16202b;
+  --ink-muted: #4b5765;
   --surface: #fff;
-  --surface-sunken: #eceae6;
-  --line: #858585;
-  --line-strong: #6f6f6f;
-  --accent: #35506e;
+  --surface-sunken: #e2e7ed;
+  --line: #737e8c;
+  --line-strong: #5f6b79;
+  --accent: #2f5b8a;
   /* Text on a filled --danger or --accent background. */
   --ink-inverse: #fff;
   /* Washed over a surface to show a row is under the pointer. */
-  --hover-wash: rgb(0 0 0 / 5%);
+  --hover-wash: rgb(30 60 100 / 7%);
   /* Dims the page behind a dialog. */
   --scrim: rgb(0 0 0 / 40%);
+
+  /* The title band atop the header, in the favicon's navy, and the stripe that closes it off. */
+  --band: #35506e;
+  --band-ink: #fff;
+  --stripe: #b3570f;
+
+  /* The one action that stands out: Download PDF. */
+  --highlight: #b3570f;
+  --highlight-ink: #fff;
 
   /*
    * The card preview is a proof of what comes out of the printer: the paper it paints behind the card
@@ -39,9 +52,9 @@
   --danger-ink: #6b1712;
 
   /* A name clash, or an unreadable save worth keeping. */
-  --warning: #9a7700;
-  --warning-surface: #fff4cc;
-  --warning-ink: #6b5200;
+  --warning: #8f6e00;
+  --warning-surface: #fff2c7;
+  --warning-ink: #5f4900;
 
   /* Spacing. Every gap, margin and padding in the UI comes from this scale. */
   --space-1: 0.25rem;
@@ -51,7 +64,7 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --radius: 4px;
+  --radius: 6px;
   --border: 1px;
   --focus-ring: 2px solid var(--accent);
 
@@ -71,23 +84,30 @@
  */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #e9e6e2;
-    --ink-muted: #b0aba4;
-    --surface: #26262a;
-    --surface-sunken: #17171a;
-    --line: #727279;
-    --line-strong: #93939b;
-    --accent: #8fb8e8;
-    --ink-inverse: #1a1a1a;
-    --hover-wash: rgb(255 255 255 / 8%);
+    --ink: #e6ebf1;
+    --ink-muted: #a7b2bf;
+    --surface: #1c2531;
+    --surface-sunken: #10161d;
+    --line: #6b7888;
+    --line-strong: #8f9bab;
+    --accent: #8fbcec;
+    --ink-inverse: #10161d;
+    --hover-wash: rgb(200 225 255 / 8%);
     --scrim: rgb(0 0 0 / 60%);
+
+    /* Amber reads well against the dark, where the light theme's rust would sink into it. */
+    --band: #243a54;
+    --band-ink: #f2f6fb;
+    --stripe: #f0b458;
+    --highlight: #f0b458;
+    --highlight-ink: #1a1206;
 
     --danger: #f2837a;
     --danger-surface: #3a1614;
     --danger-ink: #ffb4ab;
 
     --warning: #d9a400;
-    --warning-surface: #3a2e10;
+    --warning-surface: #352b10;
     --warning-ink: #f7d98a;
   }
 }
@@ -160,16 +180,23 @@ textarea {
   resize: vertical;
 }
 
+/* A fieldset is lifted onto a panel surface, so its group reads as one piece on the page. */
 fieldset {
   margin: 0;
   padding: var(--space-2) var(--space-3) var(--space-3);
   border: var(--border) solid var(--line);
   border-radius: var(--radius);
+  background: var(--surface);
 }
 
 legend {
-  padding: 0 var(--space-1);
-  font-size: var(--text-sm);
+  padding: 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--accent);
+  /* Small uppercase condensed text needs the tracking back to stay readable. */
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /*

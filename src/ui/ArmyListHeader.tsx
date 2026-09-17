@@ -98,7 +98,12 @@ export function ArmyListHeader({
             ))}
           </select>
         </label>
-        <button type="button" onClick={downloadPdf} disabled={!canPrint || printing}>
+        <button
+          type="button"
+          className={styles.download}
+          onClick={downloadPdf}
+          disabled={!canPrint || printing}
+        >
           {printing ? 'Building PDF…' : 'Download PDF'}
         </button>
       </div>

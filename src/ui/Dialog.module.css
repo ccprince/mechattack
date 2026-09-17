@@ -30,6 +30,7 @@
 
 .title {
   margin: 0 0 var(--space-3);
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
 }
 

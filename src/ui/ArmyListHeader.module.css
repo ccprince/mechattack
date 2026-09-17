@@ -63,6 +63,18 @@
   white-space: nowrap;
 }
 
+/* Download PDF is what the Army List is built for, so it's the one filled button. */
+.download:not(:disabled) {
+  border-color: var(--highlight);
+  background: var(--highlight);
+  color: var(--highlight-ink);
+  font-weight: 600;
+}
+
+.download:hover:not(:disabled) {
+  border-color: var(--highlight-ink);
+}
+
 .printSize {
   display: grid;
   gap: var(--space-1);
