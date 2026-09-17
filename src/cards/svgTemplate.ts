@@ -101,6 +101,12 @@ export function addDp(data: SVGGElement, row: string, { boxes, rolls }: DpDrawin
 }
 
 /**
+ * How wide the hatch lines stroke. Chosen for the smaller Print Size: at Sleeve's 0.641 this prints
+ * a 0.5 pt line, about the thinnest a home printer renders reliably (docs/cards.md).
+ */
+const hatchWidth = 1.1;
+
+/**
  * Grays out `rect` and hatches it at 45°. The hatching, not the gray, is what marks the block as
  * unusable, so the card still reads in one ink or to a colour-blind player.
  */
@@ -121,7 +127,7 @@ export function addCrossOut(data: SVGGElement, rect: Rect): void {
   );
   hatch.setAttribute('fill', 'none');
   hatch.setAttribute('stroke', '#333');
-  hatch.setAttribute('stroke-width', '0.5');
+  hatch.setAttribute('stroke-width', String(hatchWidth));
   hatch.setAttribute('opacity', '0.6');
   data.append(block, hatch);
 }

@@ -120,7 +120,7 @@ describe('buildVehicleCardSvg', () => {
     const hatch = svg.querySelector('#data path');
     const segments = hatch?.getAttribute('d')?.split('M').filter(Boolean) ?? [];
     expect(segments.length).toBeGreaterThan(20);
-    expect(hatch?.getAttribute('stroke-width')).toBe('0.5');
+    expect(hatch?.getAttribute('stroke-width')).toBe('1.1');
   });
 
   const illegalVehicle: VehicleProfile = {

@@ -291,9 +291,12 @@ mount rows; the two Dp areas line up with the mount rows, leaving the 418–435 
 4. **Cross out unused capacity.** Draw one `rect.crossed` per contiguous block, plus a path of 45°
    hatching filling it (see the sample `#data` groups). The hatching, not the gray fill, is what
    marks a block unusable, so a card still reads printed in one ink or seen by a colour-blind
-   player. Lines run top-left to bottom-right, 6 units apart, at stroke width 0.5 and the same
+   player. Lines run top-left to bottom-right, 9 units apart, at stroke width 1.1 and the same
    `#333` at 0.6 opacity the gray uses; `hatchLines` clips them to the block by arithmetic, since
-   svg2pdf ignores `clipPath`.
+   svg2pdf ignores `clipPath`. **Both numbers are set by the smaller Print Size:** 1.1 units prints
+   a 0.5 pt line at Sleeve's 0.641 scale, about the thinnest a home printer renders reliably, and
+   lines that thick need the wider spacing or they fill in to a gray wash. Fewer, heavier lines is
+   the right trade — a finer hatch is what vanishes on a sleeve-size card.
    - Mech/Vehicle armor grid: cross out every row whose value is greater than `armor`. A block
      spans the full width of the grid box, x = 12–250, from the top row down — across the armor
      values, so an unusable row is struck along with the value naming it, not just its ten cells.

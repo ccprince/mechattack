@@ -60,10 +60,10 @@ export interface Line {
 }
 
 /**
- * How far apart the hatch lines run. Fine enough to read as a texture rather than as marks to be
- * counted, coarse enough that a Sleeve-size card still prints separate lines.
+ * How far apart the hatch lines run. Wide enough that the lines stay separate at Sleeve size, where
+ * they carry a stroke thick enough to print; closer spacing at that weight fills in to a gray wash.
  */
-const hatchSpacing = 6;
+const hatchSpacing = 9;
 
 /**
  * The 45° lines that hatch a crossed-out block, top-left to bottom-right. Clipped to the block by
