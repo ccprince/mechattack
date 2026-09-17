@@ -139,9 +139,10 @@
 
   <!-- ===== Sample data (the app will generate this group) ===== -->
   <g id="data">
-    <!-- unused armor layers crossed out: armor 40 → rows 60..50 -->
-    <rect class="crossed" x="44" y="90" width="206" height="40"/>
-    <path d="M44 90L250 130 M44 130L250 90" stroke="#333" stroke-width="0.8" opacity="0.6"/>
+    <!-- unused armor layers hatched out: armor 40 → rows 60..50, values included -->
+    <rect class="crossed" x="12" y="90" width="238" height="40"/>
+    <path d="M12 126L16 130 M12 120L22 130 M12 114L28 130 M12 108L34 130 M12 102L40 130 M12 96L46 130 M12 90L52 130 M18 90L58 130 M24 90L64 130 M30 90L70 130 M36 90L76 130 M42 90L82 130 M48 90L88 130 M54 90L94 130 M60 90L100 130 M66 90L106 130 M72 90L112 130 M78 90L118 130 M84 90L124 130 M90 90L130 130 M96 90L136 130 M102 90L142 130 M108 90L148 130 M114 90L154 130 M120 90L160 130 M126 90L166 130 M132 90L172 130 M138 90L178 130 M144 90L184 130 M150 90L190 130 M156 90L196 130 M162 90L202 130 M168 90L208 130 M174 90L214 130 M180 90L220 130 M186 90L226 130 M192 90L232 130 M198 90L238 130 M204 90L244 130 M210 90L250 130 M216 90L250 124 M222 90L250 118 M228 90L250 112 M234 90L250 106 M240 90L250 100 M246 90L250 94"
+          fill="none" stroke="#333" stroke-width="0.5" opacity="0.6"/>
 
     <text class="val" data-field="bp"    x="211" y="46" text-anchor="middle" style="font-size:16px">95</text>
     <text class="val" data-field="name"  x="258" y="44">Hellhound</text>
