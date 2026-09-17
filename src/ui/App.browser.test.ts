@@ -4,6 +4,7 @@ import type { ArmyList } from '../domain/armyList';
 import { armyListKey, backupKey, singleSlotKey } from '../domain/armyListStorage';
 import { fakeStore, savedStore, unavailableStore } from '../domain/testStores';
 import { browserStore } from './browserStore';
+import { repoUrl } from './buildLabel';
 import {
   importFile,
   openArmyListText,
@@ -156,5 +157,14 @@ describe('when storage is unavailable', () => {
     await listName().fill('Iron Legion');
     await expect.poll(savedArmyListTexts).toEqual(['Iron Legion']);
     await expect.poll(openArmyListText).toBe('Iron Legion');
+  });
+});
+
+describe('footer', () => {
+  it('links to the source on GitHub by name, with its mark', async () => {
+    load(fakeStore());
+    const link = page.getByRole('contentinfo').getByRole('link', { name: 'GitHub' });
+    await expect.element(link).toHaveAttribute('href', repoUrl);
+    expect(link.element().querySelector('svg')).not.toBeNull();
   });
 });
