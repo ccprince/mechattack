@@ -138,18 +138,16 @@ function MechFields({ profile, update }: { profile: MechProfile; update: UpdateU
   const stats = mechStats(profile);
   return (
     <>
-      <StatOutputs
-        stats={[
+      <ClassPicker
+        classes={mechClasses}
+        value={profile.class}
+        onChange={(mechClass: MechClass) => update({ class: mechClass })}
+        workedOut={[
           { label: 'Bp', value: `${stats.bp} / ${mechFrames[profile.class].maxBp}` },
           { label: 'Mv', value: stats.mv },
           { label: 'Tp', value: stats.tp },
           { label: 'Hc', value: stats.hc },
         ]}
-      />
-      <ClassPicker
-        classes={mechClasses}
-        value={profile.class}
-        onChange={(mechClass: MechClass) => update({ class: mechClass })}
       />
       <UpgradeFields
         labels={mechUpgradeLabels}
@@ -195,17 +193,15 @@ function VehicleFields({
 
   return (
     <>
-      <StatOutputs
-        stats={[
-          { label: 'Bp', value: `${stats.bp} / ${frame.maxBp}` },
-          { label: 'Mv', value: stats.mv },
-          { label: 'Tp', value: stats.tp },
-        ]}
-      />
       <ClassPicker
         classes={vehicleClasses}
         value={profile.class}
         onChange={(vehicleClass: VehicleClass) => update({ class: vehicleClass })}
+        workedOut={[
+          { label: 'Bp', value: `${stats.bp} / ${frame.maxBp}` },
+          { label: 'Mv', value: stats.mv },
+          { label: 'Tp', value: stats.tp },
+        ]}
       />
       <UpgradeFields
         labels={vehicleUpgradeLabels}
@@ -255,25 +251,18 @@ function TroopFields({ profile, update }: { profile: TroopProfile; update: Updat
   const stats = troopStats(profile);
   return (
     <>
-      <StatOutputs
-        stats={[
-          { label: 'Bp', value: `${stats.bp} / ${troopClassStats[profile.class].maxBp}` },
-          { label: 'Mv', value: stats.mv },
-          { label: 'Tp', value: stats.tp },
-          { label: 'Sv', value: stats.sv },
-        ]}
-      />
       <ClassPicker
         classes={troopClasses}
         value={profile.class}
         onChange={(troopClass: TroopClass) => update({ class: troopClass })}
+        workedOut={[
+          { label: 'Bp', value: `${stats.bp} / ${troopClassStats[profile.class].maxBp}` },
+          { label: 'Mv', value: stats.mv },
+          { label: 'Tp', value: stats.tp },
+          { label: 'Sv', value: stats.sv },
+          { label: 'Standard Equipment', value: standardEquipment(profile.class).join(', ') },
+        ]}
       />
-      <div className={styles.field}>
-        <span aria-hidden="true">Standard Equipment</span>
-        <output aria-label="Standard Equipment">
-          {standardEquipment(profile.class).join(', ')}
-        </output>
-      </div>
       <MountPicker
         label="Crew Served Weapon"
         eligible={eligibleCrewServedWeapons(profile.class)}
@@ -284,38 +273,48 @@ function TroopFields({ profile, update }: { profile: TroopProfile; update: Updat
   );
 }
 
-/** Worked out from the Unit Profile; never typed in. */
-function StatOutputs({ stats }: { stats: { label: string; value: string | number }[] }) {
-  return (
-    <div className={styles.stats}>
-      {stats.map(({ label, value }) => (
-        <div key={label} className={styles.stat}>
-          <span aria-hidden="true">{label}</span>
-          <output aria-label={label}>{value}</output>
-        </div>
-      ))}
-    </div>
-  );
+interface WorkedOutValue {
+  label: string;
+  value: string | number;
 }
 
+/**
+ * Picks the Class, with the values worked out from it joined underneath: everything read-only sits
+ * together, under the choice that sets it.
+ */
 function ClassPicker<C extends string>({
   classes,
   value,
   onChange,
+  workedOut,
 }: {
   classes: readonly C[];
   value: C;
   onChange: (value: C) => void;
+  workedOut: WorkedOutValue[];
 }) {
   return (
-    <label className={styles.field}>
-      <span>Class</span>
-      <select value={value} onChange={(event) => onChange(event.target.value as C)}>
-        {classes.map((unitClass) => (
-          <option key={unitClass}>{unitClass}</option>
+    <div className={styles.classPicker}>
+      <label className={styles.field}>
+        <span>Class</span>
+        <select value={value} onChange={(event) => onChange(event.target.value as C)}>
+          {classes.map((unitClass) => (
+            <option key={unitClass}>{unitClass}</option>
+          ))}
+        </select>
+      </label>
+      {/* Worked out from the Unit Profile; never typed in. */}
+      <dl className={styles.workedOut}>
+        {workedOut.map(({ label, value: workedOutValue }) => (
+          <div key={label}>
+            <dt aria-hidden="true">{label}</dt>
+            <dd>
+              <output aria-label={label}>{workedOutValue}</output>
+            </dd>
+          </div>
         ))}
-      </select>
-    </label>
+      </dl>
+    </div>
   );
 }
 
