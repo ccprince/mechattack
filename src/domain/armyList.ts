@@ -7,8 +7,16 @@ import {
   type UnitProfile,
 } from './unitProfile';
 
-/** Any whole number of Bp from 0 up; the max only keeps typed-in values exact. */
-export const bpLimitRange: NumberRange = { min: 0, max: Number.MAX_SAFE_INTEGER, step: 1 };
+/**
+ * Any whole number of Bp from 0 up, though − and + move it by 5; the max only keeps typed-in values
+ * exact.
+ */
+export const bpLimitRange: NumberRange = {
+  min: 0,
+  max: Number.MAX_SAFE_INTEGER,
+  step: 1,
+  stride: 5,
+};
 
 export const armyListSchema = z.object({
   /** Bumped with a migration whenever the saved shape changes. */
@@ -26,7 +34,7 @@ export type ArmyList = z.infer<typeof armyListSchema>;
 
 /** An empty Army List, as a new one starts. */
 export function newArmyList(): ArmyList {
-  return { version: 2, name: 'New Army List', bpLimit: 50, unitProfiles: [] };
+  return { version: 2, name: 'New Army List', bpLimit: 100, unitProfiles: [] };
 }
 
 /**

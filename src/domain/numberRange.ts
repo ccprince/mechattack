@@ -3,6 +3,8 @@ export interface NumberRange {
   min: number;
   max: number;
   step: number;
+  /** How far − and + move the value, when that's further than `step`. Must be a multiple of `step`. */
+  stride?: number;
 }
 
 /** The typed-in value, or undefined unless it's a whole number in range and on the step. */
@@ -31,13 +33,15 @@ export function clampToRange(text: string, range: NumberRange, current: number):
 }
 
 /**
- * One step up (`1`) or down (`-1`) from `value`, stopping at the ends of the range. A value off the
- * step moves to the next step in that direction, so 55 goes up to 60 and down to 50.
+ * One stride up (`1`) or down (`-1`) from `value`, stopping at the ends of the range. The stride is
+ * `stride`, or else `step`. A value off the stride moves to its next multiple in that direction, so
+ * with a stride of 10, 55 goes up to 60 and down to 50.
  */
 export function stepInRange(value: number, range: NumberRange, direction: 1 | -1): number {
-  const steps = value / range.step;
-  const next = direction === 1 ? Math.floor(steps) + 1 : Math.ceil(steps) - 1;
-  return pullIntoRange(next * range.step, range);
+  const stride = range.stride ?? range.step;
+  const strides = value / stride;
+  const next = direction === 1 ? Math.floor(strides) + 1 : Math.ceil(strides) - 1;
+  return pullIntoRange(next * stride, range);
 }
 
 function pullIntoRange(value: number, range: NumberRange): number {

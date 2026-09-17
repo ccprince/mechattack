@@ -72,6 +72,14 @@ describe('stepInRange', () => {
     expect(stepInRange(2.5, bp, 1)).toBe(3);
   });
 
+  it('moves by the stride when the range has one, to its next multiple', () => {
+    const bpLimit: NumberRange = { min: 0, max: 1000, step: 1, stride: 5 };
+    expect(stepInRange(100, bpLimit, 1)).toBe(105);
+    expect(stepInRange(100, bpLimit, -1)).toBe(95);
+    expect(stepInRange(42, bpLimit, 1)).toBe(45);
+    expect(stepInRange(42, bpLimit, -1)).toBe(40);
+  });
+
   it('brings a value outside the range back into it', () => {
     expect(stepInRange(-3, bp, 1)).toBe(1);
     expect(stepInRange(400, armor, -1)).toBe(150);

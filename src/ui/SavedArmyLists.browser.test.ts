@@ -114,7 +114,7 @@ describe('Saved Army Lists', () => {
     load(store);
     await chooseFromMenu('New Army List');
     await expect.element(listName()).toHaveValue('New Army List');
-    await expect.element(bpLimit()).toHaveValue(50);
+    await expect.element(bpLimit()).toHaveValue(100);
     await expect.element(unitProfiles().getByText('Ironclad')).not.toBeInTheDocument();
     await expect.poll(savedArmyListNames).toEqual(['New Army List', 'Iron Legion']);
     expect(JSON.parse(store.entries[armyListKey('list-1')]!)).toEqual(ironLegion);
