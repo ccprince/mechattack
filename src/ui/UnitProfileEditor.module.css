@@ -104,6 +104,20 @@
   gap: var(--space-2);
   align-items: center;
   font-size: var(--text-sm);
+
+  /*
+   * A checkbox is 13px square, far too small to hit, so the label around it is the target. Left at
+   * the height of its text it was 19px — under the 24px minimum, which is why this is a floor the
+   * label carries on every device rather than only on touch (#97).
+   */
+  min-height: var(--touch-target-min);
+}
+
+/* On touch the label grows to the same finger-sized square as the icon buttons beside it. */
+@media (pointer: coarse) {
+  .check {
+    min-height: var(--touch-target);
+  }
 }
 
 .issues {
