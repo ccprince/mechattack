@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- A mech's head on the app's accent colour: angled armour, a lit visor, a chin grille and an antenna. -->
+  <rect width="32" height="32" rx="6" fill="#35506e"/>
+  <path d="M22 9l2.5-5" stroke="#eceae6" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M8 8h16l3.5 6-3 12h-17l-3-12z" fill="#eceae6"/>
+  <path d="M7.5 12.5h17l-2.5 5h-12z" fill="#1a1a1a"/>
+  <path d="M10 14h12l-1.2 2.2h-9.6z" fill="#e8a33d"/>
+  <path d="M13 20.5v3M16 20.5v3M19 20.5v3" stroke="#35506e" stroke-width="1.6" stroke-linecap="round"/>
+</svg>
