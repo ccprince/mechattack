@@ -27,6 +27,16 @@
   gap: var(--space-3);
 }
 
+/*
+ * A touch-sized − and + leave nothing of a 7rem column for the number between them, so the columns
+ * get wide enough to hold a stepper and still show what it's stepping (#97).
+ */
+@media (pointer: coarse) {
+  .upgrades {
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  }
+}
+
 .classPicker select {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

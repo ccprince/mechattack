@@ -140,6 +140,32 @@ describe('an icon button', () => {
       box: page.getByRole('button', { name, exact: true }).element().getBoundingClientRect(),
     }));
 
+  /** Every pair of buttons on the page drawn on top of each other, named for the failure message. */
+  function overlappingButtons(): string[] {
+    const drawn = page
+      .getByRole('button')
+      .elements()
+      .map((button) => ({
+        name: button.ariaLabel ?? button.textContent,
+        box: button.getBoundingClientRect(),
+      }))
+      .filter(({ box }) => box.width > 0);
+
+    // A shared edge isn't an overlap, and neither is the sub-pixel a fractional grid track leaves.
+    const over = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right - 0.5 &&
+      b.left < a.right - 0.5 &&
+      a.top < b.bottom - 0.5 &&
+      b.top < a.bottom - 0.5;
+
+    return drawn.flatMap(({ name, box }, index) =>
+      drawn
+        .slice(index + 1)
+        .filter((other) => over(box, other.box))
+        .map((other) => `${name} / ${other.name}`),
+    );
+  }
+
   /** Names the ones an expectation rejects, at the size they came out, for the failure message. */
   const listing = (wrong: ReturnType<typeof boxes>) =>
     wrong.map(({ name, box }) => `${name}: ${Math.round(box.width)}×${Math.round(box.height)}`);
@@ -163,14 +189,28 @@ describe('an icon button', () => {
       expect(listing(boxes().filter(({ box }) => box.width < 44 || box.height < 44))).toEqual([]);
     });
 
-    it('grows without pushing a phone screen sideways', async () => {
-      await page.viewport(360, 780);
-      await loadWithTwoMechs();
-      await page.getByRole('button', { name: 'Add Vehicle' }).click();
-      await page.getByRole('button', { name: 'Add Troop' }).click();
+    /*
+     * A 44px stepper needs room a 26px one didn't, and a control that won't narrow doesn't overflow
+     * quietly — it paints over the field beside it. So this walks every width a phone, tablet or
+     * split window might be, a pixel at a time, with each kind of Unit Profile in the editor.
+     */
+    it.each(['Mech', 'Vehicle', 'Troop'])(
+      'leaves room for the rest of the page (%s)',
+      async (kind) => {
+        load(fakeStore());
+        await page.getByRole('button', { name: `Add ${kind}` }).click();
 
-      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
-    });
+        const wrong = new Set<string>();
+        for (let width = 320; width <= 1400; width++) {
+          await page.viewport(width, 900);
+          for (const pair of overlappingButtons()) wrong.add(`${width}px: ${pair} overlap`);
+          if (document.documentElement.scrollWidth > width)
+            wrong.add(`${width}px: scrolls sideways`);
+        }
+        expect([...wrong]).toEqual([]);
+      },
+      60000,
+    );
   });
 
   it('stays at the pointer size when the pointer is fine', async () => {
