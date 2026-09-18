@@ -9,11 +9,16 @@ const load = setUpApp();
 
 const styleOf = (element: Element) => window.getComputedStyle(element);
 
-/** How many line boxes the element's text takes: one rect per line. */
+/*
+ * How many line boxes the element's text takes. Counts distinct rect tops rather than rects: a line
+ * made of several text nodes, as `{value} Bp` is, gives one rect each and would otherwise read as
+ * several lines.
+ */
 function lineCount(element: Element): number {
   const range = document.createRange();
   range.selectNodeContents(element);
-  return range.getClientRects().length;
+  const tops = Array.from(range.getClientRects(), (rect) => Math.round(rect.top));
+  return new Set(tops).size;
 }
 
 /** Starts the app with two Mechs, the second one selected. */
