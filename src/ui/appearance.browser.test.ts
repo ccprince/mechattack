@@ -223,3 +223,51 @@ describe('an icon button', () => {
     expect(listing(wrong)).toEqual([]);
   });
 });
+
+/*
+ * A Hull Option is ticked by a checkbox the browser draws 13px square, so the target a player hits is
+ * the `<label>` wrapped round it. That label is a full-width row but only as tall as its text, which
+ * left it under the 24px WCAG 2.5.8 Target Size (Minimum, AA) asks for — the one place in the app that
+ * missed the minimum rather than merely the comfortable 44 (#97).
+ */
+describe('a Hull Option', () => {
+  /*
+   * The label is the target: a checkbox is too small to hit, and wrapping it in a label is what makes
+   * the row clickable. Reached from the checkbox's accessible name so the test doesn't name a class.
+   */
+  const targets = () =>
+    ['Turret', 'Static Mount'].map((name) => {
+      const check = page.getByRole('checkbox', { name, exact: true }).element();
+      return { name, box: check.closest('label')!.getBoundingClientRect() };
+    });
+
+  const listing = (wrong: ReturnType<typeof targets>) =>
+    wrong.map(({ name, box }) => `${name}: ${Math.round(box.width)}×${Math.round(box.height)}`);
+
+  /** Starts the app with a Vehicle, the only kind of Unit Profile that has Hull Options. */
+  async function loadWithAVehicle() {
+    load(fakeStore());
+    await page.getByRole('button', { name: 'Add Vehicle' }).click();
+  }
+
+  it('is tall enough to hit with a pointer', async () => {
+    await loadWithAVehicle();
+
+    expect(listing(targets().filter(({ box }) => box.height < 24))).toEqual([]);
+  });
+
+  describe('on a touch device', () => {
+    const session = cdp();
+    const touch = (enabled: boolean) =>
+      session.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 1 });
+
+    beforeEach(() => touch(true));
+    afterEach(() => touch(false));
+
+    it('is as tall as a finger needs, like the icon buttons beside it', async () => {
+      await loadWithAVehicle();
+
+      expect(listing(targets().filter(({ box }) => box.height < 44))).toEqual([]);
+    });
+  });
+});

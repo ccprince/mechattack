@@ -70,6 +70,13 @@
    */
   --touch-target: 2.75rem;
 
+  /*
+   * The floor rather than the comfort: 24px is the smallest target WCAG 2.5.8 Target Size (Minimum,
+   * AA) accepts, for a control a pointer hits as well as a finger. A target that can't be the full
+   * `--touch-target` on every device is held to this one.
+   */
+  --touch-target-min: 1.5rem;
+
   --radius: 6px;
   --border: 1px;
   --focus-ring: 2px solid var(--accent);
