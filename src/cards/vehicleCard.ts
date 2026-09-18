@@ -6,6 +6,7 @@ import { dpDrawing } from './dpShape';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
+import { addNameRowCorner } from './nameRowCorner';
 import {
   addCrossOut,
   addDp,
@@ -43,11 +44,13 @@ const statValue = { x: 316, width: 80, fontSize: 24 };
 // Full names run to the end of the row, where canvas measurement under-reports the rendered width
 // by a few percent, so these keep 8 more padding than the field map's ~8.
 const weaponWidth = { unmarked: 204, marked: 188 };
-// Illegal marks (docs/cards.md): the name triangle, and each mount row's marker relative to its row.
-const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const mountRowMark = { x: 217, dy: -9, width: 11, height: 10 };
 
-export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): SVGSVGElement {
+export function buildVehicleCardSvg(
+  profile: VehicleProfile,
+  measure: Measure,
+  copyNumber?: number,
+): SVGSVGElement {
   const { svg, data } = parseTemplate(vehicleTemplate);
   const issues = vehicleIssues(profile);
 
@@ -78,7 +81,7 @@ export function buildVehicleCardSvg(profile: VehicleProfile, measure: Measure): 
   line('armor', String(profile.armor), 258, 228, 116);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
-  if (issues.length > 0) addWarningTriangle(data, 'illegal', nameMark);
+  addNameRowCorner(data, copyNumber, issues.length > 0);
   const { x: notesX, fontSize, lineHeight } = vehicleNotesBox;
   for (const { field, lines, y } of vehicleNotes(profile, issues, measure)) {
     const text = addWrappedValue(data, field, lines, notesX, y, fontSize, lineHeight);

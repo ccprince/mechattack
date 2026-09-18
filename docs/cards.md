@@ -99,6 +99,31 @@ Conventions across all cards:
 - Each weapon row has a **Dp area** where the entry's Dp is drawn (see [Dp](#dp)). The areas hold no
   artwork but their surrounding box: the app draws the shape itself.
 - The Vehicle and Troop cards keep the label "Type" for the value the app calls Class.
+- The **name label row** ends in a right-justified group holding the Copy Number and the illegal
+  warning triangle. See [The name row corner](#the-name-row-corner).
+
+### The name row corner
+
+Every card's `NAME:` label row ends in the same empty space, and two things may print there: the
+Copy Number (`CONTEXT.md`) and the illegal warning triangle. They form one group, right-justified
+to x = 376, on all three cards.
+
+| Present | Copy Number | Triangle |
+|---|---|---|
+| Both | `copy` anchored end at 360 | 364–376, unmoved |
+| Triangle only | — | 364–376 |
+| Copy Number only | `copy` anchored end at 376 | — |
+
+The triangle is the group's rightmost element whenever it prints, so it never moves from the
+position each card's table below gives it; only the Copy Number shifts, 16 left when the triangle
+is there. Both are drawn from code, so no template carries either.
+
+`copy` prints `(N)` — parentheses included — in the value font at 10px, on the label baseline. It is
+a value, not label furniture, so it takes `.val` rather than the label's face, and 10px keeps it
+subordinate to the name beneath it and inside the triangle's 15–26 band. It needs no fitting: the
+widest it can get is `(100)` at the top of the quantity range, about 30 wide, which still clears the
+`NAME:` label ending near x = 300. A Copy Number of 1 on a name no other copy shares doesn't print
+at all — a lone card is never numbered.
 
 ### Mech (`mech-card.svg`)
 
@@ -106,6 +131,7 @@ Conventions across all cards:
 |---|---|---|---|
 | `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
 | `name` | 258, 42 | 254–378 × 12–48 | |
+| `copy` | 376 or 360, 25 end, 10px | 300–378 × 12–30 | Only when the name is shared: `(N)`. See [The name row corner](#the-name-row-corner) |
 | `class` | 258, 78 | 254–378 × 48–84 | |
 | `mv` | 316, 110 center, 22px | 254–378 × 84–120 | |
 | `tp` | 316, 146 center, 22px | 254–378 × 120–156 | |
@@ -134,7 +160,7 @@ prints with three marks. A Legal card has none of them.
 
 | Mark | Position | Notes |
 |---|---|---|
-| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Warning triangle beside the name, in the empty end of the NAME label row |
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Warning triangle beside the name, in the empty end of the NAME label row, sharing it with `copy` |
 | `<g data-mark="la-illegal">`, `ra-`, `lt-`, `rt-` | Triangle 82–93 / 265–276 × 465–475 (arms) or 512–522 (torsos), 5.5 higher with a suffix | On each Hardpoint row with an Issue, at the right of the short name's line. The row's `*-weapon` fits 63 wide instead of 75; `*-suffix` keeps 75 |
 | `illegal` data-field | 258, 260, 10px | `ILLEGAL: <Issue>` for one Issue, `ILLEGAL: 2 issues` for several. Emboldened with a 0.6 stroke in the fill color (only weight 600 is bundled), which svg2pdf draws as text render mode 2. Wraps like `notes`, 0.6 narrower, ≤ 2 lines; `notes` starts `dy="14"` below its last line and keeps the remaining lines of the 12 |
 
@@ -154,6 +180,7 @@ Armor grid: rows are 150, 140, …, 10 from top to bottom. Row *i* (0-based) spa
 |---|---|---|---|
 | `bp` | 211, 46 center, 16px | 172–250 × 12–54 | |
 | `name` | 258, 44 | 254–378 × 12–58 | |
+| `copy` | 376 or 360, 25 end, 10px | 300–378 × 12–30 | Only when the name is shared: `(N)`. See [The name row corner](#the-name-row-corner) |
 | `type` | 258, 90 | 254–378 × 58–104 | |
 | `mv` | 316, 136 center, 24px | 254–378 × 104–150 | |
 | `tp` | 316, 182 center, 24px | 254–378 × 150–196 | |
@@ -179,7 +206,7 @@ name as stored, with a blank Rv.
 
 | Mark | Position | Notes |
 |---|---|---|
-| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech, sharing the row's end with `copy` |
 | `<g data-mark="mount1-illegal">`, `mount2-` | Triangle 217–228 × 456–466 / 505–515 | On each mount row with an Issue, at the right of the weapon line. The row's `*-weapon` fits 196 wide instead of 212 |
 
 One Issue's wording: `Hull Options over`, `Turret: Md Laser too heavy`, `Static: Plasma Lance not in
@@ -193,6 +220,7 @@ Armor grid: rows are 60 … 10. Row *i* spans y = 90 + 20*i* to 110 + 20*i*; col
 |---|---|---|---|
 | `bp` | 211, 43 center, 16px | 172–250 × 12–50 | |
 | `name` | 258, 44 | 254–378 × 12–59 | |
+| `copy` | 376 or 360, 25 end, 10px | 300–378 × 12–30 | Only when the name is shared: `(N)`. See [The name row corner](#the-name-row-corner) |
 | `type` | 258, 91 | 254–378 × 59–106 | The Troop Class in full, `Heavy Infantry` |
 | `mv` | 316, 138 center, 24px | 254–378 × 106–153 | |
 | `tp` | 316, 185 center, 24px | 254–378 × 153–200 | |
@@ -213,7 +241,7 @@ stored: it follows from the Troop Class.
 
 | Mark | Position | Notes |
 |---|---|---|
-| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech |
+| `<g data-mark="illegal">` | Triangle 364–376 × 15–26 | Beside the name, as on the Mech, sharing the row's end with `copy` |
 | `<g data-mark="weapon-illegal">` | Triangle 140–151 × 214–224 | On the Crew Served Weapon row when it has an Issue, at the right of the weapon line. `weapon` fits 120 wide instead of 136 |
 
 One Issue's wording: `Md Laser too heavy` (short name), `Plasma Lance not in Catalog`, `Bp over max`.
@@ -369,6 +397,9 @@ Use window height 525 for Mech/Vehicle and 249 for Troops. The screenshot is 2×
   cards before settling on hatching (#92): per-cell diagonals striped too busily, and blanking the
   rows outright looked cleanest but only by editing this template's static artwork, which the card
   builder never does — it fills `#data` and nothing else.
+- **The Copy Number sits above the name, not in it.** Appending `(2)` to the name would make it
+  compete with the name for the 116 the name value fits in, so a long name would shrink or lose
+  the number to truncation. The label row's empty end costs the name nothing.
 - The Critical Systems Area row is static artwork. Its numbers repeat the column numbers so hits
   are easier to mark, and it never takes printed data.
 

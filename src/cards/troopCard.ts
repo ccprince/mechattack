@@ -5,6 +5,7 @@ import { dpDrawing } from './dpShape';
 import { fitLine, fitOrWrap, type Measure } from './fitText';
 import { strengthCrossOut } from './geometry';
 import { illegalStroke } from './illegalNote';
+import { addNameRowCorner } from './nameRowCorner';
 import {
   addCrossOut,
   addDp,
@@ -26,13 +27,15 @@ const weaponWidth = { unmarked: 128, marked: 112 };
 const weaponRow = { x: 15, y: 223, fontSize: 13, lineHeight: 14, maxLines: 2, wrapDy: -4 };
 /** Mv, Tp and Sv print large in the middle of their cell: they're read constantly in play. */
 const statValue = { x: 316, width: 80, fontSize: 24 };
-// Illegal marks (docs/cards.md): the name triangle, and the Crew Served Weapon row's marker.
-const nameMark = { x: 364, y: 15, width: 12, height: 11 };
 const weaponMark = { x: 140, y: 214, width: 11, height: 10 };
 /** The Crew Served Weapon's Dp area, 3×3 cells of 12 (docs/cards.md). */
 const dpArea = { x: 214, y: 191, width: 36, height: 56, cellSize: 12, rollsFontSize: 11 };
 
-export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGSVGElement {
+export function buildTroopCardSvg(
+  profile: TroopProfile,
+  measure: Measure,
+  copyNumber?: number,
+): SVGSVGElement {
   const { svg, data } = parseTemplate(troopTemplate);
   const issues = troopIssues(profile);
   const stats = troopStats(profile);
@@ -62,7 +65,7 @@ export function buildTroopCardSvg(profile: TroopProfile, measure: Measure): SVGS
   stat('sv', stats.sv, 232);
 
   // A printed card is taken as Legal at the table, so an illegal one says so (docs/cards.md).
-  if (issues.length > 0) addWarningTriangle(data, 'illegal', nameMark);
+  addNameRowCorner(data, copyNumber, issues.length > 0);
   const { x: notesX, fontSize, lineHeight } = troopNotesBox;
   for (const { field, lines, y } of troopNotes(profile, issues, measure)) {
     const text = addWrappedValue(data, field, lines, notesX, y, fontSize, lineHeight);

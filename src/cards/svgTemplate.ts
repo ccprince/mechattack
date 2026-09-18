@@ -38,7 +38,7 @@ export function addValue(
   x: number,
   y: number,
   fontSize: number,
-  anchor: 'start' | 'middle' = 'start',
+  anchor: 'start' | 'middle' | 'end' = 'start',
 ): SVGTextElement {
   const el = createValueText(data, field, x, y, fontSize);
   if (anchor !== 'start') el.setAttribute('text-anchor', anchor);

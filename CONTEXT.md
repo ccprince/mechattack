@@ -30,10 +30,19 @@ sleeve. Every card in one print uses the same Print Size.
 
 **Unit Profile**:
 The design of one unit: its name, kind, Class, stats and mounted Weapons. Belongs to one Army List,
-where its name is unique, and the list fields it in some quantity; each copy is a separate card.
-A quantity of 0 keeps a Unit Profile on the list without fielding it, such as a variant not in use
-this game. Only fielded copies count against the Bp Limit or print.
+which fields it in some quantity; each copy is a separate card. Its name should be unique on the
+list and a clash is flagged, but it's allowed and isn't an Issue; copies sharing a name are told
+apart by their Copy Number. A quantity of 0 keeps a Unit Profile on the list without fielding it,
+such as a variant not in use this game. Only fielded copies count against the Bp Limit or print.
 _Avoid_: Unit template, datasheet
+
+**Copy Number**:
+What tells one printed card from another when several share a name: every fielded copy of that name
+across the Army List is numbered from 1, in list order. A name only one copy carries gets no number,
+and a blank name counts as a name like any other. It belongs to a printing rather than to a unit —
+changing a quantity or reordering the list can number the same model differently next time — so it's
+never a lasting identity for a miniature on the table.
+_Avoid_: Sequence number, card number
 
 **Legal**:
 A Unit Profile is Legal when it breaks no build rule, such as mounting something heavier than its
