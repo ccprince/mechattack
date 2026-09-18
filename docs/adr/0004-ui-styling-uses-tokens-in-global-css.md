@@ -31,6 +31,12 @@ fits in the preview fits in print. They're declared with `font-display: swap`,
 so the body shows in the system font for the moment before they arrive. Headings (Unit Profile
 sections, fieldset legends, dialog titles) use the heading font; everything else uses the UI font.
 
+Most tokens name a value the whole UI reuses — an ink, a type size, a gap. `--touch-target` (#97) is
+a second kind: a hit area, the 44px square a finger needs, which no gap on the spacing scale happens
+to be. It stays a named token rather than a literal padding because it's a role, and it's in `rem` so
+it tracks the reader's default text size. A token of this kind belongs in `global.css` with a comment
+saying which it is.
+
 ## Consequences
 
 - A visual change is made once, in `global.css`, and the whole UI follows.
@@ -39,6 +45,8 @@ sections, fieldset legends, dialog titles) use the heading font; everything else
   its white `--paper`, the token the dark palette leaves alone.
 - Contrast is a token property, so it's checked as one: `src/ui/tokens.test.ts` reads `global.css` and
   holds every pair the UI stacks to WCAG AA, in both palettes. A new pairing goes in that list.
+- A hit area is a token too, `--touch-target`, and a module asks for it by name rather than reaching
+  for a padding that happens to add up to 44px.
 - New components must not introduce a literal colour, type size or spacing value. Where one is
   genuinely local to a component — an optical baseline nudge, the card preview's paper shadow — it
   carries a comment saying so.
