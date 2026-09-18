@@ -2,25 +2,34 @@ import { bpOfCopies, hasNameClash, type ArmyList } from '../domain/armyList';
 import type { ArmyListAction } from '../domain/armyListReducer';
 import { stepInRange } from '../domain/numberRange';
 import { quantityRange } from '../domain/profileFields';
-import { unitProfileBp, unitProfileIssues, type UnitProfile } from '../domain/unitProfile';
+import {
+  unitKinds,
+  unitProfileBp,
+  unitProfileIssues,
+  type UnitProfile,
+} from '../domain/unitProfile';
 import { useArmyList } from './ArmyListContext';
 import { deleteConfirmation, useConfirm } from './ConfirmContext';
 import { BinIcon, DuplicateIcon, MinusIcon, PlusIcon } from './icons';
 import styles from './UnitProfileList.module.css';
 
 interface Section {
-  kind: UnitProfile['kind'];
   /** The kind as a group of them, which is what the section holds. */
   heading: string;
   add: Extract<ArmyListAction, { type: `add${string}` }>;
 }
 
-/** The three kinds, in the order the list always shows them. */
-const sections: Section[] = [
-  { kind: 'Mech', heading: 'Mechs', add: { type: 'addMech' } },
-  { kind: 'Vehicle', heading: 'Vehicles', add: { type: 'addVehicle' } },
-  { kind: 'Troop', heading: 'Troops', add: { type: 'addTroop' } },
-];
+const sectionsByKind: Record<UnitProfile['kind'], Section> = {
+  Mech: { heading: 'Mechs', add: { type: 'addMech' } },
+  Vehicle: { heading: 'Vehicles', add: { type: 'addVehicle' } },
+  Troop: { heading: 'Troops', add: { type: 'addTroop' } },
+};
+
+/**
+ * The sections in `unitKinds` order, which is also the order cards print in: the two orders come
+ * from one place so a printed stack can't disagree with the screen.
+ */
+const sections = unitKinds.map((kind) => ({ kind, ...sectionsByKind[kind] }));
 
 /**
  * The Unit Profiles, grouped by kind. A row is navigation; what can be done to a Unit Profile is

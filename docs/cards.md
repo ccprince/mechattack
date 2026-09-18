@@ -104,6 +104,8 @@ Conventions across all cards:
 
 ### The name row corner
 
+Cards print in Print Order (`CONTEXT.md`), and Copy Numbers count up in that same order.
+
 Every card's `NAME:` label row ends in the same empty space, and two things may print there: the
 Copy Number (`CONTEXT.md`) and the illegal warning triangle. They form one group, right-justified
 to x = 376, on all three cards.

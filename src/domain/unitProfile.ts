@@ -16,6 +16,12 @@ export const unitProfileSchema = z.discriminatedUnion('kind', [
 
 export type UnitProfile = z.infer<typeof unitProfileSchema>;
 
+/**
+ * The three kinds in the order an Army List always presents them, on screen and in print. Nothing
+ * lets a player order Unit Profiles themselves, so this is the only order either can offer.
+ */
+export const unitKinds: readonly UnitProfile['kind'][] = ['Mech', 'Vehicle', 'Troop'];
+
 export type Issue = MechIssue | VehicleIssue | TroopIssue;
 
 /** The Unit Profile's worked-out Bp, for one copy. */

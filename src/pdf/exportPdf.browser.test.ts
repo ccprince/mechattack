@@ -83,7 +83,7 @@ describe('exportArmyListPdf', () => {
     },
   );
 
-  it('prints every fielded copy of a list mixing Mechs and Vehicles, in list order', async () => {
+  it('prints every fielded copy of a list mixing Mechs and Vehicles, Mechs first', async () => {
     // 6 fielded copies: 2 Large pages.
     const mixed: ArmyList = {
       version: 2,
@@ -106,9 +106,9 @@ describe('exportArmyListPdf', () => {
       .texts.map(({ text }) => text)
       .filter((text) => ['Hellhound', 'Ironclad', 'Parked', 'Outrider'].includes(text));
     expect(names).toEqual([
-      'Hellhound',
-      'Hellhound',
       'Ironclad',
+      'Hellhound',
+      'Hellhound',
       'Outrider',
       'Outrider',
       'Outrider',
@@ -116,7 +116,8 @@ describe('exportArmyListPdf', () => {
   });
 
   it('prints every fielded copy of a list mixing all three kinds, Troops two to a slot', async () => {
-    // 3 Troops, a Mech, 2 Troops and 2 Vehicles fill 6 Large slots over 2 pages, or 1 Sleeve page.
+    // Grouped by kind: a Mech, 2 Vehicles and 5 Troops fill 6 Large slots over 2 pages, or 1 Sleeve
+    // page. The list is deliberately out of that order.
     const mixed: ArmyList = {
       version: 2,
       name: 'Combined Arms',
@@ -145,14 +146,14 @@ describe('exportArmyListPdf', () => {
           ['Rangers', 'Ironclad', 'Skyborne', 'Parked', 'Hellhound'].includes(text),
         );
       expect(names).toEqual([
-        'Rangers',
-        'Rangers',
-        'Rangers',
         'Ironclad',
-        'Skyborne',
-        'Skyborne',
         'Hellhound',
         'Hellhound',
+        'Rangers',
+        'Rangers',
+        'Rangers',
+        'Skyborne',
+        'Skyborne',
       ]);
     }
   });

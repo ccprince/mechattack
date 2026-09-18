@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { NumberRange } from './numberRange';
 import {
+  unitKinds,
   unitProfileBp,
   unitProfileIssues,
   unitProfileSchema,
@@ -50,6 +51,16 @@ export function bpTotal(list: ArmyList): number {
   return bpOfCopies(list.unitProfiles);
 }
 
+/**
+ * The Unit Profiles grouped by kind — Mechs, then Vehicles, then Troops — keeping the order they
+ * were added in within each kind. This is the order the editor shows and the order cards print in,
+ * so a printed stack matches what the player built on screen. Stored order is insertion order
+ * alone, which no player chose.
+ */
+export function orderedUnitProfiles(list: ArmyList): UnitProfile[] {
+  return unitKinds.flatMap((kind) => list.unitProfiles.filter((profile) => profile.kind === kind));
+}
+
 /** One fielded copy of a Unit Profile: one printed card. */
 export interface FieldedCopy {
   profile: UnitProfile;
@@ -61,14 +72,16 @@ export interface FieldedCopy {
 }
 
 /**
- * One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing.
+ * One entry per fielded copy, in `orderedUnitProfiles` order: what prints, in print order. A
+ * quantity of 0 prints nothing.
  *
  * Copies sharing a name are numbered from 1 across the whole Army List, not per Unit Profile, so
- * that no two printed cards read alike — which is the only thing a Copy Number is for. Names are
+ * that no two printed cards read alike — which is the only thing a Copy Number is for. They're
+ * numbered in that same print order, so the numbers climb as the cards are dealt out. Names are
  * compared trimmed, as the editor's clash warning does, and a blank name pools like any other.
  */
 export function fieldedCopies(list: ArmyList): FieldedCopy[] {
-  const profiles = list.unitProfiles.flatMap((profile) =>
+  const profiles = orderedUnitProfiles(list).flatMap((profile) =>
     Array<UnitProfile>(profile.quantity).fill(profile),
   );
   const totals = new Map<string, number>();
@@ -90,9 +103,9 @@ export function hasFieldedCopies(list: ArmyList): boolean {
   return list.unitProfiles.some((profile) => profile.quantity > 0);
 }
 
-/** The fielded Unit Profiles with Issues, in list order: the ones that would print marked. */
+/** The fielded Unit Profiles with Issues, in print order: the ones that would print marked. */
 export function fieldedWithIssues(list: ArmyList): UnitProfile[] {
-  return list.unitProfiles.filter(
+  return orderedUnitProfiles(list).filter(
     (profile) => profile.quantity > 0 && unitProfileIssues(profile).length > 0,
   );
 }

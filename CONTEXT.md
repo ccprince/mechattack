@@ -38,10 +38,10 @@ _Avoid_: Unit template, datasheet
 
 **Copy Number**:
 What tells one printed card from another when several share a name: every fielded copy of that name
-across the Army List is numbered from 1, in list order. A name only one copy carries gets no number,
+across the Army List is numbered from 1, in Print Order. A name only one copy carries gets no number,
 and a blank name counts as a name like any other. It belongs to a printing rather than to a unit —
-changing a quantity or reordering the list can number the same model differently next time — so it's
-never a lasting identity for a miniature on the table.
+changing a quantity, or adding or deleting a Unit Profile, can number the same model differently
+next time — so it's never a lasting identity for a miniature on the table.
 _Avoid_: Sequence number, card number
 
 **Legal**:
@@ -52,10 +52,17 @@ marked as such. Exceeding the Bp Limit is a problem with the Army List, not an I
 _Avoid_: Valid, invalid (for build rules)
 
 **Mech**, **Vehicle**, **Troop**:
-The only three kinds of unit. Each prints on its own card layout. The Unit Profile list groups by
-kind under plural headings — Mechs, Vehicles, Troops — where the plural names a group of units
-rather than the kind.
+The only three kinds of unit, and the order everything shows them in; see Print Order. Each prints
+on its own card layout. The Unit Profile list groups by kind under plural headings — Mechs,
+Vehicles, Troops — where the plural names a group of units rather than the kind.
 _Avoid_: Troops (as a kind name), infantry
+
+**Print Order**:
+The one order an Army List is ever shown in: grouped by kind, Mechs then Vehicles then Troops, and
+within a kind the order the Unit Profiles were added. The editor and the printed cards both follow
+it, so a printed stack is in the order the player built it. A player can't reorder an Army List, so
+the order Unit Profiles happen to be stored in is never shown as such.
+_Avoid_: List order, sort order
 
 **Class**:
 A unit's, Weapon's or Support Equipment's weight category, which limits what a unit may mount. A

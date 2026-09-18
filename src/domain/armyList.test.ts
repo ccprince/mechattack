@@ -238,25 +238,45 @@ describe('fieldedCopies', () => {
     ]);
   });
 
-  it('includes Vehicles with Mechs', () => {
+  it('puts Vehicles after Mechs, whichever was added first', () => {
     const ironclad = mech({ id: 'u1' });
     const hauler = vehicle({ id: 'u2', quantity: 2 });
     expect(fieldedCopies(list({ unitProfiles: [hauler, ironclad] }))).toEqual([
+      { profile: ironclad },
       { profile: hauler, copyNumber: 1 },
       { profile: hauler, copyNumber: 2 },
-      { profile: ironclad },
     ]);
   });
 
-  it('includes Troops with Mechs and Vehicles', () => {
+  it('puts Troops after Mechs and Vehicles, whichever was added first', () => {
     const ironclad = mech({ id: 'u1' });
     const hauler = vehicle({ id: 'u2' });
     const rifles = troop({ id: 'u3', quantity: 2 });
     expect(fieldedCopies(list({ unitProfiles: [rifles, hauler, ironclad] }))).toEqual([
+      { profile: ironclad },
+      { profile: hauler },
       { profile: rifles, copyNumber: 1 },
       { profile: rifles, copyNumber: 2 },
-      { profile: hauler },
-      { profile: ironclad },
+    ]);
+  });
+
+  it('keeps one kind in the order it was added, so Vehicles are never split apart', () => {
+    const first = vehicle({ id: 'u1', name: 'Hauler' });
+    const rifles = troop({ id: 'u2', name: 'Rifles' });
+    const second = vehicle({ id: 'u3', name: 'Outrider' });
+    expect(
+      fieldedCopies(list({ unitProfiles: [first, rifles, second] })).map(
+        ({ profile }) => profile.name,
+      ),
+    ).toEqual(['Hauler', 'Outrider', 'Rifles']);
+  });
+
+  it('numbers a name shared across kinds in print order, not the order it was added', () => {
+    const vehicleCaine = vehicle({ id: 'u1', name: 'Caine' });
+    const mechCaine = mech({ id: 'u2', name: 'Caine' });
+    expect(fieldedCopies(list({ unitProfiles: [vehicleCaine, mechCaine] }))).toEqual([
+      { profile: mechCaine, copyNumber: 1 },
+      { profile: vehicleCaine, copyNumber: 2 },
     ]);
   });
 
