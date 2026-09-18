@@ -17,7 +17,8 @@ export interface PrintableCard {
 const pointsPerInch = 72;
 
 /**
- * Prints one card per fielded copy of every Unit Profile on the Army List, in list order.
+ * Prints one card per fielded copy of every Unit Profile on the Army List, grouped by kind as the
+ * editor groups them: Mechs, then Vehicles, then Troops.
  */
 export async function exportArmyListPdf(
   list: ArmyList,
