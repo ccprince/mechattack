@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cdp, page, userEvent } from 'vitest/browser';
 import { fakeStore } from '../domain/testStores';
 import { openButton, profileRow, setUpApp } from './testApp';
 // The tokens and base styles come with the entry point, not with the app: this file is about them.
@@ -19,6 +19,12 @@ function lineCount(element: Element): number {
   range.selectNodeContents(element);
   const tops = Array.from(range.getClientRects(), (rect) => Math.round(rect.top));
   return new Set(tops).size;
+}
+
+/** Gives back the viewport after each test in the block, for a test that narrows it to a phone. */
+function keepViewport() {
+  const size = { width: window.innerWidth, height: window.innerHeight };
+  afterEach(() => page.viewport(size.width, size.height));
 }
 
 /** Starts the app with two Mechs, the second one selected. */
@@ -72,8 +78,7 @@ describe('the selected Unit Profile', () => {
  * comfortably inside them.
  */
 describe('the app title', () => {
-  const size = { width: window.innerWidth, height: window.innerHeight };
-  afterEach(() => page.viewport(size.width, size.height));
+  keepViewport();
 
   it.each([
     ['a 412px phone, at full size', 412],
@@ -95,5 +100,126 @@ describe('the app title', () => {
     });
 
     expect(lineCount(title)).toBe(1);
+  });
+});
+
+/*
+ * A finger needs a bigger target than a pointer does, so an icon button — the steppers, Duplicate,
+ * Delete and the three Adds, the controls a player touches most — grows on a touch device (#97). The
+ * gate is the input device rather than the viewport: a narrow desktop window doesn't need the room,
+ * and a tablet does.
+ */
+describe('an icon button', () => {
+  /*
+   * Every button in the app holding an icon and nothing else, with two Mechs in the list and the
+   * second one selected. Named rather than found by markup shape, so the elements stay free to change
+   * underneath (ADR 0004), and so a button going missing fails instead of shrinking the set.
+   */
+  const names = [
+    'Army Lists',
+    'Add Mech',
+    'Add Vehicle',
+    'Add Troop',
+    'Decrease Bp Limit',
+    'Increase Bp Limit',
+    'One more New Mech 2',
+    'One fewer New Mech 2',
+    'Duplicate New Mech 2',
+    'Delete New Mech 2',
+    'Decrease Armor',
+    'Increase Armor',
+    'Decrease Heat Sinks',
+    'Increase Heat Sinks',
+    'Decrease Engine Upgrades',
+    'Increase Engine Upgrades',
+  ];
+
+  const boxes = () =>
+    names.map((name) => ({
+      name,
+      box: page.getByRole('button', { name, exact: true }).element().getBoundingClientRect(),
+    }));
+
+  /** Every pair of buttons on the page drawn on top of each other, named for the failure message. */
+  function overlappingButtons(): string[] {
+    const drawn = page
+      .getByRole('button')
+      .elements()
+      .map((button) => ({
+        name: button.ariaLabel ?? button.textContent,
+        box: button.getBoundingClientRect(),
+      }))
+      .filter(({ box }) => box.width > 0);
+
+    // A shared edge isn't an overlap, and neither is the sub-pixel a fractional grid track leaves.
+    const over = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right - 0.5 &&
+      b.left < a.right - 0.5 &&
+      a.top < b.bottom - 0.5 &&
+      b.top < a.bottom - 0.5;
+
+    return drawn.flatMap(({ name, box }, index) =>
+      drawn
+        .slice(index + 1)
+        .filter((other) => over(box, other.box))
+        .map((other) => `${name} / ${other.name}`),
+    );
+  }
+
+  /** Names the ones an expectation rejects, at the size they came out, for the failure message. */
+  const listing = (wrong: ReturnType<typeof boxes>) =>
+    wrong.map(({ name, box }) => `${name}: ${Math.round(box.width)}×${Math.round(box.height)}`);
+
+  /*
+   * Chromium decides `pointer: coarse` from touch support, which only the browser can turn on, so
+   * these drive it over CDP rather than from the page.
+   */
+  describe('on a touch device', () => {
+    const session = cdp();
+    const touch = (enabled: boolean) =>
+      session.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 1 });
+
+    beforeEach(() => touch(true));
+    afterEach(() => touch(false));
+    keepViewport();
+
+    it('is a 44px square to hit', async () => {
+      await loadWithTwoMechs();
+
+      expect(listing(boxes().filter(({ box }) => box.width < 44 || box.height < 44))).toEqual([]);
+    });
+
+    /*
+     * A 44px stepper needs room a 26px one didn't, and a control that won't narrow doesn't overflow
+     * quietly — it paints over the field beside it. So this walks every width a phone, tablet or
+     * split window might be, a pixel at a time, with each kind of Unit Profile in the editor.
+     */
+    it.each(['Mech', 'Vehicle', 'Troop'])(
+      'leaves room for the rest of the page (%s)',
+      async (kind) => {
+        load(fakeStore());
+        await page.getByRole('button', { name: `Add ${kind}` }).click();
+
+        const wrong = new Set<string>();
+        for (let width = 320; width <= 1400; width++) {
+          await page.viewport(width, 900);
+          for (const pair of overlappingButtons()) wrong.add(`${width}px: ${pair} overlap`);
+          if (document.documentElement.scrollWidth > width)
+            wrong.add(`${width}px: scrolls sideways`);
+        }
+        expect([...wrong]).toEqual([]);
+      },
+      60000,
+    );
+  });
+
+  it('stays at the pointer size when the pointer is fine', async () => {
+    await loadWithTwoMechs();
+
+    // Drawn, and no larger than a pointer asks for: the rule is gated on the input device.
+    const wrong = boxes().filter(
+      ({ box }) => box.width < 24 || box.height < 24 || box.width >= 44 || box.height >= 44,
+    );
+    expect(listing(wrong)).toEqual([]);
   });
 });

@@ -64,6 +64,12 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
+  /*
+   * A hit area rather than a gap: the 44px square Apple and Google both call comfortable for a
+   * finger, off the spacing scale on purpose, and in `rem` so it tracks the reader's text size.
+   */
+  --touch-target: 2.75rem;
+
   --radius: 6px;
   --border: 1px;
   --focus-ring: 2px solid var(--accent);
@@ -164,6 +170,18 @@ button:where(:has(> svg:only-child)) {
 button > svg:only-child {
   width: var(--space-4);
   height: var(--space-4);
+}
+
+/*
+ * A finger needs more to aim at than a pointer does, so an icon button grows to a comfortable square
+ * on a touch device. The gate is the input device, not the viewport: a narrow desktop window doesn't
+ * need the room and a tablet does.
+ */
+@media (pointer: coarse) {
+  button:where(:has(> svg:only-child)) {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
 }
 
 /* A checkbox keeps its native look: a border and background would break how browsers draw it. */

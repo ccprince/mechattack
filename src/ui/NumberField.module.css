@@ -4,6 +4,12 @@
  */
 .control {
   display: flex;
+  /*
+   * The buttons don't shrink, so without a floor of its own the row would refuse to narrow past the
+   * width they and the input want, and spill over whatever sits next to it. It gives up the input's
+   * width instead; a layout that puts it somewhere too narrow for the buttons is the layout's to fix.
+   */
+  min-width: 0;
   max-width: 10rem;
   gap: var(--space-1);
   align-items: stretch;
