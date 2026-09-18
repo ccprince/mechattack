@@ -7,6 +7,7 @@ import { dpDrawing } from './dpShape';
 import { fitLine, wrapLines, type Measure } from './fitText';
 import { armorCrossOut } from './geometry';
 import { illegalNote, illegalStroke } from './illegalNote';
+import { addNameRowCorner } from './nameRowCorner';
 import {
   addCrossOut,
   addDp,
@@ -43,14 +44,18 @@ const illegalMaxLines = 2;
 const illegalFontSize = 10;
 /** Extra leading between the stroked ILLEGAL line and the taller notes below it. */
 const illegalGap = 2;
-// Illegal marks (docs/cards.md): the name triangle, and each Hardpoint marker relative to its row.
-const nameMark = { x: 364, y: 15, width: 12, height: 11 };
+// Illegal marks (docs/cards.md): each Hardpoint marker relative to its row. The name row's own
+// mark shares its corner with the Copy Number, so it lives in ./nameRowCorner.
 const hardpointMark = { dx: 67, dy: -9, width: 11, height: 10 };
 const weaponWidth = { unmarked: 75, marked: 63 };
 /** A suffix prints spelled out under the short name, the pair centered on the row's baseline. */
 const suffixLine = { fontSize: 11, nameDy: -5.5, suffixDy: 7.5 };
 
-export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVGElement {
+export function buildMechCardSvg(
+  profile: MechProfile,
+  measure: Measure,
+  copyNumber?: number,
+): SVGSVGElement {
   const { svg, data } = parseTemplate(mechTemplate);
   const issues = mechIssues(profile);
 
@@ -112,8 +117,8 @@ export function buildMechCardSvg(profile: MechProfile, measure: Measure): SVGSVG
     illegal.style.stroke = '#1a1a1a';
     illegal.style.strokeWidth = `${illegalStroke}px`;
     illegalLines = illegal.childElementCount;
-    addWarningTriangle(data, 'illegal', nameMark);
   }
+  addNameRowCorner(data, copyNumber, issues.length > 0);
   wrapInNotesBox(
     'notes',
     profile.notes,

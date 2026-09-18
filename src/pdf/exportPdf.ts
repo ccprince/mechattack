@@ -24,16 +24,12 @@ export async function exportArmyListPdf(
   size: PrintSize,
   measure: Measure,
 ): Promise<jsPDF> {
-  // Copies of a Unit Profile share one card: exportCardsPdf never changes the SVG it's given.
-  const svgs = new Map<UnitProfile, SVGSVGElement>();
-  const cards = fieldedCopies(list).map((profile): PrintableCard => {
-    let svg = svgs.get(profile);
-    if (!svg) {
-      svg = buildUnitCardSvg(profile, measure);
-      svgs.set(profile, svg);
-    }
-    return { kind: profile.kind, svg };
-  });
+  // A card per copy, never shared: copies of a Unit Profile differ by their Copy Number, and a copy
+  // that has none is the only one of its name, so it prints once anyway.
+  const cards = fieldedCopies(list).map(({ profile, copyNumber }): PrintableCard => ({
+    kind: profile.kind,
+    svg: buildUnitCardSvg(profile, measure, copyNumber),
+  }));
   const doc = await exportCardsPdf(cards, size);
   // Printed cards travel without the app's footer, so the file itself says it isn't official (#75).
   doc.setDocumentProperties({

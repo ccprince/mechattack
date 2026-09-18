@@ -9,6 +9,7 @@ import {
   hasNameClash,
   isOverBpLimit,
   type ArmyList,
+  type FieldedCopy,
 } from './armyList';
 import type { MechProfile } from './mech';
 import type { TroopProfile } from './troop';
@@ -28,6 +29,11 @@ function mech(overrides: Partial<MechProfile> = {}): MechProfile {
     quantity: 1,
     ...overrides,
   };
+}
+
+/** A fielded copy as `[name, Copy Number]`, for asserting on numbering without whole profiles. */
+function copyNumbers({ profile, copyNumber }: FieldedCopy): [string, number | undefined] {
+  return [profile.name, copyNumber];
 }
 
 function vehicle(overrides: Partial<VehicleProfile> = {}): VehicleProfile {
@@ -225,16 +231,20 @@ describe('fieldedCopies', () => {
     const reserve = mech({ id: 'u2', name: 'Reserve', quantity: 0 });
     const scout = mech({ id: 'u3', name: 'Scout', quantity: 1 });
     const army = list({ unitProfiles: [pair, reserve, scout] });
-    expect(fieldedCopies(army)).toEqual([pair, pair, scout]);
+    expect(fieldedCopies(army)).toEqual([
+      { profile: pair, copyNumber: 1 },
+      { profile: pair, copyNumber: 2 },
+      { profile: scout },
+    ]);
   });
 
   it('includes Vehicles with Mechs', () => {
     const ironclad = mech({ id: 'u1' });
     const hauler = vehicle({ id: 'u2', quantity: 2 });
     expect(fieldedCopies(list({ unitProfiles: [hauler, ironclad] }))).toEqual([
-      hauler,
-      hauler,
-      ironclad,
+      { profile: hauler, copyNumber: 1 },
+      { profile: hauler, copyNumber: 2 },
+      { profile: ironclad },
     ]);
   });
 
@@ -243,15 +253,82 @@ describe('fieldedCopies', () => {
     const hauler = vehicle({ id: 'u2' });
     const rifles = troop({ id: 'u3', quantity: 2 });
     expect(fieldedCopies(list({ unitProfiles: [rifles, hauler, ironclad] }))).toEqual([
-      rifles,
-      rifles,
-      hauler,
-      ironclad,
+      { profile: rifles, copyNumber: 1 },
+      { profile: rifles, copyNumber: 2 },
+      { profile: hauler },
+      { profile: ironclad },
     ]);
   });
 
   it('is empty when nothing is fielded', () => {
     expect(fieldedCopies(list({ unitProfiles: [mech({ quantity: 0 })] }))).toEqual([]);
+  });
+
+  it('leaves a lone copy unnumbered', () => {
+    const scout = mech({ id: 'u1', name: 'Scout' });
+    expect(fieldedCopies(list({ unitProfiles: [scout] }))).toEqual([{ profile: scout }]);
+  });
+
+  it('numbers copies by name across Unit Profiles, not within each one', () => {
+    const veteran = mech({ id: 'u1', name: 'Big Bertha', quantity: 2 });
+    const rookie = mech({ id: 'u2', name: 'Big Bertha', quantity: 2 });
+    expect(fieldedCopies(list({ unitProfiles: [veteran, rookie] })).map(copyNumbers)).toEqual([
+      ['Big Bertha', 1],
+      ['Big Bertha', 2],
+      ['Big Bertha', 3],
+      ['Big Bertha', 4],
+    ]);
+  });
+
+  it('numbers a single copy whose name another Unit Profile shares', () => {
+    const veteran = mech({ id: 'u1', name: 'Big Bertha' });
+    const rookie = mech({ id: 'u2', name: 'Big Bertha' });
+    expect(fieldedCopies(list({ unitProfiles: [veteran, rookie] }))).toEqual([
+      { profile: veteran, copyNumber: 1 },
+      { profile: rookie, copyNumber: 2 },
+    ]);
+  });
+
+  it('numbers each name on its own, leaving unshared names alone', () => {
+    const berthas = mech({ id: 'u1', name: 'Big Bertha', quantity: 2 });
+    const scout = mech({ id: 'u2', name: 'Scout' });
+    const haulers = vehicle({ id: 'u3', name: 'Hauler', quantity: 2 });
+    expect(
+      fieldedCopies(list({ unitProfiles: [berthas, scout, haulers] })).map(copyNumbers),
+    ).toEqual([
+      ['Big Bertha', 1],
+      ['Big Bertha', 2],
+      ['Scout', undefined],
+      ['Hauler', 1],
+      ['Hauler', 2],
+    ]);
+  });
+
+  it('pools names that differ only by surrounding spaces, as the clash warning does', () => {
+    const padded = mech({ id: 'u1', name: ' Big Bertha ' });
+    const plain = mech({ id: 'u2', name: 'Big Bertha' });
+    expect(fieldedCopies(list({ unitProfiles: [padded, plain] }))).toEqual([
+      { profile: padded, copyNumber: 1 },
+      { profile: plain, copyNumber: 2 },
+    ]);
+  });
+
+  it('numbers blank names like any other, so unnamed cards are still told apart', () => {
+    const unnamed = mech({ id: 'u1', name: '', quantity: 2 });
+    const alsoUnnamed = mech({ id: 'u2', name: '  ' });
+    expect(fieldedCopies(list({ unitProfiles: [unnamed, alsoUnnamed] })).map(copyNumbers)).toEqual([
+      ['', 1],
+      ['', 2],
+      ['  ', 3],
+    ]);
+  });
+
+  it('skips copies of a name that quantity 0 keeps off the table', () => {
+    const fielded = mech({ id: 'u1', name: 'Big Bertha' });
+    const benched = mech({ id: 'u2', name: 'Big Bertha', quantity: 0 });
+    expect(fieldedCopies(list({ unitProfiles: [fielded, benched] }))).toEqual([
+      { profile: fielded },
+    ]);
   });
 });
 

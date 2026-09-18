@@ -50,9 +50,39 @@ export function bpTotal(list: ArmyList): number {
   return bpOfCopies(list.unitProfiles);
 }
 
-/** One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing. */
-export function fieldedCopies(list: ArmyList): UnitProfile[] {
-  return list.unitProfiles.flatMap((profile) => Array<UnitProfile>(profile.quantity).fill(profile));
+/** One fielded copy of a Unit Profile: one printed card. */
+export interface FieldedCopy {
+  profile: UnitProfile;
+  /**
+   * Which copy of this name it is, from 1, or undefined when it's the only fielded copy carrying
+   * the name: a card no other card can be confused with is never numbered.
+   */
+  copyNumber?: number;
+}
+
+/**
+ * One entry per fielded copy, in list order: what prints. A quantity of 0 prints nothing.
+ *
+ * Copies sharing a name are numbered from 1 across the whole Army List, not per Unit Profile, so
+ * that no two printed cards read alike — which is the only thing a Copy Number is for. Names are
+ * compared trimmed, as the editor's clash warning does, and a blank name pools like any other.
+ */
+export function fieldedCopies(list: ArmyList): FieldedCopy[] {
+  const profiles = list.unitProfiles.flatMap((profile) =>
+    Array<UnitProfile>(profile.quantity).fill(profile),
+  );
+  const totals = new Map<string, number>();
+  for (const { name } of profiles) {
+    totals.set(name.trim(), (totals.get(name.trim()) ?? 0) + 1);
+  }
+  const counted = new Map<string, number>();
+  return profiles.map((profile) => {
+    const name = profile.name.trim();
+    if (totals.get(name) === 1) return { profile };
+    const copyNumber = (counted.get(name) ?? 0) + 1;
+    counted.set(name, copyNumber);
+    return { profile, copyNumber };
+  });
 }
 
 /** Whether anything would print. */
