@@ -64,3 +64,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * The title is a fixed string in Alfa Slab One, which sets it 13.5em wide; the title row's own
+ * padding, gap and menu button take another 4.75rem. Below these widths what's left is short of it
+ * and the title wraps to a second line, so it steps down a size instead. Both are in rem, like the
+ * sizes they guard: a reader whose browser sets a smaller default text size has a narrower title
+ * and more room for it, and these move with that setting rather than against it.
+ */
+@media (width < 24rem) {
+  .title {
+    font-size: var(--text-lg);
+  }
+}
+
+/*
+ * Under 21.5rem even --text-lg wraps. This is the last step down: on a narrower screen still, or for
+ * a reader whose browser is set to large text, the title wraps rather than shrink further, because
+ * two lines read better than type too small to read.
+ */
+@media (width < 21.5rem) {
+  .title {
+    font-size: var(--text-base);
+  }
+}
